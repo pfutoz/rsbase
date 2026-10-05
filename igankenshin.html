@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>胃がん検診データ作成補助機能 導入マニュアル</title>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+            color: #1f2937;
+            margin: 0;
+            padding: 30px;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: #ffffff;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        }
+        h1 { font-size: 1.8rem; color: #2563eb; border-bottom: 2px solid #e5e7eb; padding-bottom: 10px; margin-top: 0; }
+        h2 { font-size: 1.3rem; color: #1e293b; margin-top: 30px; border-left: 4px solid #2563eb; padding-left: 10px; }
+        h3 { font-size: 1.05rem; color: #374151; margin-top: 20px; }
+        p, li { font-size: 0.95rem; color: #4b5563; }
+        ul { padding-left: 20px; }
+        code {
+            font-family: monospace;
+            background-color: #f1f5f9;
+            padding: 2px 6px;
+            border-radius: 4px;
+            color: #0f172a;
+            font-size: 0.9rem;
+        }
+        pre {
+            background-color: #0f172a;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-size: 0.85rem;
+        }
+        .warning {
+            background-color: #fef3c7;
+            border-left: 4px solid #d97706;
+            padding: 12px 15px;
+            margin: 15px 0;
+            border-radius: 0 6px 6px 0;
+        }
+        .warning strong { color: #b45309; }
+        .btn-link {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #2563eb;
+            padding: 6px 12px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 500;
+            border: 1px solid #bfdbfe;
+            margin: 5px 0;
+        }
+        .btn-link:hover {
+            background-color: #dbeafe;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏥 胃がん検診データ作成補助機能 導入マニュアル</h1>
+        <p>本機能は、Webブラウザ（<code>index.php</code>）上の表示からワンクリックでDICOMフォルダのパスをクリップボードへコピーし、バックグラウンドでPythonツールを起動して、デスクトップ等の指定フォルダへJPEG形式で一括変換・保存するシステムです。</p>
+
+        <h2>1. Python環境の構築（クライアントPC側）</h2>
+        <p>Pythonがインストールされていない端末の場合は、以下の手順で環境を構築します。</p>
+        
+        <h3>Step 1: Pythonのインストール</h3>
+        <ul>
+            <li><a href="https://www.python.org/downloads/" target="_blank">Python公式サイト</a>へアクセスし、最新の安定版（Python 3.x系）のインストーラーをダウンロードします。</li>
+            <li>インストーラーを実行し、最下部にある <strong>「Add python.exe to PATH」に必ずチェックを入れてから</strong>インストールを進めます。</li>
+            <li>コマンドプロンプト（<code>cmd</code>）を開き、バージョンを確認します：<br>
+                <code>python --version</code>（例：<code>Python 3.x.x</code>）
+            </li>
+        </ul>
+
+        <h3>Step 2: 必要な外部ライブラリの導入</h3>
+        <p>DICOM解析および画像変換用のライブラリ（<code>pydicom</code>, <code>Pillow</code>）をインストールします。</p>
+        <pre><code>pip install pydicom Pillow</code></pre>
+
+        <h2>2. ツール一式（DicomTool）の配置</h2>
+        <ul>
+            <li>
+                <strong>dicom_convert.py</strong>：メインの変換スクリプトです。以下のボタンからダウンロードして、クライアントPC上の適切なディレクトリ（または任意の作業フォルダ）に配置してください。<br>
+                <a href="dicom_convert.py" download class="btn-link">📥 dicom_convert.py をダウンロード</a>
+            </li>
+            <li><strong>config.txt</strong>：出力先設定ファイル。初回実行時に自動生成されます。変更したい場合は1行目のパスを書き換えてください。デフォルトではログイン中のユーザーのデスクトップにある <code>JPEG</code> フォルダを指します。</li>
+        </ul>
+
+        <h2>3. 常駐監視スクリプト（watcher.vbs）の配置と設定</h2>
+        <p>Webからの指示を受け取ってPythonを自動起動させるためのVBScriptを設定します。</p>
+        
+        <h3>Step 1: スクリプトのダウンロードと配置</h3>
+        <ul>
+            <li>Web画面（<code>index.php</code>）右上にある <strong>「📥 常駐スクリプトDL (.zip)」</strong> ボタンから <code>watcher.zip</code> をダウンロードします。</li>
+            <li>クライアントPCの適切な場所（またはスタートアップフォルダ等）に配置します。</li>
+            <li><strong>💡 詳しい配置方法や設定手順については、以下のヘルプも合わせてご参照ください：</strong><br>
+                <a href="help.html" target="_blank" class="btn-link">❓ 常駐スクリプト設置ヘルプ (help.html) を開く</a>
+            </li>
+        </ul>
+
+        <div class="warning">
+            <strong>⚠️ 超重要：watcher.vbs の文字コードに関する注意点</strong><br>
+            VBScript（<code>.vbs</code>）内に日本語コメントやメッセージが含まれている場合、文字コードが <strong>「ANSI（Shift_JIS）」</strong> 以外（UTF-8など）になっていると、全角文字が文字化けしてスクリプトが正常に動作しません。メモ帳などで開く場合は、保存時の文字コードを必ず <code>ANSI</code> に指定してください。
+        </div>
+
+        <h3>Step 2: toolDir（ツール格納パス）の書き換え</h3>
+        <p>ダウンロードした <code>watcher.vbs</code> をメモ帳などで開き、ツールの保存場所（パス）がクライアント環境に合っているか確認し、適切に書き換えます。</p>
+        <pre><code>toolDir = "C:\Users\Owner\Desktop\DicomTool\" ' ※実際の環境のパスに変更してください</code></pre>
+
+        <h2>4. 実際の操作手順</h2>
+        <ol>
+            <li>ブラウザで <code>index.php</code> を開き、対象患者の行にある<strong>「年齢部分」</strong>をクリックします。</li>
+            <li>画面下部に「フォルダパスをコピーしました」というトースト通知が表示され、同時にトリガーが送信されます。</li>
+            <li>クライアントPC側で、保存時の<strong>サブフォルダ名</strong>（例: <code>1111</code> など）の入力を求めるダイアログがポップアップします。</li>
+            <li>サブフォルダ名を入力して「OK」を押すと、コマンド画面が自動で立ち上がり、指定先（例: <code>C:\Users\[ユーザー名]\Desktop\JPEG\[入力したサブフォルダ名]\</code>）へDICOMファイルがJPEGとして一括変換・保存されます。</li>
+        </ol>
+    </div>
+</body>
+</html>

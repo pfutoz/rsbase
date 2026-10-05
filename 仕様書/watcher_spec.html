@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>クライアント常駐ソフト (watcher.vbs) 仕様書 - RS-Base 高速連携システム</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+
+        :root {
+            --primary: #1e40af;
+            --primary-light: #3b82f6;
+            --primary-bg: #eff6ff;
+            --accent: #0d9488;
+            --accent-bg: #f0fdfa;
+            --warning: #b45309;
+            --warning-bg: #fef3c7;
+            --warning-border: #fde68a;
+            --danger: #b91c1c;
+            --danger-bg: #fef2f2;
+            --danger-border: #fecaca;
+            --success: #15803d;
+            --success-bg: #f0fdf4;
+            --success-border: #bbf7d0;
+            --bg-body: #f8fafc;
+            --bg-card: #ffffff;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --border-light: #f1f5f9;
+            --code-bg: #0f172a;
+            --code-text: #e2e8f0;
+            --radius-sm: 6px;
+            --radius-md: 10px;
+            --radius-lg: 16px;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.04);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Inter', 'Noto Sans JP', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            line-height: 1.7;
+            padding: 24px 16px;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .container { max-width: 1120px; margin: 0 auto; }
+
+        .nav-breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 16px;
+            font-size: 0.88rem;
+            color: var(--text-muted);
+        }
+        .nav-breadcrumb a {
+            color: var(--primary-light);
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .nav-breadcrumb a:hover { text-decoration: underline; }
+
+        .header {
+            background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 50%, #0369a1 100%);
+            color: white;
+            padding: 32px 30px;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-lg);
+            margin-bottom: 24px;
+            position: relative;
+            overflow: hidden;
+        }
+        .header-badge {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.18);
+            backdrop-filter: blur(8px);
+            padding: 4px 12px;
+            border-radius: 9999px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            margin-bottom: 12px;
+        }
+        .header h1 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            letter-spacing: -0.02em;
+        }
+        .header p {
+            color: #e0f2fe;
+            font-size: 0.95rem;
+            max-width: 860px;
+        }
+        .meta-info {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            margin-top: 16px;
+            font-size: 0.84rem;
+            color: #bfdbfe;
+        }
+
+        .card {
+            background: var(--bg-card);
+            border-radius: var(--radius-md);
+            padding: 26px 28px;
+            margin-bottom: 22px;
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--border);
+        }
+        .card-title {
+            font-size: 1.22rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 2px solid var(--border-light);
+            padding-bottom: 10px;
+        }
+        .card-title .icon { font-size: 1.35rem; }
+
+        h3 {
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: var(--text-main);
+            margin: 20px 0 10px 0;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        h4 {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #334155;
+            margin: 14px 0 6px 0;
+        }
+        p { margin-bottom: 12px; font-size: 0.93rem; }
+        ul, ol { margin-left: 22px; margin-bottom: 14px; font-size: 0.93rem; }
+        li { margin-bottom: 6px; }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 14px 0;
+            font-size: 0.88rem;
+        }
+        th, td {
+            padding: 10px 12px;
+            border: 1px solid var(--border);
+            text-align: left;
+            vertical-align: top;
+        }
+        th {
+            background-color: #f1f5f9;
+            color: #334155;
+            font-weight: 600;
+        }
+        tr:nth-child(even) td { background-color: #f8fafc; }
+
+        .badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.76rem;
+            font-weight: 600;
+        }
+        .badge-primary { background: #dbeafe; color: #1e40af; }
+        .badge-success { background: #dcfce7; color: #166534; }
+        .badge-warning { background: #fef3c7; color: #92400e; }
+        .badge-danger { background: #fee2e2; color: #991b1b; }
+        .badge-teal { background: #ccfbf1; color: #0f766e; }
+
+        .alert {
+            display: flex;
+            gap: 12px;
+            padding: 14px 16px;
+            border-radius: var(--radius-md);
+            margin: 16px 0;
+            font-size: 0.91rem;
+            line-height: 1.6;
+        }
+        .alert-info { background: var(--primary-bg); border-left: 4px solid var(--primary-light); color: #1e3a8a; }
+        .alert-warning { background: var(--warning-bg); border-left: 4px solid var(--warning); color: #78350f; }
+        .alert-danger { background: var(--danger-bg); border-left: 4px solid var(--danger); color: #7f1d1d; }
+
+        code {
+            font-family: 'JetBrains Mono', Consolas, monospace;
+            background: #f1f5f9;
+            color: #0f172a;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+        pre {
+            background: var(--code-bg);
+            color: var(--code-text);
+            padding: 14px 16px;
+            border-radius: var(--radius-md);
+            overflow-x: auto;
+            margin: 12px 0;
+            font-family: 'JetBrains Mono', Consolas, monospace;
+            font-size: 0.84rem;
+            line-height: 1.55;
+        }
+        pre code { background: transparent; color: inherit; padding: 0; }
+
+        .flow-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 14px;
+            margin: 18px 0;
+        }
+        .flow-step {
+            background: #f8fafc;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 16px;
+            position: relative;
+        }
+        .flow-step-num {
+            display: inline-block;
+            width: 24px;
+            height: 24px;
+            background: var(--primary);
+            color: white;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 24px;
+            font-weight: 700;
+            font-size: 0.75rem;
+            margin-bottom: 8px;
+        }
+        .flow-step-title {
+            font-weight: 700;
+            font-size: 0.88rem;
+            color: var(--text-main);
+            margin-bottom: 6px;
+        }
+        .flow-step-desc {
+            font-size: 0.82rem;
+            color: var(--text-muted);
+            line-height: 1.5;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 36px;
+            color: var(--text-muted);
+            font-size: 0.84rem;
+            border-top: 1px solid var(--border);
+            padding-top: 20px;
+        }
+
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <div class="nav-breadcrumb">
+        <a href="index.html">📚 統合仕様書ポータル</a>
+        <span>&gt;</span>
+        <span>クライアント常駐ソフト (watcher.vbs) 仕様書</span>
+    </div>
+
+    <!-- ヘッダー -->
+    <header class="header">
+        <div class="header-badge">Client Daemon &amp; External Integration Specification</div>
+        <h1>⚡ クライアント常駐ソフト (watcher.vbs) 仕様書</h1>
+        <p>Windowsクライアント端末のバックグラウンドに常駐し、Webブラウザからのトリガー指示を感知して各社ビューワおよびDICOM変換ツールを高速起動する連携エージェントの仕様書です。</p>
+        <div class="meta-info">
+            <span>📅 策定日: 2026年9月30日</span>
+            <span>📂 格納場所: \\192.168.1.16\htdocs\rsbase\watcher.vbs (導入ZIP: watcher.zip)</span>
+            <span>🏷 実行エンジン: Windows 標準 WScript.exe (VBScript)</span>
+        </div>
+    </header>
+
+    <!-- 1. 常駐エージェントの概要 & 動作原理 -->
+    <section class="card">
+        <div class="card-title">
+            <span class="icon">🔄</span>
+            1. 常駐エージェントの概要 &amp; 動作原理
+        </div>
+        <p>通常、WebブラウザからローカルPC上の実行ファイル（<code>.exe</code>）をコマンドライン引数付きで直接起動することはセキュリティ制限により困難です。本システムでは、<strong>Webサーバー上の共有フォルダ（<code>tmp/</code>）を介したファイルポーリング方式</strong>を採用することで、ブラウザのセキュリティ制約を回避し、完全自動でのローカルアプリケーション直起動を実現しています。</p>
+
+        <div class="flow-container">
+            <div class="flow-step">
+                <span class="flow-step-num">1</span>
+                <div class="flow-step-title">Web画面でクリック</div>
+                <div class="flow-step-desc">検査名バッジまたは年齢をクリックすると、PHPが <code>tmp/trigger_[クライアントIP].txt</code> に起動モードと対象パスを書き込む。</div>
+            </div>
+            <div class="flow-step">
+                <span class="flow-step-num">2</span>
+                <div class="flow-step-title">常駐VBSの1秒検知</div>
+                <div class="flow-step-desc"><code>watcher.vbs</code> が1秒毎に共有フォルダの自身IPファイルをポーリング監視。発見後直ちに内容をメモリに読み込む。</div>
+            </div>
+            <div class="flow-step">
+                <span class="flow-step-num">3</span>
+                <div class="flow-step-title">トリガー即時削除</div>
+                <div class="flow-step-desc">重複起動やループを防止するため、トリガーファイルを即座に削除（<code>DeleteFile</code>）。</div>
+            </div>
+            <div class="flow-step">
+                <span class="flow-step-num">4</span>
+                <div class="flow-step-title">アプリ振り分け起動</div>
+                <div class="flow-step-desc">モード（<code>NORMAL</code> / <code>ECG</code> / <code>JPEG</code>）に応じて、対象のEXEまたはPython変換スクリプトを即時キック。</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 2. マルチNIC & VPN動的追随 IP検出仕様 -->
+    <section class="card">
+        <div class="card-title">
+            <span class="icon">🌐</span>
+            2. マルチNIC &amp; VPN動的追随 IP検出仕様
+        </div>
+        <p>診察端末では、有線LAN、院内Wi-Fi、外部VPN（IPsec / OpenVPN / SSL-VPN）など複数のネットワークアダプタが存在する場合があります。サーバー側が把握する <code>REMOTE_ADDR</code> とクライアント側の監視ファイル名が完全一致するよう、以下の高度な動的IP取得ロジックを備えています。</p>
+
+        <h3>① 二重WMIクエリによる全IPv4アドレス取得（<code>GetAllMyIPs()</code>）</h3>
+        <ol>
+            <li><strong>第1段階 (StandardCimv2)</strong>: Windows 10 / 11 の最新WMI名前空間 <code>root\StandardCimv2</code> から <code>MSFT_NetIPAddress</code> をクエリ。VPN仮想アダプタやTAPデバイスを含むすべてのIPv4を網羅。</li>
+            <li><strong>第2段階 (cimv2 フォールバック)</strong>: 旧型OSまたは権限制限時のフォールバックとして <code>root\cimv2</code> の <code>Win32_NetworkAdapterConfiguration</code> からIPを取得。</li>
+            <li><strong>フィルタリング</strong>: ループバック（<code>127.0.0.1</code>）およびリンクローカル（<code>169.254.x.x</code>）を自動除外。</li>
+        </ol>
+
+        <h3>② 10秒周期の動的再取得（VPN切断・接続への自動追随）</h3>
+        <p>ポーリングループ10回（10秒）ごとに <code>GetAllMyIPs()</code> を自動再実行します。これにより、PC起動後にVPNを接続した場合やWi-Fiを切り替えた場合でも、常駐スクリプトを再起動することなく新しいIPでのトリガー監視を自動継続します。</p>
+    </section>
+
+    <!-- 3. モード別起動振り分けロジック -->
+    <section class="card">
+        <div class="card-title">
+            <span class="icon">⚙️</span>
+            3. モード別起動振り分けロジック
+        </div>
+        <p>トリガーファイル内に書き込まれた <code>[モード]|[フォルダパス]</code> を解析し、以下の3通りのアクションを実行します。</p>
+
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 14%;">判定モード</th>
+                    <th style="width: 28%;">起動ターゲット</th>
+                    <th style="width: 32%;">実行コマンド・引数</th>
+                    <th>特記事項</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>NORMAL</strong><br><span class="badge badge-primary">通常画像</span></td>
+                    <td><code>C:\RSBASE\RSB_public_html\<br>RSViewer\rsview.exe</code></td>
+                    <td><code>cmd.exe /c start "" "[rsview_path]" "[folder]"</code></td>
+                    <td>
+                        ・ウィンドウ最小化（第2引数: <code>7</code>）でバックグラウンド実行。<br>
+                        ・<code>cmd.exe /c start</code> を挟むことで、RSViewerの多重起動（別患者の画像並行閲覧）に対応。
+                    </td>
+                </tr>
+                <tr>
+                    <td><strong>ECG</strong><br><span class="badge badge-warning">心電図</span></td>
+                    <td><code>C:\RSBASE\RSB_public_html\<br>denshi\FEV-05.exe</code></td>
+                    <td><code>"[fev05_path]" "[folder]"</code></td>
+                    <td>
+                        ・フクダ電子製ビューワを通常表示（第2引数: <code>1</code>）で直接起動。<br>
+                        ・非同期実行（第3引数: <code>False</code>）によりスクリプトのハングアップを防止。
+                    </td>
+                </tr>
+                <tr>
+                    <td><strong>JPEG</strong><br><span class="badge badge-teal">胃がん検診変換</span></td>
+                    <td><code>Desktop\DicomTool\<br>dicom_convert.py</code></td>
+                    <td><code>cmd.exe /k python "[scriptPath]" "[folder]" "[subFolder]"</code></td>
+                    <td>
+                        ・実行前に <code>InputBox</code> ダイアログを表示し、保存サブフォルダ名を受け付け。<br>
+                        ・<code>cmd.exe /k</code> により変換進捗と完了結果コンソールを閉じずに保持。
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>パスの安全トリム処理</h3>
+        <p>Windowsのコマンドライン引数としてUNCパスを二重引用符 <code>"</code> で囲む際、パス末尾に <code>\</code> が存在すると <code>\"</code> と解釈されてエスケープエラーが発生します。<code>watcher.vbs</code> では末尾の <code>\</code> を自動検知して除去する安全処理を実装しています。</p>
+    </section>
+
+    <!-- 4. 配布パッケージとワンクリック導入手順 -->
+    <section class="card">
+        <div class="card-title">
+            <span class="icon">📦</span>
+            4. 配布パッケージ (watcher.zip) &amp; ワンクリック導入手順
+        </div>
+        <p>クライアントPCへの導入を最短・簡単にするため、自動インストーラー（バッチファイル）を同梱した配布パッケージ（<code>watcher.zip</code>）が用意されています。</p>
+
+        <h3>同梱ファイル一覧</h3>
+        <table>
+            <thead>
+                <tr><th style="width: 25%;">ファイル名</th><th>役割・説明</th></tr>
+            </thead>
+            <tbody>
+                <tr><td><code>watcher.vbs</code></td><td>常駐監視スクリプト本体</td></tr>
+                <tr><td><code>setup.bat</code></td><td>自動配置・スタートアップ登録・即時起動バッチ</td></tr>
+                <tr><td><code>uninstall.bat</code></td><td>常駐解除・プロセス停止バッチ</td></tr>
+                <tr><td><code>readme.txt</code></td><td>導入・利用マニュアル（簡易テキスト版）</td></tr>
+            </tbody>
+        </table>
+
+        <h3>setup.bat が自動実行する4大処理</h3>
+        <ol>
+            <li><strong>ZoneID（セキュリティブロック）自動解除</strong>: インターネット/イントラネット経由でダウンロードしたファイルに付与される実行制限を PowerShell <code>Unblock-File</code> で解除。</li>
+            <li><strong>プログラム自動配置</strong>: <code>C:\RSBASE\watcher.vbs</code>（権限がない場合は <code>%LOCALAPPDATA%\RSBASE\</code>）に安全コピー。</li>
+            <li><strong>Windows スタートアップ自動登録</strong>: <code>%APPDATA%\Microsoft\Windows\Start Menu\Programs\Startup\RSBase_Watcher.lnk</code> ショートカットを自動生成し、次回以降PC起動時に自動常駐。</li>
+            <li><strong>即時起動</strong>: 既存の <code>wscript.exe</code> を安全にタスクキルし、新しい <code>watcher.vbs</code> を即座にバックグラウンド起動。</li>
+        </ol>
+    </section>
+
+    <!-- 5. トラブルシューティング & 運用保守 -->
+    <section class="card">
+        <div class="card-title">
+            <span class="icon">🔧</span>
+            5. トラブルシューティング &amp; 運用保守
+        </div>
+        <table>
+            <thead>
+                <tr><th style="width: 25%;">現象</th><th style="width: 35%;">推定原因</th><th>対処方法</th></tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Webでクリックしてもアプリが起動しない</td>
+                    <td><code>watcher.vbs</code> のプロセスが停止している</td>
+                    <td>
+                        タスクマネージャーの「詳細」タブを開き、<code>wscript.exe</code> が実行中か確認する。停止している場合は <code>setup.bat</code> を再実行する。
+                    </td>
+                </tr>
+                <tr>
+                    <td>「共有フォルダにアクセスできない」エラー</td>
+                    <td>サーバー（<code>\\192.168.1.16</code>）への共有アクセス制限</td>
+                    <td>
+                        エクスプローラーのアドレスバーに <code>\\192.168.1.16\htdocs\rsbase\tmp\</code> を入力し、手動でアクセスできるか、書き込み・削除権限があるか確認する。
+                    </td>
+                </tr>
+                <tr>
+                    <td>JPEG変換時に「ツール不在エラー」が出る</td>
+                    <td>デスクトップに <code>DicomTool</code> が配置されていない</td>
+                    <td>
+                        <code>\\192.168.1.16\htdocs\rsbase\DicomTool\</code> をデスクトップへコピーする。
+                    </td>
+                </tr>
+                <tr>
+                    <td>常駐を一時停止したい</td>
+                    <td>メンテナンスまたは設定変更</td>
+                    <td>
+                        <code>uninstall.bat</code> を実行するか、タスクマネージャーから <code>wscript.exe</code> を強制終了する。
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+
+    <div class="footer">
+        RS-Base 高速連携エージェント 仕様書 &copy; 2026 当院システム管理部
+    </div>
+
+</div>
+
+</body>
+</html>

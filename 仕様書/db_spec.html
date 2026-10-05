@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RS-Base データベース直接参照仕様書 - テーブル構成絶対変更NG規定</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+
+        :root {
+            --primary: #1e40af;
+            --primary-light: #3b82f6;
+            --primary-bg: #eff6ff;
+            --accent: #0d9488;
+            --accent-bg: #f0fdfa;
+            --warning: #b45309;
+            --warning-bg: #fef3c7;
+            --warning-border: #fde68a;
+            --danger: #b91c1c;
+            --danger-bg: #fef2f2;
+            --danger-border: #fecaca;
+            --success: #15803d;
+            --success-bg: #f0fdf4;
+            --success-border: #bbf7d0;
+            --bg-body: #f8fafc;
+            --bg-card: #ffffff;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --border-light: #f1f5f9;
+            --code-bg: #0f172a;
+            --code-text: #e2e8f0;
+            --radius-sm: 6px;
+            --radius-md: 10px;
+            --radius-lg: 16px;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.04);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Inter', 'Noto Sans JP', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            line-height: 1.7;
+            padding: 24px 16px;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .container { max-width: 1120px; margin: 0 auto; }
+
+        .nav-breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 16px;
+            font-size: 0.88rem;
+            color: var(--text-muted);
+        }
+        .nav-breadcrumb a {
+            color: var(--primary-light);
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .nav-breadcrumb a:hover { text-decoration: underline; }
+
+        .header {
+            background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 50%, #0369a1 100%);
+            color: white;
+            padding: 32px 30px;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-lg);
+            margin-bottom: 24px;
+            position: relative;
+            overflow: hidden;
+        }
+        .header-badge {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.18);
+            backdrop-filter: blur(8px);
+            padding: 4px 12px;
+            border-radius: 9999px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            margin-bottom: 12px;
+        }
+        .header h1 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            letter-spacing: -0.02em;
+        }
+        .header p {
+            color: #e0f2fe;
+            font-size: 0.95rem;
+            max-width: 860px;
+        }
+        .meta-info {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            margin-top: 16px;
+            font-size: 0.84rem;
+            color: #bfdbfe;
+        }
+
+        .card {
+            background: var(--bg-card);
+            border-radius: var(--radius-md);
+            padding: 26px 28px;
+            margin-bottom: 22px;
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--border);
+        }
+        .card-title {
+            font-size: 1.22rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 2px solid var(--border-light);
+            padding-bottom: 10px;
+        }
+        .card-title .icon { font-size: 1.35rem; }
+
+        h3 {
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: var(--text-main);
+            margin: 20px 0 10px 0;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        h4 {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #334155;
+            margin: 14px 0 6px 0;
+        }
+        p { margin-bottom: 12px; font-size: 0.93rem; }
+        ul, ol { margin-left: 22px; margin-bottom: 14px; font-size: 0.93rem; }
+        li { margin-bottom: 6px; }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 14px 0;
+            font-size: 0.88rem;
+        }
+        th, td {
+            padding: 10px 12px;
+            border: 1px solid var(--border);
+            text-align: left;
+            vertical-align: top;
+        }
+        th {
+            background-color: #f1f5f9;
+            color: #334155;
+            font-weight: 600;
+        }
+        tr:nth-child(even) td { background-color: #f8fafc; }
+
+        .badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.76rem;
+            font-weight: 600;
+        }
+        .badge-primary { background: #dbeafe; color: #1e40af; }
+        .badge-success { background: #dcfce7; color: #166534; }
+        .badge-warning { background: #fef3c7; color: #92400e; }
+        .badge-danger { background: #fee2e2; color: #991b1b; }
+        .badge-teal { background: #ccfbf1; color: #0f766e; }
+
+        .alert {
+            display: flex;
+            gap: 12px;
+            padding: 14px 16px;
+            border-radius: var(--radius-md);
+            margin: 16px 0;
+            font-size: 0.91rem;
+            line-height: 1.6;
+        }
+        .alert-info { background: var(--primary-bg); border-left: 4px solid var(--primary-light); color: #1e3a8a; }
+        .alert-warning { background: var(--warning-bg); border-left: 4px solid var(--warning); color: #78350f; }
+        .alert-danger { background: var(--danger-bg); border-left: 4px solid var(--danger); color: #7f1d1d; }
+
+        code {
+            font-family: 'JetBrains Mono', Consolas, monospace;
+            background: #f1f5f9;
+            color: #0f172a;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+        pre {
+            background: var(--code-bg);
+            color: var(--code-text);
+            padding: 14px 16px;
+            border-radius: var(--radius-md);
+            overflow-x: auto;
+            margin: 12px 0;
+            font-family: 'JetBrains Mono', Consolas, monospace;
+            font-size: 0.84rem;
+            line-height: 1.55;
+        }
+        pre code { background: transparent; color: inherit; padding: 0; }
+
+        .flow-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 14px;
+            margin: 18px 0;
+        }
+        .flow-step {
+            background: #f8fafc;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 16px;
+            position: relative;
+        }
+        .flow-step-num {
+            display: inline-block;
+            width: 24px;
+            height: 24px;
+            background: var(--primary);
+            color: white;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 24px;
+            font-weight: 700;
+            font-size: 0.75rem;
+            margin-bottom: 8px;
+        }
+        .flow-step-title {
+            font-weight: 700;
+            font-size: 0.88rem;
+            color: var(--text-main);
+            margin-bottom: 6px;
+        }
+        .flow-step-desc {
+            font-size: 0.82rem;
+            color: var(--text-muted);
+            line-height: 1.5;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 36px;
+            color: var(--text-muted);
+            font-size: 0.84rem;
+            border-top: 1px solid var(--border);
+            padding-top: 20px;
+        }
+
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <div class="nav-breadcrumb">
+        <a href="index.html">📚 統合仕様書ポータル</a>
+        <span>&gt;</span>
+        <span>RS-Base データベース直接参照仕様書</span>
+    </div>
+
+    <!-- ヘッダー -->
+    <header class="header">
+        <div class="header-badge">Database Architecture &amp; Integrity Policy</div>
+        <h1>🗄️ RS-Base データベース直接参照仕様書</h1>
+        <p>RS-Base既存データベース（gazouDB）の構造、直接参照（SELECT）の技術仕様、およびテーブル構成・データの変更絶対禁止規定を明記したマスタードキュメントです。</p>
+        <div class="meta-info">
+            <span>📅 策定日: 2026年9月30日</span>
+            <span>📂 参照元資料: \\192.168.1.16\htdocs\rsbase\テーブル定義書.xlsx</span>
+            <span>🔒 運用セキュリティ: <strong>完全参照専用（Read-Only）厳格適用</strong></span>
+        </div>
+    </header>
+
+    <!-- 1. テーブル構成・スキーマの絶対変更禁止規定（最重要方針） -->
+    <section class="card">
+        <div class="card-title">
+            <span class="icon">🚨</span>
+            1. テーブル構成・スキーマの絶対変更禁止規定（最重要ルール）
+        </div>
+        
+        <div class="alert alert-danger">
+            <div>
+                <strong style="font-size: 1.05rem;">⛔ 【厳格禁止】RS-Base データベースに対する構造変更およびデータ更新の絶対禁止:</strong><br>
+                本システム（<code>index.php</code>, <code>viewer.php</code> 等）が接続している PostgreSQL データベースは、<strong>院内の医療画像・波形ファイリングシステム「RS-Base」本体が全権管理・リアルタイム運用しているコアデータベース</strong>です。<br>
+                このデータベースに対してテーブル定義の変更や直接更新を行うと、<strong>RS-Base本体のCGIエラー、DICOM受信用デーモンの停止、最悪の場合は医療画像データの消失・整合性破壊</strong>に直結します。<br>
+                したがって、以下の運用原則を開発者および保守担当者の絶対遵守事項として定めます。
+            </div>
+        </div>
+
+        <h3>禁止事項リスト</h3>
+        <table>
+            <thead>
+                <tr><th style="width: 28%;">区分</th><th>禁止される操作内容</th><th>禁止理由</th></tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>DDL操作の禁止<br>（スキーマ・構成変更）</strong></td>
+                    <td>
+                        ・<code>CREATE TABLE</code> / <code>DROP TABLE</code><br>
+                        ・<code>ALTER TABLE</code>（カラム追加・削除・型変更）<br>
+                        ・<code>CREATE INDEX</code> / <code>DROP INDEX</code>
+                    </td>
+                    <td>RS-Base本体のCGIプログラムは固定カラム位置や既存インデックスに強く依存しているため、構成変更によりRS-Base本体が即座に動作停止します。</td>
+                </tr>
+                <tr>
+                    <td><strong>DML操作の禁止<br>（データの直接更新）</strong></td>
+                    <td>
+                        ・<code>INSERT INTO</code><br>
+                        ・<code>UPDATE</code><br>
+                        ・<code>DELETE FROM</code> / <code>TRUNCATE</code>
+                    </td>
+                    <td>RS-Base独自の採番体系（<code>renban</code>, <code>sort</code>, <code>again_on</code> 等）や整合性チェックを迂回した更新は、カルテリンク破綻や二重登録を引き起こします。</td>
+                </tr>
+                <tr>
+                    <td><strong>トリガー・ストアド変更</strong></td>
+                    <td>
+                        ・トリガーやルールの新規追加・変更
+                    </td>
+                    <td>データベース内部のイベント処理競合を防止するため。</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="alert alert-info">
+            <div>
+                <strong>💡 許容される操作（唯一の利用形態）:</strong><br>
+                本再構築システム（PHP）に許可されている操作は、<strong><code>SELECT</code> による純粋なデータ参照・抽出（Read-Only）のみ</strong>です。新規データの登録や所見の修正は、必ずRS-Base本家の編集画面（<code>2000.cgi</code>）を通じて実施します。
+            </div>
+        </div>
+    </section>
+
+    <!-- 2. データベース接続仕様 -->
+    <section class="card">
+        <div class="card-title">
+            <span class="icon">🔌</span>
+            2. データベース接続仕様
+        </div>
+        <table>
+            <thead>
+                <tr><th style="width: 30%;">接続パラメータ</th><th>設定値</th><th>備考</th></tr>
+            </thead>
+            <tbody>
+                <tr><td><strong>RDBMS</strong></td><td>PostgreSQL 9.3.2 (Visual C++ 64-bit)</td><td>RS-Base専用DBエンジン</td></tr>
+                <tr><td><strong>ホスト (Host)</strong></td><td><code>192.168.1.164</code></td><td>RS-BaseサーバーIP</td></tr>
+                <tr><td><strong>ポート (Port)</strong></td><td><code>5432</code></td><td>PostgreSQL標準ポート</td></tr>
+                <tr><td><strong>データベース名 (DBName)</strong></td><td><code>gazouDB</code></td><td>画像・検査統合データベース</td></tr>
+                <tr><td><strong>接続ユーザー / パスワード</strong></td><td><code>postgres</code> / <code>medicalin</code></td><td>標準管理者アカウント</td></tr>
+                <tr><td><strong>文字エンコーディング</strong></td><td>DB側: <code>SHIFT_JIS</code> (CP932)<br>Web側: <code>UTF-8</code></td><td>PDO接続時に <code>SET client_encoding TO 'SHIFT_JIS'</code> を実行し、PHPで <code>mb_convert_encoding(..., 'UTF-8', 'CP932')</code> 相互変換。</td></tr>
+            </tbody>
+        </table>
+    </section>
+
+    <!-- 3. 主要テーブル定義 (gazou_tbl) -->
+    <section class="card">
+        <div class="card-title">
+            <span class="icon">📊</span>
+            3. 主要テーブル定義: gazou_tbl（画像・検査データ台帳）
+        </div>
+        <p><code>index.php</code> が直接クエリを実行している中核テーブルです。検査1件ごとに1レコードが登録されます。</p>
+
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 8%;">No.</th>
+                    <th style="width: 18%;">カラム物理名</th>
+                    <th style="width: 24%;">データ型</th>
+                    <th style="width: 14%;">制約</th>
+                    <th>用途・格納内容</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td>1</td><td><code>renban</code></td><td>serial</td><td><span class="badge badge-primary">PK (主キー)</span></td><td>検査連番（本家CGI連携キー）</td></tr>
+                <tr><td>2</td><td><code>sort</code></td><td>varchar(200)</td><td></td><td>RS-Base内部ソート用文字列</td></tr>
+                <tr><td>3</td><td><code>kensamei</code></td><td>varchar(50)</td><td>NOT NULL</td><td>検査種別名（ES_General, US_Adult_Abd_, 心電図 等）</td></tr>
+                <tr><td>4</td><td><code>id</code></td><td>varchar(50)</td><td>NOT NULL</td><td>患者ID / カルテ番号（カルテビューワ連携キー）</td></tr>
+                <tr><td>5</td><td><code>kanja_yomi</code></td><td>varchar(500)</td><td></td><td>患者カナ氏名（五十音抽出・ソートキー）</td></tr>
+                <tr><td>6</td><td><code>kanja_kanji</code></td><td>varchar(500)</td><td></td><td>患者漢字氏名</td></tr>
+                <tr><td>7</td><td><code>date</code></td><td>varchar(20)</td><td></td><td>検査日付（<code>YYYY/MM/DD</code> 形式、検索キー）</td></tr>
+                <tr><td>8</td><td><code>age</code></td><td>varchar(20)</td><td></td><td>検査受診時年齢（※年齢クリック時JPEG変換トリガー）</td></tr>
+                <tr><td>9</td><td><code>sex</code></td><td>varchar(20)</td><td></td><td>性別（男 / 女 等）</td></tr>
+                <tr><td>10</td><td><code>sindan1</code></td><td>varchar(500)</td><td></td><td>第1診断所見テキスト</td></tr>
+                <tr><td>11-13</td><td><code>sindan2</code> - <code>sindan4</code></td><td>varchar(500)</td><td></td><td>第2〜第4診断所見</td></tr>
+                <tr><td>14</td><td><code>comment</code></td><td>text</td><td></td><td>自由入力備考コメント</td></tr>
+                <tr><td>15</td><td><code>folder</code></td><td>varchar(500)</td><td></td><td>画像格納先フォルダパス（UNIXパス、PHPでUNC化）</td></tr>
+                <tr><td>16</td><td><code>saikensa</code></td><td>varchar(500)</td><td></td><td>再検査フラグ</td></tr>
+                <tr><td>17</td><td><code>doctor</code></td><td>varchar(500)</td><td></td><td>担当医師名</td></tr>
+                <tr><td>18</td><td><code>jusin_ka</code></td><td>varchar(500)</td><td></td><td>受診診療科</td></tr>
+                <tr><td>19</td><td><code>daytime</code></td><td>varchar(500)</td><td></td><td>検査詳細時刻</td></tr>
+                <tr><td>20</td><td><code>extra</code></td><td>text</td><td></td><td>拡張メタデータ</td></tr>
+                <tr><td>21</td><td><code>again_on</code></td><td>varchar(500)</td><td></td><td>再撮影状態フラグ</td></tr>
+                <tr><td>22</td><td><code>date_integer</code></td><td>integer</td><td>NOT NULL</td><td>日付数値型（ソート用）</td></tr>
+                <tr><td>23-36</td><td><code>integer1-5</code> / <code>extra2-10</code></td><td>integer / text</td><td></td><td>RS-Base拡張予約フィールド</td></tr>
+            </tbody>
+        </table>
+    </section>
+
+    <!-- 4. 関連テーブル定義一覧 (テーブル定義書.xlsxより) -->
+    <section class="card">
+        <div class="card-title">
+            <span class="icon">📑</span>
+            4. 関連テーブル一覧（RS-Base データベース全体構成）
+        </div>
+        <p>当院の <code>gazouDB</code> に存在するその他の主要テーブルです（すべて変更不可）。</p>
+
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 25%;">テーブル物理名</th>
+                    <th style="width: 18%;">主要キー</th>
+                    <th>概要・役割</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong><code>name_tbl</code></strong></td>
+                    <td><code>id</code> (PK, bigserial)</td>
+                    <td>患者基本情報マスター（氏名、生年月日、性別、住所、電話番号、保険・公費情報）</td>
+                </tr>
+                <tr>
+                    <td><strong><code>labo_tbl</code></strong></td>
+                    <td><code>date</code>, <code>id</code></td>
+                    <td>検体検査データ台帳（採血項目、検査値、単位、基準値上下限、採血時間）</td>
+                </tr>
+                <tr>
+                    <td><strong><code>tyui_tbl</code></strong></td>
+                    <td><code>id</code></td>
+                    <td>患者特記事項・禁忌・アレルギー等の注意情報</td>
+                </tr>
+                <tr>
+                    <td><strong><code>yoyaku1_tbl</code> - <code>3_tbl</code></strong></td>
+                    <td><code>date</code>, <code>id</code></td>
+                    <td>予約情報管理テーブル（診療予約、検査予約枠データ）</td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+
+    <!-- 5. PHPからのクエリ設計ベストプラクティス -->
+    <section class="card">
+        <div class="card-title">
+            <span class="icon">⚡</span>
+            5. PHPからのクエリ設計 &amp; 参照最適化
+        </div>
+        <p>RS-Baseサーバーへの負荷を最小限に抑えつつ高速にデータを引き出すため、<code>index.php</code> では以下の実装パターンが徹底されています。</p>
+
+        <h3>① プレースホルダーを用いた安全なパラメータバインド</h3>
+        <pre><code>// 日付前方一致または患者ID完全一致の安全なクエリ構築
+$sql = "SELECT renban, id, kanja_kanji, kanja_yomi, kensamei, date, sindan1, folder, sex, age FROM gazou_tbl WHERE 1=1";
+$params = [];
+
+if (!empty($filter_id)) {
+    $sql .= " AND id = ?";
+    $params[] = $filter_id;
+} else {
+    $sql .= " AND date LIKE ?";
+    $params[] = $target_date . '%';
+}
+$sql .= " ORDER BY id DESC, renban DESC";
+
+$stmt = $pdo->prepare($sql);
+$stmt->execute($params);</code></pre>
+
+        <h3>② 必要最小限のカラム指定</h3>
+        <p><code>SELECT *</code> は避け、画面描画に必要なカラムのみを射影することで、PostgreSQL側のメモリ転送量およびネットワーク帯域を節約しています。</p>
+    </section>
+
+    <div class="footer">
+        RS-Base データベース直接参照仕様書 &copy; 2026 当院システム管理部
+    </div>
+
+</div>
+
+</body>
+</html>

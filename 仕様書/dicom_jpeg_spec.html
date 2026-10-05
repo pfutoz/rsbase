@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RS-Base 胃がん検診 DICOM→JPEG 自動変換連携システム 仕様書・今後やることロードマップ</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #1e40af;
+            --primary-light: #3b82f6;
+            --primary-bg: #eff6ff;
+            --accent: #0d9488;
+            --accent-bg: #f0fdfa;
+            --warning: #b45309;
+            --warning-bg: #fef3c7;
+            --warning-border: #fde68a;
+            --danger: #b91c1c;
+            --danger-bg: #fef2f2;
+            --danger-border: #fecaca;
+            --success: #15803d;
+            --success-bg: #f0fdf4;
+            --success-border: #bbf7d0;
+            --bg-body: #f8fafc;
+            --bg-card: #ffffff;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --border-light: #f1f5f9;
+            --code-bg: #0f172a;
+            --code-text: #e2e8f0;
+            --radius-sm: 6px;
+            --radius-md: 10px;
+            --radius-lg: 16px;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.04);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', 'Noto Sans JP', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            line-height: 1.7;
+            padding: 30px 20px;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .container {
+            max-width: 1040px;
+            margin: 0 auto;
+        }
+
+        /* ヘッダーエリア */
+        .header {
+            background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 50%, #0369a1 100%);
+            color: white;
+            padding: 36px 32px;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-lg);
+            margin-bottom: 28px;
+            position: relative;
+            overflow: hidden;
+        }
+        .header::after {
+            content: "DICOM ➔ JPEG";
+            position: absolute;
+            right: -20px;
+            bottom: -15px;
+            font-size: 4.5rem;
+            font-weight: 900;
+            color: rgba(255, 255, 255, 0.06);
+            user-select: none;
+            pointer-events: none;
+            font-family: 'Inter', sans-serif;
+        }
+        .header-badge {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.18);
+            backdrop-filter: blur(8px);
+            padding: 4px 12px;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            margin-bottom: 12px;
+        }
+        .header h1 {
+            font-size: 1.85rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            letter-spacing: -0.02em;
+        }
+        .header p {
+            color: #cbd5e1;
+            font-size: 0.95rem;
+            max-width: 750px;
+        }
+        .meta-info {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            margin-top: 20px;
+            font-size: 0.82rem;
+            color: #93c5fd;
+            border-top: 1px solid rgba(255, 255, 255, 0.15);
+            padding-top: 14px;
+        }
+        .meta-info span {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* カード共通 */
+        .card {
+            background-color: var(--bg-card);
+            border-radius: var(--radius-md);
+            padding: 30px;
+            margin-bottom: 24px;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow-sm);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .card:hover {
+            box-shadow: var(--shadow-md);
+        }
+        .card-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #0f172a;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 18px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid var(--border-light);
+        }
+        .card-title .icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            background: var(--primary-bg);
+            color: var(--primary);
+            font-size: 1.1rem;
+        }
+
+        h3 {
+            font-size: 1.05rem;
+            font-weight: 600;
+            margin: 20px 0 10px 0;
+            color: #1e293b;
+        }
+
+        p {
+            margin-bottom: 12px;
+            color: #334155;
+            font-size: 0.95rem;
+        }
+
+        /* コールアウトアラート */
+        .alert {
+            padding: 16px 18px;
+            border-radius: var(--radius-sm);
+            margin: 16px 0;
+            font-size: 0.92rem;
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+        }
+        .alert-warning {
+            background-color: var(--warning-bg);
+            border: 1px solid var(--warning-border);
+            color: #78350f;
+        }
+        .alert-info {
+            background-color: var(--primary-bg);
+            border: 1px solid #bfdbfe;
+            color: #1e3a8a;
+        }
+        .alert-success {
+            background-color: var(--success-bg);
+            border: 1px solid var(--success-border);
+            color: #14532d;
+        }
+        .alert-danger {
+            background-color: var(--danger-bg);
+            border: 1px solid var(--danger-border);
+            color: #7f1d1d;
+        }
+        .alert-icon {
+            font-size: 1.25rem;
+            line-height: 1;
+            flex-shrink: 0;
+            margin-top: 1px;
+        }
+
+        /* ワークフローステップ */
+        .flow-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 14px;
+            margin: 20px 0;
+        }
+        .flow-step {
+            background: #f8fafc;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 16px;
+            position: relative;
+        }
+        .flow-step-num {
+            display: inline-block;
+            width: 24px;
+            height: 24px;
+            background: var(--primary);
+            color: white;
+            font-size: 0.75rem;
+            font-weight: 700;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 24px;
+            margin-bottom: 8px;
+        }
+        .flow-step-title {
+            font-weight: 700;
+            font-size: 0.92rem;
+            color: #1e293b;
+            margin-bottom: 6px;
+        }
+        .flow-step-desc {
+            font-size: 0.83rem;
+            color: var(--text-muted);
+            line-height: 1.5;
+        }
+
+        /* タスクリスト（ロードマップ） */
+        .task-card {
+            background: #ffffff;
+            border: 1px solid var(--border);
+            border-left: 4px solid var(--primary);
+            border-radius: var(--radius-sm);
+            padding: 18px 20px;
+            margin-bottom: 14px;
+            transition: all 0.2s;
+        }
+        .task-card.pending {
+            border-left-color: #3b82f6;
+        }
+        .task-card.future {
+            border-left-color: #f59e0b;
+            background: #fffbeb;
+        }
+        .task-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .task-title {
+            font-size: 1.02rem;
+            font-weight: 700;
+            color: #0f172a;
+        }
+        .badge {
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 3px 9px;
+            border-radius: 9999px;
+            display: inline-block;
+        }
+        .badge-ready { background: #dbeafe; color: #1e40af; }
+        .badge-warning { background: #fef3c7; color: #92400e; }
+        .badge-success { background: #dcfce7; color: #166534; }
+        
+        .task-desc {
+            font-size: 0.9rem;
+            color: #475569;
+            margin-bottom: 10px;
+        }
+        .task-checklist {
+            list-style: none;
+            padding: 0;
+            margin: 10px 0 0 0;
+            font-size: 0.87rem;
+        }
+        .task-checklist li {
+            padding: 4px 0;
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            color: #334155;
+        }
+        .task-checklist li::before {
+            content: "✓";
+            color: var(--primary);
+            font-weight: bold;
+        }
+
+        /* テーブル */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 16px 0;
+            font-size: 0.88rem;
+        }
+        th, td {
+            padding: 10px 14px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+        th {
+            background-color: #f8fafc;
+            color: #475569;
+            font-weight: 600;
+        }
+        tr:hover td {
+            background-color: #f1f5f9;
+        }
+
+        /* コードブロック */
+        pre {
+            background-color: var(--code-bg);
+            color: var(--code-text);
+            padding: 16px 20px;
+            border-radius: var(--radius-sm);
+            overflow-x: auto;
+            font-family: 'JetBrains Mono', Consolas, monospace;
+            font-size: 0.84rem;
+            line-height: 1.6;
+            margin: 12px 0 16px 0;
+        }
+        code {
+            font-family: 'JetBrains Mono', Consolas, monospace;
+            background-color: #e2e8f0;
+            color: #0f172a;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.85em;
+        }
+        pre code {
+            background: transparent;
+            color: inherit;
+            padding: 0;
+        }
+
+        /* フッター */
+        .footer {
+            text-align: center;
+            font-size: 0.82rem;
+            color: var(--text-muted);
+            margin-top: 36px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border);
+        }
+
+        @media (max-width: 768px) {
+            body { padding: 15px 10px; }
+            .card { padding: 20px 16px; }
+            .header { padding: 24px 20px; }
+            .header h1 { font-size: 1.4rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <!-- ヘッダー -->
+    <header class="header">
+        <div class="header-badge">Specification & Roadmap Document</div>
+        <h1>🏥 RS-Base 胃がん検診 DICOM→JPEG 変換連携システム</h1>
+        <p>Web一覧画面（index.php）からワンクリックでローカル常駐VBSおよびPythonツール（DicomTool）を連動させ、DICOM画像を一括JPEG変換する機能の仕様書および今後やること一覧です。</p>
+        <div class="meta-info">
+            <span>📅 作成日: 2026年9月30日</span>
+            <span>📂 格納場所: \\192.168.1.16\htdocs\rsbase\仕様書\</span>
+            <span>🏷 ステータス: 企画・検証完了 / ロールバック状態（次期本番適用待機中）</span>
+        </div>
+    </header>
+
+    <!-- 1. 全体アーキテクチャ & 連携フロー -->
+    <section class="card">
+        <div class="card-title">
+            <span class="icon">🔄</span>
+            1. システム全体概要 & 連携フロー
+        </div>
+        <p>本システムは、Webブラウザの検査一覧画面で<strong>患者行の「年齢」セルをクリック</strong>するだけで、クライアントPC側に常駐する VBScript がトリガーを感知し、デスクトップ上の <code>DicomTool\dicom_convert.py</code> をキックして対象患者のDICOMフォルダを一括JPEG変換する仕組みです。</p>
+        
+        <div class="flow-container">
+            <div class="flow-step">
+                <span class="flow-step-num">1</span>
+                <div class="flow-step-title">Web画面の操作</div>
+                <div class="flow-step-desc"><code>index.php</code> の「年齢」をクリック。クリップボードにDICOMパスがコピーされ、AJAX POSTでサーバーへトリガー生成依頼が送信される。</div>
+            </div>
+            <div class="flow-step">
+                <span class="flow-step-num">2</span>
+                <div class="flow-step-title">トリガーファイル生成</div>
+                <div class="flow-step-desc">PHPが <code>tmp/trigger_[クライアントIP].txt</code> に <code>JPEG|[DICOMフォルダパス]</code> をパイプ区切りで書き込む。</div>
+            </div>
+            <div class="flow-step">
+                <span class="flow-step-num">3</span>
+                <div class="flow-step-title">常駐VBSの検知</div>
+                <div class="flow-step-desc">PC上で動く <code>watcher.vbs</code> が1秒毎にトリガーを監視。検知後直ちにファイルを削除し、InputBoxダイアログを表示して保存サブフォルダ名を受け付ける。</div>
+            </div>
+            <div class="flow-step">
+                <span class="flow-step-num">4</span>
+                <div class="flow-step-title">Pythonで変換実行</div>
+                <div class="flow-step-desc"><code>dicom_convert.py</code> が起動し、<code>pydicom</code> と <code>Pillow</code> でDICOMをJPEG化してデスクトップの <code>JPEG\[サブフォルダ名]</code> 配下に高速保存する。</div>
+            </div>
+        </div>
+
+        <div class="alert alert-info">
+            <span class="alert-icon">💡</span>
+            <div>
+                <strong>ポイント:</strong> 通常の検査名バッジクリック（通常ビューワ/心電図ビューワ起動）の動作はそのまま維持し、<strong>「年齢」部分のクリックのみをJPEG変換用の専用トリガー</strong>として割り当てる設計です。
+            </div>
+        </div>
+    </section>
+
+    <!-- 2. 現在の資材配置状況 -->
+    <section class="card">
+        <div class="card-title">
+            <span class="icon">📁</span>
+            2. 資材の配置状況（サーバー & クライアントPC）
+        </div>
+        <p>ユーザー様により、動作確認済みの資産およびデスクトップツールがサーバー上に一括バックアップ・配置されています。</p>
+
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 25%;">格納先</th>
+                    <th style="width: 28%;">ファイル / フォルダ名</th>
+                    <th>概要・役割</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td rowspan="4"><strong>サーバー</strong><br><code>\\192.168.1.16\htdocs\rsbase\</code></td>
+                    <td><code>DicomTool\</code></td>
+                    <td>デスクトップ配備用のPython変換ツール一式（<code>dicom_convert.py</code>, <code>config.txt</code>, <code>dicom2jpeg.bat</code>, <code>python-3.13.15-amd64.exe</code>）</td>
+                </tr>
+                <tr>
+                    <td><code>index.php</code></td>
+                    <td>本番稼働中の検査一覧Web画面（現在は作業前状態にロールバック済み）</td>
+                </tr>
+                <tr>
+                    <td><code>indexold.php</code></td>
+                    <td>過去にJPEG連携が稼働していた旧版ファイル（年齢クリック時の実装サンプル）</td>
+                </tr>
+                <tr>
+                    <td><code>watcher.vbs</code> / <code>watcher.zip</code></td>
+                    <td>クライアントに配布する常駐監視スクリプト本体および導入パッケージ</td>
+                </tr>
+                <tr>
+                    <td rowspan="3"><strong>クライアントPC</strong><br>（各診察室・端末）</td>
+                    <td><code>C:\Users\Owner\Desktop\DicomTool\</code></td>
+                    <td>変換実行用Pythonスクリプトおよび設定ファイルが置かれる作業フォルダ</td>
+                </tr>
+                <tr>
+                    <td><code>%APPDATA%\...\Startup\watcher.vbs</code></td>
+                    <td>Windows起動時に自動実行される常駐ポーリングスクリプト</td>
+                </tr>
+                <tr>
+                    <td><code>C:\Users\Owner\Desktop\jpeg\</code></td>
+                    <td>変換されたJPEG画像の出力先ベースフォルダ（<code>config.txt</code> で指定）</td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+
+    <!-- 3. 今回の検証で判明した技術的ポイント・注意点 -->
+    <section class="card">
+        <div class="card-title">
+            <span class="icon">⚠️</span>
+            3. 今回の検証で判明した重要技術ポイント（知見）
+        </div>
+        <p>今後の改修および本番反映時に絶対に注意すべき重要事項をまとめました。</p>
+
+        <div class="alert alert-danger">
+            <span class="alert-icon">🚨</span>
+            <div>
+                <strong>【最重要】VBScriptのループ内 <code>Dim</code> 宣言による強制終了バグ</strong><br>
+                VBScriptでは、<code>Do While</code> や <code>For Each</code> などの<strong>ループの内部で変数を <code>Dim</code> 宣言すると、2周目の実行時に「名前が再定義されました（Name redefined）」という実行時エラーが発生し、スクリプトが即死（プロセス終了）</strong>します。<br>
+                <code>currentIp</code>, <code>myTriggerFile</code>, <code>objFile</code>, <code>subFolder</code>, <code>cleanPath</code>, <code>launchCmd</code> などの全変数は、<strong>必ずスクリプト先頭のグローバル領域で一括 <code>Dim</code> 宣言</strong>する必要があります。
+            </div>
+        </div>
+
+        <div class="alert alert-warning">
+            <span class="alert-icon">⚠️</span>
+            <div>
+                <strong>【文字コード】VBScriptは必ず「Shift-JIS (CP932)」で保存すること</strong><br>
+                <code>watcher.vbs</code> 内にはダイアログ（<code>InputBox</code> や <code>MsgBox</code>）で表示する日本語文言（「保存するサブフォルダ名を入力してください:」など）が含まれます。Windowsの <code>wscript.exe</code> はシステムコードページ（CP932）で解釈するため、UTF-8で保存すると<strong>文字化けや構文エラー</strong>の原因になります。
+            </div>
+        </div>
+
+        <div class="alert alert-info">
+            <span class="alert-icon">📌</span>
+            <div>
+                <strong>【パスの動的解決】マルチユーザー対応の考慮</strong><br>
+                ツールフォルダ <code>toolDir</code> の指定を <code>C:\Users\Owner\Desktop\DicomTool\</code> に固定すると、別ユーザーアカウントでログインした際にパス不一致になります。<code>objShell.SpecialFolders("Desktop") & "\DicomTool\"</code> で動的にデスクトップを取得し、存在しない場合のみ <code>Owner</code> へフォールバックさせる記述が安全です。
+            </div>
+        </div>
+    </section>
+
+    <!-- 4. 今後やること一覧（ロードマップ） -->
+    <section class="card">
+        <div class="card-title">
+            <span class="icon">📋</span>
+            4. 今後やること一覧（対応ロードマップ）
+        </div>
+        <p>今後、本番環境への再適用および拡張を行う際の手順とタスク一覧です。</p>
+
+        <!-- Task 1 -->
+        <div class="task-card pending">
+            <div class="task-header">
+                <span class="task-title">Task 1: Web画面（index.php）のJPEGトリガー改修・本番適用</span>
+                <span class="badge badge-ready">最優先・準備完了</span>
+            </div>
+            <div class="task-desc">
+                [indexold.php](file:///192.168.1.16/htdocs/rsbase/indexold.php) を参考に、現在の本番 [index.php](file:///192.168.1.16/htdocs/rsbase/index.php) の年齢セルをクリックした際の処理を <code>copyAndLaunch(this, ..., "JPEG")</code> へ切り替えます。
+            </div>
+            <ul class="task-checklist">
+                <li><code>$mode = $_POST['launch_mode'] ?? 'NORMAL';</code> のコメント・許容値に <code>'JPEG'</code> を明記</li>
+                <li>年齢表示セル（<code>&lt;span class="folder-click"&gt;</code>）の <code>onclick</code> を <code>copyAndLaunch(this, &lt;?= json_encode($unc_folder_display, ...) ?&gt;, "JPEG")</code> に変更</li>
+                <li>トースト通知文言を「フォルダパスをコピーしました。&lt;br&gt;JPEG変換トリガーを送信しました。」に更新</li>
+                <li>JavaScript関数 <code>copyAndLaunch(element, folderPath, launchMode)</code> を組み込み、非同期通信（AJAX POST）とUIフィードバック（「変換起動中...」→「📷 起動OK」）を実装</li>
+                <li><code>php -l</code> による構文チェックおよびHTTP 200レスポンスの疎通確認</li>
+            </ul>
+        </div>
+
+        <!-- Task 2 -->
+        <div class="task-card pending">
+            <div class="task-header">
+                <span class="task-title">Task 2: クライアント常駐スクリプト（watcher.vbs）の完全版反映・配布</span>
+                <span class="badge badge-ready">最優先・準備完了</span>
+            </div>
+            <div class="task-desc">
+                検証で解決した「変数スコープの適正化（二重定義エラー解消）」および「<code>mode = "JPEG"</code> 分岐」を組み込んだ完全版 <code>watcher.vbs</code> をサーバーおよびクライアントへ展開します。
+            </div>
+            <ul class="task-checklist">
+                <li>サーバー上の <code>\\192.168.1.16\htdocs\rsbase\watcher.vbs</code> を完全版コード（Shift-JIS）で更新</li>
+                <li>配布用アーカイブ <code>\\192.168.1.16\htdocs\rsbase\watcher.zip</code> を再圧縮してパッケージ更新</li>
+                <li>クライアントPCの <code>C:\RSBASE\watcher.vbs</code> およびスタートアップフォルダ（<code>%APPDATA%\...\Startup\watcher.vbs</code>）を最新化</li>
+                <li>既存の <code>wscript.exe</code> プロセスを終了し、最新の <code>watcher.vbs</code> で常駐起動</li>
+            </ul>
+        </div>
+
+        <!-- Task 3 -->
+        <div class="task-card pending">
+            <div class="task-header">
+                <span class="task-title">Task 3: DicomTool（Python変換環境）の配布と事前設定確認</span>
+                <span class="badge badge-ready">資材配置済み</span>
+            </div>
+            <div class="task-desc">
+                サーバー上の <code>DicomTool\</code> フォルダを各対象クライアントPCのデスクトップへ配置し、変換スクリプトが正しく稼働する環境を整えます。
+            </div>
+            <ul class="task-checklist">
+                <li>サーバーの <code>\\192.168.1.16\htdocs\rsbase\DicomTool\</code> をクライアントPCの <code>Desktop\DicomTool\</code> にコピー</li>
+                <li>未導入のPCには <code>python-3.13.15-amd64.exe</code> を実行して「Add to PATH」有効でインストール</li>
+                <li>必須ライブラリの導入確認（<code>pip install pydicom Pillow</code>）</li>
+                <li><code>config.txt</code> の1行目に設定された保存先ベースパス（例: <code>C:\Users\Owner\Desktop\jpeg</code>）が適切か確認</li>
+            </ul>
+        </div>
+
+        <!-- Task 4 -->
+        <div class="task-card future">
+            <div class="task-header">
+                <span class="task-title">Task 4: 【将来課題】VPN環境・マルチNIC環境への対応改良（時間のある時）</span>
+                <span class="badge badge-warning">保留・時期未定</span>
+            </div>
+            <div class="task-desc">
+                ご指示の通り、<code>help.html</code> は現状のままとし、後日時間が取れた際にVPN接続時やWi-Fi/有線LAN併用時でも安定動作する仕組みへバージョンアップします。
+            </div>
+            <ul class="task-checklist">
+                <li><strong>課題の背景:</strong> VPN経由で接続した場合、PHP側が認識する <code>$_SERVER['REMOTE_ADDR']</code>（VPNトンネルIPやゲートウェイIP）と、クライアントPCが監視しているローカルIPが異なり、トリガーファイルを検知できない場合がある。</li>
+                <li><strong>対策アプローチ①（マルチNIC監視）:</strong> <code>watcher.vbs</code> 内で WMI の <code>MSFT_NetIPAddress</code> を用いて全アクティブIPv4アドレスを10秒毎に自動列挙し、取得できたすべてのIP宛てのトリガーファイルを一括チェックする（今回テストした <code>GetAllMyIPs()</code> の活用）。</li>
+                <li><strong>対策アプローチ②（端末識別子方式）:</strong> IPアドレスに依存せず、クライアントPC名（ComputerName）やCookie/LocalStorageに保存した端末トークンをキーにしてトリガーファイル（例: <code>trigger_[PC名].txt</code>）を生成・監視する方式の検討。</li>
+                <li><strong>マニュアル更新:</strong> 改良内容に合わせて [help.html](file:///192.168.1.16/htdocs/rsbase/help.html) の導入手順やトラブルシューティング案内を追記・更新する。</li>
+            </ul>
+        </div>
+    </section>
+
+    <!-- 5. 実装ソースコード・リファレンス -->
+    <section class="card">
+        <div class="card-title">
+            <span class="icon">💻</span>
+            5. 実装コード・リファレンス（完全版）
+        </div>
+        <p>今後の適用時にそのまま再利用できる、検証済みの完成版コードブロックです。</p>
+
+        <h3>① Web側（index.php）の追加・改修コード</h3>
+        <p><strong>HTML部（年齢クリックセル）:</strong></p>
+        <pre><code>&lt;td&gt;
+    &lt;!-- 年齢部分クリック時は、検査種類に関係なく常に "JPEG" モードでパス複製＆トリガー起動 --&gt;
+    &lt;span class="folder-click" onclick='copyAndLaunch(this, &lt;?= json_encode($unc_folder_display, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?&gt;, "JPEG")' title="クリックしてDICOMパスをコピー＆JPEG変換起動"&gt;
+        &lt;?= htmlspecialchars($row['age'] ?? '-', ENT_QUOTES, 'UTF-8') ?&gt;
+    &lt;/span&gt; 
+    / &lt;?= htmlspecialchars($row['sex'] ?? '-', ENT_QUOTES, 'UTF-8') ?&gt;
+&lt;/td&gt;</code></pre>
+
+        <p><strong>JavaScript部（copyAndLaunch 関数）:</strong></p>
+        <pre><code>// 年齢部分クリック時の「パスコピー ＆ JPEGトリガー生成」同時実行関数
+function copyAndLaunch(element, folderPath, launchMode) {
+    // 1. クリップボードへのパスコピー処理
+    const textarea = document.createElement("textarea");
+    textarea.value = folderPath;
+    textarea.style.position = "fixed";
+    textarea.style.top = "0";
+    textarea.style.left = "0";
+    textarea.style.opacity = "0";
+    document.body.appendChild(textarea);
+    textarea.focus();
+    textarea.select();
+
+    try {
+        document.execCommand('copy');
+        const toast = document.getElementById("toast");
+        toast.className = "show";
+        setTimeout(() => { toast.className = toast.className.replace("show", ""); }, 3000);
+    } catch (err) {
+        console.error("コピー失敗", err);
+    }
+    document.body.removeChild(textarea);
+
+    // 2. トリガーファイル生成（アプリ起動）AJAX通信
+    const originalText = element.textContent;
+    element.textContent = "変換起動中...";
+    
+    const formData = new URLSearchParams();
+    formData.append('action', 'launch');
+    formData.append('folder', folderPath);
+    formData.append('launch_mode', launchMode);
+
+    fetch('index.php', {
+        method: 'POST',
+        body: formData
+    })
+    .then(async response => {
+        if (!response.ok) {
+            const text = await response.text();
+            throw new Error("HTTPエラー (" + response.status + "):\n" + text);
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.status === 'success') {
+            element.textContent = "📷 起動OK";
+            setTimeout(() => { element.textContent = originalText; }, 2000);
+        } else {
+            alert("アプリ側エラー: " + data.message);
+            element.textContent = originalText;
+        }
+    })
+    .catch(err => {
+        alert("通信・PHPエラー詳細:\n" + err.message);
+        element.textContent = originalText;
+    });
+}</code></pre>
+
+        <h3>② 常駐スクリプト（watcher.vbs）の完全版コード（Shift-JIS保存）</h3>
+        <pre><code>' --- watcher.vbs (Multi-NIC / VPN Auto-Detection + JPEG Conversion Support) ---
+Option Explicit
+
+Dim objShell, objFSO, network, tmpDir, normalExePath, ecgExePath
+Dim desktopPath, toolDir, scriptPath
+Dim myIPs, loopCount, currentIp, myTriggerFile
+Dim objFile, fileContent, delimiterPos, mode, payload
+Dim cleanPath, launchCmd, subFolder
+
+Set objShell = CreateObject("WScript.Shell")
+Set objFSO = CreateObject("Scripting.FileSystemObject")
+Set network = CreateObject("WScript.Network")
+
+' 設定パス
+tmpDir = "\\192.168.1.16\htdocs\rsbase\tmp\"
+normalExePath = "C:\RSBASE\RSB_public_html\RSViewer\rsview.exe"
+ecgExePath    = "C:\RSBASE\RSB_public_html\denshi\FEV-05.exe"
+
+' DicomTool パス（ログイン中デスクトップを動的取得、なければ固定パスへフォールバック）
+desktopPath = objShell.SpecialFolders("Desktop")
+toolDir = desktopPath & "\DicomTool\"
+If Not objFSO.FolderExists(toolDir) Then
+    toolDir = "C:\Users\Owner\Desktop\DicomTool\"
+End If
+scriptPath = toolDir & "dicom_convert.py"
+
+' アクティブな全IPv4アドレスを取得（VPN・Wi-Fi・有線LAN対応）
+Function GetAllMyIPs()
+    Dim ipList, ip, colItems, objItem, i
+    Set ipList = CreateObject("Scripting.Dictionary")
+    On Error Resume Next
+
+    Set colItems = GetObject("winmgmts:\\.\root\StandardCimv2").ExecQuery("Select IPAddress from MSFT_NetIPAddress Where AddressFamily = 2")
+    If Err.Number = 0 Then
+        For Each objItem in colItems
+            ip = objItem.IPAddress
+            If InStr(ip, ".") > 0 And Left(ip, 7) <> "169.254" And ip <> "127.0.0.1" Then
+                If Not ipList.Exists(ip) Then ipList.Add ip, True
+            End If
+        Next
+    End If
+    Err.Clear
+
+    Set colItems = GetObject("winmgmts:\\.\root\cimv2").ExecQuery("Select IPAddress from Win32_NetworkAdapterConfiguration Where IPEnabled = True")
+    If Err.Number = 0 Then
+        For Each objItem in colItems
+            If Not IsNull(objItem.IPAddress) Then
+                For i = 0 To UBound(objItem.IPAddress)
+                    ip = objItem.IPAddress(i)
+                    If InStr(ip, ".") > 0 And Left(ip, 7) <> "169.254" And ip <> "127.0.0.1" Then
+                        If Not ipList.Exists(ip) Then ipList.Add ip, True
+                    End If
+                Next
+            End If
+        Next
+    End If
+    On Error Goto 0
+
+    GetAllMyIPs = ipList.Keys
+End Function
+
+myIPs = GetAllMyIPs()
+loopCount = 0
+
+' メイン監視ループ（1秒間隔）
+Do While True
+    On Error Resume Next
+
+    ' 10秒ごとにIP一覧を再更新（VPNの接続・切断を動的検知）
+    If loopCount Mod 10 = 0 Then
+        myIPs = GetAllMyIPs()
+    End If
+    loopCount = loopCount + 1
+
+    For Each currentIp in myIPs
+        myTriggerFile = tmpDir & "trigger_" & currentIp & ".txt"
+
+        If objFSO.FileExists(myTriggerFile) Then
+            fileContent = ""
+            Set objFile = objFSO.OpenTextFile(myTriggerFile, 1, False)
+            If Not objFile.AtEndOfStream Then
+                fileContent = Trim(objFile.ReadAll)
+            End If
+            objFile.Close
+            Set objFile = Nothing
+
+            ' 二重起動防止のため即座にトリガーファイルを削除
+            objFSO.DeleteFile myTriggerFile, True
+
+            If Len(fileContent) > 0 Then
+                delimiterPos = InStr(fileContent, "|")
+                If delimiterPos > 0 Then
+                    mode = Left(fileContent, delimiterPos - 1)
+                    payload = Mid(fileContent, delimiterPos + 1)
+                Else
+                    mode = "NORMAL"
+                    payload = fileContent
+                End If
+
+                cleanPath = Replace(payload, "/", "\")
+
+                If mode = "ECG" Then
+                    ' 心電図ビューワ起動 (FEV-05.exe)
+                    If objFSO.FileExists(ecgExePath) Then
+                        launchCmd = """" & ecgExePath & """ """ & cleanPath & """"
+                        objShell.Run launchCmd, 1, False
+                    End If
+                ElseIf mode = "JPEG" Then
+                    ' 胃がん検診 DICOM→JPEG 変換モード
+                    If Not objFSO.FileExists(scriptPath) Then
+                        MsgBox "DICOM変換ツールが見つかりません。" & vbCrLf & scriptPath, 16, "ツール不在エラー"
+                    Else
+                        subFolder = InputBox("保存するサブフォルダ名を入力してください:", "フォルダ名指定")
+                        If Trim(subFolder) <> "" Then
+                            If Right(cleanPath, 1) = "\" Then
+                                cleanPath = Left(cleanPath, Len(cleanPath) - 1)
+                            End If
+                            launchCmd = "cmd.exe /k python """ & scriptPath & """ """ & cleanPath & """ """ & subFolder & """"
+                            objShell.Run launchCmd, 1, False
+                        End If
+                    End If
+                Else
+                    ' 通常DICOMビューワ起動 (rsview.exe)
+                    If objFSO.FileExists(normalExePath) Then
+                        launchCmd = "cmd.exe /c start """" """ & normalExePath & """ """ & cleanPath & """"
+                        objShell.Run launchCmd, 7, False
+                    End If
+                End If
+            End If
+
+            Exit For
+        End If
+    Next
+    On Error Goto 0
+
+    WScript.Sleep 1000
+Loop</code></pre>
+    </section>
+
+    <!-- フッター -->
+    <footer class="footer">
+        RS-Base Image Filing & Viewer Integration System &bull; Technical Specification & Roadmap Document
+    </footer>
+
+</div>
+
+</body>
+</html>

@@ -1,0 +1,11 @@
+# Temporary files
+/tmp/*
+!/tmp/.gitkeep
+
+# Backup files
+*.bak
+
+# OS generated files
+Thumbs.db
+Desktop.ini
+.DS_Store

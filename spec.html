@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RS-Base 画像ファイリング・ビューワ連携システム 導入マニュアル</title>
+    <style>
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f9fafb;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: #ffffff;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+        h1 {
+            font-size: 1.8rem;
+            color: #1e3a8a;
+            border-bottom: 2px solid #e5e7eb;
+            padding-bottom: 10px;
+            margin-top: 0;
+        }
+        h2 {
+            font-size: 1.3rem;
+            color: #2563eb;
+            margin-top: 30px;
+            border-left: 4px solid #2563eb;
+            padding-left: 10px;
+        }
+        h3 {
+            font-size: 1.1rem;
+            color: #1f2937;
+            margin-top: 20px;
+        }
+        p, li {
+            font-size: 0.95rem;
+        }
+        ul {
+            padding-left: 20px;
+        }
+        code, pre {
+            font-family: Consolas, Monaco, monospace;
+            background-color: #f1f5f9;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
+        pre {
+            padding: 15px;
+            overflow-x: auto;
+            border: 1px solid #e2e8f0;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            margin-bottom: 15px;
+        }
+        th, td {
+            border: 1px solid #e5e7eb;
+            padding: 10px 12px;
+            text-align: left;
+            font-size: 0.9rem;
+        }
+        th {
+            background-color: #f8fafc;
+            font-weight: 600;
+        }
+        .warning-box {
+            background-color: #fef2f2;
+            border: 1px solid #fecaca;
+            color: #991b1b;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            margin-bottom: 15px;
+        }
+        .note {
+            color: #6b7280;
+            font-size: 0.85rem;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>🏥 RS-Base 画像ファイリング・ビューワ連携システム 導入マニュアル</h1>
+    <p>本ドキュメントでは、Windows端末からWebインターフェース経由でDICOMビューワおよびフクダ電子心電図ビューワを高速かつ安定して起動するためのシステム構成および導入手順をまとめています。</p>
+
+    <h2>1. システムファイル構成</h2>
+    <p>Webサーバー（および共有フォルダ）上に配置するファイルの一覧です。</p>
+    <ul>
+        <li><strong><code>index.php</code></strong>：PostgreSQLから検査・画像データを取得し、一覧表示とモード切替、非同期トリガー送信を行うメイン画面[cite: 1]。</li>
+        <li><strong><code>watcher.vbs</code></strong>：クライアント端末側でバックグラウンド常駐し、サーバー上のトリガーファイルを監視する常駐スクリプト[cite: 1]。</li>
+        <li><strong><code>tmp/</code> フォルダ</strong>：クライアント別のトリガーファイルを一時保存する共有ディレクトリ[cite: 1]。</li>
+    </ul>
+
+    <h2>2. 参照データベース環境</h2>
+    <table>
+        <tr><th>項目</th><th>設定値</th></tr>
+        <tr><td>DBMS</td><td>PostgreSQL[cite: 1]</td></tr>
+        <tr><td>ホスト</td><td><code>192.168.1.164</code>[cite: 1]</td></tr>
+        <tr><td>データベース名</td><td><code>gazouDB</code>[cite: 1]</td></tr>
+        <tr><td>ユーザー / パスワード</td><td><code>postgres</code> / <code>medicalin</code>[cite: 1]</td></tr>
+        <tr><td>ポート</td><td><code>5432</code>[cite: 1]</td></tr>
+        <tr><td>主要テーブル</td><td><code>gazou_tbl</code>（検査データ・パス管理）[cite: 1]</td></tr>
+    </table>
+
+    <h2>3. 参考システム（利用する外部ビューワ・CGI）</h2>
+    <ul>
+        <li><strong>通常DICOMビューワ</strong>: <code>C:\RSBASE\RSB_public_html\RSViewer\rsview.exe</code>[cite: 1]</li>
+        <li><strong>フクダ電子 心電図ビューワ</strong>: <code>C:\RSBASE\RSB_public_html\denshi\FEV-05.exe</code></li>
+        <li><strong>標準CGI連携（RSBaseモード時）</strong>: 
+            <ul>
+                <li>心電図用CGI: <code>http://192.168.1.164/~rsn/ecg_st.cgi</code></li>
+                <li>通常画像用CGI: <code>http://192.168.1.164/~rsn/2000.cgi</code></li>
+            </ul>
+        </li>
+    </ul>
+
+    <h2>4. 各ファイルの詳細な解説</h2>
+    <h3>① index.php</h3>
+    <ul>
+        <li><strong>モード切替機能</strong>：「RSBaseモード（標準CGI）」と「カスタムビューワモード（ローカルアプリ直起動）」を切り替え可能[cite: 1]。</li>
+        <li><strong>自動ファイル種別判別</strong>：データベースから取得したデータの拡張子（<code>.ecg</code>）や検査名を解析し、心電図は <code>ECG</code> モード、通常画像は <code>NORMAL` モードとして識別[cite: 1]。</li>
+        <li><strong>非同期トリガー送信 (AJAX)</strong>：カスタムモード時にバッジをクリックすると、クライアントIPを特定し、サーバー上の <code>tmp/trigger_[IP].txt</code> へ起動命令を書き込み[cite: 1]。</li>
+    </ul>
+
+    <h3>② watcher.vbs</h3>
+    <ul>
+        <li><strong>常駐ポーリング</strong>：1秒間隔で自身のIPに対応するトリガーファイルの有無を常時監視[cite: 1]。</li>
+        <li><strong>自動起動の振り分け</strong>：
+            <ul>
+                <li><code>ECG</code> モード検知時：<code>C:\RSBASE\RSB_public_html\denshi\FEV-05.exe</code> をファイルパス付きで起動[cite: 1]。</li>
+                <li><code>NORMAL</code> モード検知時：<code>C:\RSBASE\RSB_public_html\RSViewer\rsview.exe</code> をフォルダパス付き（最小化）で起動[cite: 1]。</li>
+            </ul>
+        </li>
+    </ul>
+
+    <h2>5. 動作させるための環境構築（ワンクリックセットアップ）</h2>
+    <p>クライアントPC（Windows 10 / 11）への導入手順です[cite: 1]。</p>
+
+    <h3>🛠 かんたんセットアップ手順</h3>
+    <ol>
+        <li><strong>ダウンロード</strong>：画面右上の「📥 かんたん導入セットDL (.zip)」から <code>watcher.zip</code> をダウンロードします[cite: 1]。</li>
+        <li><strong>ZIPの展開（解凍）</strong>：
+            <ul>
+                <li><code>watcher.zip</code> を右クリックして「すべて展開...」を選択し、展開します[cite: 1]。</li>
+                <li>フォルダ内に <code>setup.bat</code>, <code>uninstall.bat</code>, <code>watcher.vbs</code> があることを確認します。</li>
+            </ul>
+        </li>
+        <li><strong>ワンクリック導入（setup.bat の実行）</strong>：
+            <ul>
+                <li>展開フォルダ内の <code>setup.bat</code> を<strong>ダブルクリック</strong>して実行します[cite: 1]。</li>
+                <li>セキュリティブロック解除、<code>C:\RSBASE\</code> への配置、スタートアップ自動登録、即時常駐開始がすべて全自動で実行されます[cite: 1]。</li>
+            </ul>
+        </li>
+        <li><strong>稼働確認</strong>：
+            <ul>
+                <li>RS-Base一覧画面で「起動」ボタンをクリックし、ビューワが瞬時に連動起動することを確認します[cite: 1]。</li>
+            </ul>
+        </li>
+        <li><strong>停止・アンインストール</strong>：
+            <ul>
+                <li>常駐停止や設定解除を行いたい場合は、同梱の <code>uninstall.bat</code> をダブルクリックします[cite: 1]。</li>
+            </ul>
+        </li>
+    </ol>
+</div>
+
+</body>
+</html>

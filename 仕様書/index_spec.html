@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>index.php 全体機能仕様書 - RS-Base 高速画像ファイリングシステム</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+
+        :root {
+            --primary: #1e40af;
+            --primary-light: #3b82f6;
+            --primary-bg: #eff6ff;
+            --accent: #0d9488;
+            --accent-bg: #f0fdfa;
+            --warning: #b45309;
+            --warning-bg: #fef3c7;
+            --warning-border: #fde68a;
+            --danger: #b91c1c;
+            --danger-bg: #fef2f2;
+            --danger-border: #fecaca;
+            --success: #15803d;
+            --success-bg: #f0fdf4;
+            --success-border: #bbf7d0;
+            --bg-body: #f8fafc;
+            --bg-card: #ffffff;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --border-light: #f1f5f9;
+            --code-bg: #0f172a;
+            --code-text: #e2e8f0;
+            --radius-sm: 6px;
+            --radius-md: 10px;
+            --radius-lg: 16px;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.04);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Inter', 'Noto Sans JP', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            line-height: 1.7;
+            padding: 24px 16px;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .container { max-width: 1120px; margin: 0 auto; }
+
+        .nav-breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 16px;
+            font-size: 0.88rem;
+            color: var(--text-muted);
+        }
+        .nav-breadcrumb a {
+            color: var(--primary-light);
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .nav-breadcrumb a:hover { text-decoration: underline; }
+
+        .header {
+            background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 50%, #0369a1 100%);
+            color: white;
+            padding: 32px 30px;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-lg);
+            margin-bottom: 24px;
+            position: relative;
+            overflow: hidden;
+        }
+        .header-badge {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.18);
+            backdrop-filter: blur(8px);
+            padding: 4px 12px;
+            border-radius: 9999px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            margin-bottom: 12px;
+        }
+        .header h1 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            letter-spacing: -0.02em;
+        }
+        .header p {
+            color: #e0f2fe;
+            font-size: 0.95rem;
+            max-width: 860px;
+        }
+        .meta-info {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            margin-top: 16px;
+            font-size: 0.84rem;
+            color: #bfdbfe;
+        }
+
+        .card {
+            background: var(--bg-card);
+            border-radius: var(--radius-md);
+            padding: 26px 28px;
+            margin-bottom: 22px;
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--border);
+        }
+        .card-title {
+            font-size: 1.22rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 2px solid var(--border-light);
+            padding-bottom: 10px;
+        }
+        .card-title .icon { font-size: 1.35rem; }
+
+        h3 {
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: var(--text-main);
+            margin: 20px 0 10px 0;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        h4 {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #334155;
+            margin: 14px 0 6px 0;
+        }
+        p { margin-bottom: 12px; font-size: 0.93rem; }
+        ul, ol { margin-left: 22px; margin-bottom: 14px; font-size: 0.93rem; }
+        li { margin-bottom: 6px; }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 14px 0;
+            font-size: 0.88rem;
+        }
+        th, td {
+            padding: 10px 12px;
+            border: 1px solid var(--border);
+            text-align: left;
+            vertical-align: top;
+        }
+        th {
+            background-color: #f1f5f9;
+            color: #334155;
+            font-weight: 600;
+        }
+        tr:nth-child(even) td { background-color: #f8fafc; }
+
+        .badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.76rem;
+            font-weight: 600;
+        }
+        .badge-primary { background: #dbeafe; color: #1e40af; }
+        .badge-success { background: #dcfce7; color: #166534; }
+        .badge-warning { background: #fef3c7; color: #92400e; }
+        .badge-danger { background: #fee2e2; color: #991b1b; }
+        .badge-teal { background: #ccfbf1; color: #0f766e; }
+
+        .alert {
+            display: flex;
+            gap: 12px;
+            padding: 14px 16px;
+            border-radius: var(--radius-md);
+            margin: 16px 0;
+            font-size: 0.91rem;
+            line-height: 1.6;
+        }
+        .alert-info { background: var(--primary-bg); border-left: 4px solid var(--primary-light); color: #1e3a8a; }
+        .alert-warning { background: var(--warning-bg); border-left: 4px solid var(--warning); color: #78350f; }
+        .alert-danger { background: var(--danger-bg); border-left: 4px solid var(--danger); color: #7f1d1d; }
+
+        code {
+            font-family: 'JetBrains Mono', Consolas, monospace;
+            background: #f1f5f9;
+            color: #0f172a;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+        pre {
+            background: var(--code-bg);
+            color: var(--code-text);
+            padding: 14px 16px;
+            border-radius: var(--radius-md);
+            overflow-x: auto;
+            margin: 12px 0;
+            font-family: 'JetBrains Mono', Consolas, monospace;
+            font-size: 0.84rem;
+            line-height: 1.55;
+        }
+        pre code { background: transparent; color: inherit; padding: 0; }
+
+        .flow-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 14px;
+            margin: 18px 0;
+        }
+        .flow-step {
+            background: #f8fafc;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 16px;
+            position: relative;
+        }
+        .flow-step-num {
+            display: inline-block;
+            width: 24px;
+            height: 24px;
+            background: var(--primary);
+            color: white;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 24px;
+            font-weight: 700;
+            font-size: 0.75rem;
+            margin-bottom: 8px;
+        }
+        .flow-step-title {
+            font-weight: 700;
+            font-size: 0.88rem;
+            color: var(--text-main);
+            margin-bottom: 6px;
+        }
+        .flow-step-desc {
+            font-size: 0.82rem;
+            color: var(--text-muted);
+            line-height: 1.5;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 36px;
+            color: var(--text-muted);
+            font-size: 0.84rem;
+            border-top: 1px solid var(--border);
+            padding-top: 20px;
+        }
+
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <div class="nav-breadcrumb">
+        <a href="index.html">📚 統合仕様書ポータル</a>
+        <span>&gt;</span>
+        <span>index.php 全体機能仕様書</span>
+    </div>
+
+    <!-- ヘッダー -->
+    <header class="header">
+        <div class="header-badge">Web Application Architecture Specification</div>
+        <h1>🏥 index.php 全体機能仕様書</h1>
+        <p>RS-BaseのPostgreSQLデータベース（gazouDB）を直接参照し、院内診察端末から瞬時に検査画像・心電図・カルテへアクセスするためのメインWeb画面の全体機能仕様です。</p>
+        <div class="meta-info">
+            <span>📅 策定日: 2026年9月30日</span>
+            <span>📂 格納場所: \\192.168.1.16\htdocs\rsbase\index.php</span>
+            <span>🔒 取扱区分: <strong>ロールバック固定（プログラム変更厳禁）</strong></span>
+        </div>
+    </header>
+
+    <!-- 1. システム全体概要 & 再構築の背景 -->
+    <section class="card">
+        <div class="card-title">
+            <span class="icon">🚀</span>
+            1. システム全体概要 &amp; 再構築の背景
+        </div>
+        <p>当院で稼働している <strong>RS_Base</strong> は、内視鏡・超音波（US）・心電図などのDICOMデータや波形データを一元管理するWebファイリングシステムです。しかし、本家の標準Web画面（CGIベース）は動作が重く、診察時の画像閲覧に待ち時間が発生していました。</p>
+        <p>そこで、<strong>PHP + PostgreSQL直接クエリ + 非同期トリガー連携</strong> により、以下の目的を満たすフロントエンドとして <code>index.php</code> が開発・稼働しています。</p>
+        <ul>
+            <li><strong>極めて高速な一覧表示</strong>: RS-BaseのPostgreSQL（<code>gazouDB</code>）から当日の検査一覧を即座にフェッチ。</li>
+            <li><strong>多様な外部連携</strong>: 通常DICOMビューワ（<code>rsview.exe</code>）、フクダ電子心電図ビューワ（<code>FEV-05.exe</code>）、電子カルテ（<code>karteview.php</code>）、胃がん検診DICOM→JPEG一括変換（<code>dicom_convert.py</code>）へのシームレスな連動。</li>
+            <li><strong>ゼロインストールWeb運用</strong>: 医師・スタッフはWebブラウザ（Chrome / Edge 等）から一覧を閲覧・操作可能。</li>
+        </ul>
+
+        <div class="alert alert-danger">
+            <div>
+                <strong>⚠️ 【絶対厳守】データベース構成・データの変更禁止（Read-Only）ルール:</strong><br>
+                本システムが参照するPostgreSQL（<code>192.168.1.164 / gazouDB</code>）は、RS-Baseパッケージ本体が運用・管理しているマスターデータベースです。<br>
+                <strong>テーブル構造（DDL）の変更、カラムの追加・削除・変更、インデックスの変更、およびデータの直接更新（INSERT / UPDATE / DELETE）は一切厳禁（絶対NG）</strong>です。本PHPは純粋な <code>SELECT</code> による参照専用（Read-Only）として開発・運用されています。
+            </div>
+        </div>
+    </section>
+
+    <!-- 2. 画面レイアウトと3つの動作モード -->
+    <section class="card">
+        <div class="card-title">
+            <span class="icon">🎛️</span>
+            2. 画面構成 &amp; 3つの動作モード
+        </div>
+        <p>画面上部のモードセレクタにより、用途に応じた3種類の起動モードを切り替えることができます。</p>
+
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 22%;">動作モード</th>
+                    <th style="width: 25%;">GETパラメータ</th>
+                    <th>概要・動作仕様</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>カスタムビューワモード<br>(直起動・標準推奨)</strong></td>
+                    <td><code>?mode=custom</code><br><span class="badge badge-primary">デフォルト</span></td>
+                    <td>
+                        検査名バッジクリック時に非同期POSTでサーバー上の <code>tmp/trigger_[IP].txt</code> を生成し、クライアントPC常駐の <code>watcher.vbs</code> 経由で <code>rsview.exe</code>（通常画像）または <code>FEV-05.exe</code>（心電図）をミリ秒で直起動します。
+                    </td>
+                </tr>
+                <tr>
+                    <td><strong>RSBaseモード<br>(本家標準CGI連携)</strong></td>
+                    <td><code>?mode=rsbase</code><br><span class="badge badge-warning">互換モード</span></td>
+                    <td>
+                        検査名バッジクリック時にRS-Base本家のWeb CGI（通常画像: <code>2000.cgi</code> / 心電図: <code>ecg_st.cgi</code>）を新規ブラウザタブで直接開きます。常駐ソフトが未導入の端末でも閲覧が可能です。
+                    </td>
+                </tr>
+                <tr>
+                    <td><strong>胃がん検診<br>JPEG変換モード</strong></td>
+                    <td><code>?mode=jpeg</code><br><span class="badge badge-teal">一括変換モード</span></td>
+                    <td>
+                        検査名バッジのクリック時にもJPEG変換トリガー（<code>launch_mode=JPEG</code>）を発行します。常駐ソフトがInputBoxダイアログを表示し、PythonによるDICOM一括JPEG変換ツールを実行します。
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>画面コントロール部</h3>
+        <ul>
+            <li><strong>モード切替プルダウン</strong>: <code>rsbase</code> / <code>custom</code> / <code>jpeg</code> を選択するとURLパラメータを更新して即時リロード。</li>
+            <li><strong>日付ナビゲーション</strong>: 「◀ 前日」「翌日 ▶」ボタン、および <code>&lt;input type="date"&gt;</code> によるカレンダー選択（当日: <code>date('Y/m/d')</code> が初期値）。</li>
+            <li><strong>患者絞り込み解除ボタン</strong>: <code>patient_id</code> 指定中に表示され、通常の日付表示一覧へワンクリックで復帰。</li>
+            <li><strong>常駐スクリプトDLリンク</strong>: <code>watcher.zip</code> を直接ダウンロードできるボタン（<code>custom</code> または <code>jpeg</code> モード時に表示）。</li>
+            <li><strong>ヘルプ・マニュアルリンク</strong>: <code>help.html</code>（ヘルプ）および <code>igankenshin.html</code>（胃がん検診マニュアル）への外部リンク。</li>
+        </ul>
+    </section>
+
+    <!-- 3. テーブル各列の表示定義とクリック時アクション -->
+    <section class="card">
+        <div class="card-title">
+            <span class="icon">📋</span>
+            3. 一覧テーブル各列の表示定義 &amp; クリック時アクション（完全網羅）
+        </div>
+        <p>検査データ一覧テーブル（7列構成）の各カラムにおける表示データ、元データ（DBカラム）、およびクリックイベントの完全仕様です。</p>
+
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 13%;">列名</th>
+                    <th style="width: 15%;">DB取得元</th>
+                    <th style="width: 32%;">クリック時アクション（仕様）</th>
+                    <th>詳細説明・連携先</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>① 連番</strong></td>
+                    <td><code>gazou_tbl.renban</code></td>
+                    <td>
+                        <strong>本家編集画面を別タブで開く</strong><br>
+                        <code>http://192.168.1.164/~rsn/2000.cgi?[renban]|[date]|[folder]</code>
+                    </td>
+                    <td>
+                        RS-Base本家のデータ編集・コメント修正・所見変更画面へジャンプします。
+                    </td>
+                </tr>
+                <tr>
+                    <td><strong>② 検査名</strong></td>
+                    <td><code>gazou_tbl.kensamei</code></td>
+                    <td>
+                        <strong>モードに応じたビューワ起動 / CGI呼び出し</strong><br>
+                        ・<code>custom</code>: <code>directLaunchFromElement()</code> で <code>NORMAL</code> または <code>ECG</code> トリガー送信<br>
+                        ・<code>jpeg</code>: <code>directLaunchFromElement()</code> で <code>JPEG</code> トリガー送信<br>
+                        ・<code>rsbase</code>: 本家CGI（<code>2000.cgi</code> / <code>ecg_st.cgi</code>）を開く
+                    </td>
+                    <td>
+                        検査名の表示補正あり：<br>
+                        ・<code>ES_General</code> → <code>内視鏡</code><br>
+                        ・<code>US_Adult_Abd_</code> → <code>US</code><br>
+                        心電図判定（<code>is_ecg</code>）: 検査名に「心電図」「ecg」を含む、またはUNCフォルダ名に <code>.ecg</code> を含む場合に <code>ECG</code> モードと自動判定。
+                    </td>
+                </tr>
+                <tr>
+                    <td><strong>③ 検査日</strong></td>
+                    <td><code>gazou_tbl.date</code></td>
+                    <td><em>なし（表示のみ）</em></td>
+                    <td><code>YYYY/MM/DD</code> 形式で表示。</td>
+                </tr>
+                <tr>
+                    <td><strong>④ 検査ID</strong></td>
+                    <td><code>gazou_tbl.id</code></td>
+                    <td>
+                        <strong>電子カルテビューワを別タブで開く</strong><br>
+                        <code>http://192.168.1.16/karteview/karteview.php?patient_no=[id]&amp;source=new&amp;do_search=1</code><br>
+                        ※ヘッダークリックで数値ソート
+                    </td>
+                    <td>
+                        院内のWeb電子カルテビューワへ直接患者IDを引き渡し、当該患者のカルテを瞬時に展開します。
+                    </td>
+                </tr>
+                <tr>
+                    <td><strong>⑤ 患者氏名</strong></td>
+                    <td>
+                        <code>kanja_kanji</code><br>
+                        <code>kanja_yomi</code>
+                    </td>
+                    <td>
+                        <strong>当該患者の全画像履歴を絞り込み表示</strong><br>
+                        <code>index.php?patient_id=[id]&amp;mode=[mode]</code><br>
+                        ※ヘッダークリックで五十音ソート
+                    </td>
+                    <td>
+                        漢字氏名の下にカタカナの「よみ」を小フォントで併記。クリックすると日付に関係なくその患者の過去全画像を一覧表示します。
+                    </td>
+                </tr>
+                <tr>
+                    <td><strong>⑥ 年齢 / 性別</strong></td>
+                    <td>
+                        <code>age</code><br>
+                        <code>sex</code>
+                    </td>
+                    <td>
+                        <strong>【特記事項】年齢クリック時の専用挙動:</strong><br>
+                        <span class="badge badge-teal">常にJPEG一括変換連携</span><br>
+                        1. クリップボードに対象患者のDICOMフォルダパス（UNC）を自動複写<br>
+                        2. 画面下部にトースト通知表示（3秒間）<br>
+                        3. 選択モードや検査種別に関係なく、常に <code>launch_mode=JPEG</code> で非同期POST送信
+                    </td>
+                    <td>
+                        <strong>胃がん検診DICOM変換のための専用ショートカット</strong>として動作します。<br>
+                        他列（検査名バッジ等）とは完全に独立しており、年齢セルのみがこの挙動を実行します。
+                    </td>
+                </tr>
+                <tr>
+                    <td><strong>⑦ 診断・所見</strong></td>
+                    <td><code>gazou_tbl.sindan1</code></td>
+                    <td><em>なし（表示のみ）</em></td>
+                    <td>医師が入力した第1診断所見テキストを表示。</td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+
+    <!-- 4. 検索・絞り込み & 動的ソート -->
+    <section class="card">
+        <div class="card-title">
+            <span class="icon">🔍</span>
+            4. 検索・絞り込み &amp; クライアントサイド動的ソート
+        </div>
+        <p>画面リロードを伴わずに瞬時に該当行をフィルタリング・並べ替えできるクライアントサイドJavaScript機能を備えています。</p>
+
+        <h3>① 検査種別トグルフィルター（<code>kensaToggleContainer</code>）</h3>
+        <p>当日データに存在するユニークな検査名（内視鏡、US、心電図など）をPHP側で抽出し、動的ボタンを生成。クリックすると <code>data-kensamei</code> 属性に合致する行のみを瞬時に表示します。</p>
+
+        <h3>② よみがな五十音抽出トグルフィルター（<code>initialToggleContainer</code>）</h3>
+        <p>「すべて」「ア行」「カ行」〜「ワ行」等のボタンをクリックすると、患者よみがなの先頭1文字（<code>data-yomi</code>）を判定し、五十音行でフィルタリングします。検査種別フィルターとの複合絞り込みも可能です。</p>
+
+        <h3>③ テーブルソート機能（<code>sortTable(column)</code>）</h3>
+        <p>テーブルヘッダーの「検査ID」「患者氏名 (よみ順)」「検査名」をクリックすることで、JavaScriptがDOMテーブル行をインメモリで昇順/降順にトグルソートします。</p>
+        <ul>
+            <li><strong>検査ID</strong>: <code>localeCompare(..., {numeric: true})</code> により自然な数値順でソート。</li>
+            <li><strong>患者氏名</strong>: カタカナよみ（<code>kanja_yomi</code>）の日本語50音順でソート。</li>
+            <li><strong>検査名</strong>: 検査名文字列の五十音・アルファベット順でソート。</li>
+        </ul>
+    </section>
+
+    <!-- 5. 非同期トリガー生成API仕様 (POST) -->
+    <section class="card">
+        <div class="card-title">
+            <span class="icon">⚡</span>
+            5. 非同期トリガー生成API仕様（AJAX通信）
+        </div>
+        <p>Webブラウザからクライアント端末常駐の <code>watcher.vbs</code> へ起動命令を伝達するためのバックエンド仕様です。</p>
+
+        <h3>エンドポイント仕様</h3>
+        <table>
+            <tr><th>URL</th><td><code>index.php</code></td></tr>
+            <tr><th>HTTPメソッド</th><td><code>POST</code></td></tr>
+            <tr><th>Content-Type</th><td><code>application/x-www-form-urlencoded</code></td></tr>
+            <tr><th>レスポンス形式</th><td><code>application/json; charset=UTF-8</code></td></tr>
+        </table>
+
+        <h3>リクエストパラメータ</h3>
+        <table>
+            <thead>
+                <tr><th>パラメータ名</th><th>型</th><th>必須</th><th>説明</th></tr>
+            </thead>
+            <tbody>
+                <tr><td><code>action</code></td><td>String</td><td>○</td><td><code>launch</code> 固定</td></tr>
+                <tr><td><code>folder</code></td><td>String</td><td>○</td><td>開く対象のDICOM/画像フォルダのUNCパス（例: <code>\\192.168.1.164\...</code>）</td></tr>
+                <tr><td><code>launch_mode</code></td><td>String</td><td>○</td><td><code>NORMAL</code>（通常画像）、<code>ECG</code>（心電図）、<code>JPEG</code>（胃がん検診DICOM変換）</td></tr>
+            </tbody>
+        </table>
+
+        <h3>サーバー側処理フロー</h3>
+        <ol>
+            <li>リクエスト送信元クライアントのIPアドレスを <code>$_SERVER['REMOTE_ADDR']</code> より特定。</li>
+            <li><code>tmp/</code> ディレクトリの存在を確認（なければ <code>mkdir(..., 0777, true)</code>）。</li>
+            <li>ファイルパス <code>tmp/trigger_[クライアントIP].txt</code> をターゲットに指定。</li>
+            <li>書き込み内容 <code>[launch_mode]|[folder]</code>（パイプ区切り）をファイルに書き出し。</li>
+            <li>成否に応じて JSON を返却：
+                <pre><code>// 成功時
+{"status": "success"}
+
+// 失敗時
+{"status": "error", "message": "トリガーファイルの書き込み失敗: ..."}</code></pre>
+            </li>
+        </ol>
+    </section>
+
+    <div class="footer">
+        RS-Base 高速画像ファイリングシステム 仕様書 &copy; 2026 当院システム管理部
+    </div>
+
+</div>
+
+</body>
+</html>
