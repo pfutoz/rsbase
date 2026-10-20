@@ -265,6 +265,14 @@ $mode      = $_GET['mode'] ?? 'standalone'; // 'modal' or 'standalone'
             color: #fef3c7;
         }
 
+        .action-btn.active {
+            background: #0284c7;
+            border-color: #38bdf8;
+            color: #ffffff;
+            font-weight: 700;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+        }
+
         .action-btn.btn-close {
             background: #991b1b;
             border-color: #dc2626;
@@ -800,8 +808,11 @@ $mode      = $_GET['mode'] ?? 'standalone'; // 'modal' or 'standalone'
 
         <!-- アクションツール -->
         <div class="dcm-actions">
-            <button type="button" class="action-btn" id="btnFit" title="画面に合わせる [Fキー / ダブルクリック]">
+            <button type="button" class="action-btn active" id="btnFit" title="全体フィット: 画像全体を枠内に収める [Fキー]">
                 ⏹️ フィット
+            </button>
+            <button type="button" class="action-btn" id="btnOlympusFit" title="O社(オリンパス)フィット: 左側文字情報を除外し、円形観察領域を中心に画面一杯に拡大表示 [Oキー / ダブルクリック]">
+                🎯 O社フィット
             </button>
             <button type="button" class="action-btn" id="btnOneToOne" title="原寸大 (1:1) で表示">
                 1:1
@@ -1039,6 +1050,7 @@ $mode      = $_GET['mode'] ?? 'standalone'; // 'modal' or 'standalone'
         const modeZoomBtn = document.getElementById('modeZoom');
 
         const btnFit = document.getElementById('btnFit');
+        const btnOlympusFit = document.getElementById('btnOlympusFit');
         const btnOneToOne = document.getElementById('btnOneToOne');
         const btnInvert = document.getElementById('btnInvert');
         const btnReset = document.getElementById('btnReset');
@@ -1063,6 +1075,7 @@ $mode      = $_GET['mode'] ?? 'standalone'; // 'modal' or 'standalone'
         let isInverted = false;
         let activeMouseTool = 'ww_wl'; // 'ww_wl', 'pan', 'zoom'
         let activeIeeMode = 'normal';  // 'normal', 'lci', 'nbi', 'ihb', 'texture', 'indigo'
+        let isOlympusFitMode = false;  // O社内視鏡フィットモードフラグ
 
         // ドラッグ制御用
         let isDragging = false;
@@ -1224,7 +1237,7 @@ $mode      = $_GET['mode'] ?? 'standalone'; // 'modal' or 'standalone'
                             if (pendingCount <= 0) loader.style.display = 'none';
 
                             if (autoFit) {
-                                fitToWindow();
+                                applyActiveFit();
                             } else {
                                 updateTransform();
                             }
@@ -1310,7 +1323,9 @@ $mode      = $_GET['mode'] ?? 'standalone'; // 'modal' or 'standalone'
             hudWwWl.textContent = `C:${Math.round(contrast)}% B:${Math.round(brightness)}%${ieeTag}`;
         }
 
-        // 画面にフィット
+        // --------------------------------------------------------------------------
+        // 標準全体フィット (富士フイルム・CT・一般画像用)
+        // --------------------------------------------------------------------------
         function fitToWindow() {
             const vp0 = viewports[0];
             const img0 = vp0.querySelector('.dcm-slot-img');
@@ -1331,8 +1346,60 @@ $mode      = $_GET['mode'] ?? 'standalone'; // 'modal' or 'standalone'
             panX = (slotW - imgW * zoom) / 2;
             panY = (slotH - imgH * zoom) / 2;
 
+            isOlympusFitMode = false;
+            if (btnFit) btnFit.classList.add('active');
+            if (btnOlympusFit) btnOlympusFit.classList.remove('active');
+
             updateTransform();
-            showToast("⏹️ 画面にフィット");
+            showToast("⏹️ 全体フィット (標準表示)");
+        }
+
+        // --------------------------------------------------------------------------
+        // O社 (オリンパス) 内視鏡専用フィット
+        // 左側の患者・スコープ情報テキスト領域 (左約35%) を除外し、
+        // 円形観察視野 (右側約65%) を画面中央いっぱいに拡大フィット表示する
+        // --------------------------------------------------------------------------
+        function olympusFit() {
+            const vp0 = viewports[0];
+            const img0 = vp0.querySelector('.dcm-slot-img');
+            if (!img0 || !img0.naturalWidth || !img0.naturalHeight) return;
+
+            const slotW = vp0.clientWidth || (stage.clientWidth / (currentLayout === 1 ? 1 : 2));
+            const slotH = vp0.clientHeight || (stage.clientHeight / (currentLayout === 4 ? 2 : 1));
+            const imgW = img0.naturalWidth;
+            const imgH = img0.naturalHeight;
+
+            // オリンパス内視鏡の円形観察視野ジオメトリ:
+            // X範囲: 0.35 * imgW 〜 1.0 * imgW (幅: 約 0.65 * imgW)
+            // Y範囲: 0.05 * imgH 〜 0.95 * imgH (高さ: 約 0.90 * imgH)
+            // 中心点: X = 0.675 * imgW, Y = 0.50 * imgH
+            const circleW = imgW * 0.65;
+            const circleH = imgH * 0.90;
+            const centerX = imgW * 0.675;
+            const centerY = imgH * 0.50;
+
+            const scaleX = (slotW * 0.98) / circleW;
+            const scaleY = (slotH * 0.98) / circleH;
+            zoom = Math.min(scaleX, scaleY);
+
+            // 円形観察視野の中心 (centerX, centerY) がスロットの中央 (slotW/2, slotH/2) に来るようパンを決定
+            panX = (slotW / 2) - (centerX * zoom);
+            panY = (slotH / 2) - (centerY * zoom);
+
+            isOlympusFitMode = true;
+            if (btnFit) btnFit.classList.remove('active');
+            if (btnOlympusFit) btnOlympusFit.classList.add('active');
+
+            updateTransform();
+            showToast("🎯 O社内視鏡フィット (左側テキスト除外・画像最大化)");
+        }
+
+        function applyActiveFit() {
+            if (isOlympusFitMode) {
+                olympusFit();
+            } else {
+                fitToWindow();
+            }
         }
 
         // 原寸 (1:1)
@@ -1347,6 +1414,9 @@ $mode      = $_GET['mode'] ?? 'standalone'; // 'modal' or 'standalone'
 
             panX = (slotW - img0.naturalWidth) / 2;
             panY = (slotH - img0.naturalHeight) / 2;
+
+            if (btnFit) btnFit.classList.remove('active');
+            if (btnOlympusFit) btnOlympusFit.classList.remove('active');
 
             updateTransform();
             showToast("1:1 原寸表示");
@@ -1456,12 +1526,12 @@ $mode      = $_GET['mode'] ?? 'standalone'; // 'modal' or 'standalone'
             }
         }, { passive: false });
 
-        // ダブルクリック: フィット ⇔ 原寸 トグル
+        // ダブルクリック: O社フィット ⇔ 全体フィット トグル
         stage.addEventListener('dblclick', () => {
-            if (Math.abs(zoom - 1.0) < 0.05) {
+            if (isOlympusFitMode) {
                 fitToWindow();
             } else {
-                oneToOne();
+                olympusFit();
             }
         });
 
@@ -1479,14 +1549,14 @@ $mode      = $_GET['mode'] ?? 'standalone'; // 'modal' or 'standalone'
                 loadSlice(dcmFiles.length - 1);
             } else if (e.key === 'f' || e.key === 'F') {
                 fitToWindow();
+            } else if (e.key === 'o' || e.key === 'O') {
+                olympusFit();
             } else if (e.key === '1') {
                 setLayout(1);
             } else if (e.key === '2') {
                 setLayout(2);
             } else if (e.key === '4') {
                 setLayout(4);
-            } else if (e.key === 'o' || e.key === 'O') {
-                oneToOne();
             } else if (e.key === 'r' || e.key === 'R') {
                 resetView();
             } else if (e.key === 'i' || e.key === 'I') {
@@ -1529,6 +1599,7 @@ $mode      = $_GET['mode'] ?? 'standalone'; // 'modal' or 'standalone'
         modeZoomBtn.addEventListener('click', () => setMouseMode('zoom'));
 
         btnFit.addEventListener('click', fitToWindow);
+        if (btnOlympusFit) btnOlympusFit.addEventListener('click', olympusFit);
         btnOneToOne.addEventListener('click', oneToOne);
         btnReset.addEventListener('click', resetView);
 
@@ -1604,7 +1675,7 @@ $mode      = $_GET['mode'] ?? 'standalone'; // 'modal' or 'standalone'
 
         // リサイズ時の自動追従
         window.addEventListener('resize', () => {
-            fitToWindow();
+            applyActiveFit();
         });
 
         // 起動開始
