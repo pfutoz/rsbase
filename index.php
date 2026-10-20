@@ -1141,32 +1141,32 @@ $calendar_date = str_replace('/', '-', $target_date);
             display: block;
             flex: 1;
         }
-        /* フローティング「✕ 閉じる (Esc)」ボタン */
-        .dcm-modal-close-btn {
+        /* ⧉ 別タブ表示 コンパクトアイコンボタン (フローティング) */
+        .dcm-modal-tab-btn {
             position: absolute;
-            top: 10px;
-            right: 14px;
+            top: 8px;
+            right: 10px;
             z-index: 5050;
+            width: 30px;
+            height: 30px;
             display: inline-flex;
             align-items: center;
-            gap: 6px;
+            justify-content: center;
             background: rgba(15, 23, 42, 0.85);
-            color: #f1f5f9;
+            color: #bae6fd;
             border: 1px solid rgba(255, 255, 255, 0.25);
-            border-radius: 20px;
-            padding: 5px 14px;
-            font-size: 0.8rem;
-            font-weight: 600;
+            border-radius: 6px;
+            padding: 0;
             cursor: pointer;
             backdrop-filter: blur(8px);
             transition: all 0.15s ease;
-            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
         }
-        .dcm-modal-close-btn:hover {
-            background: #ef4444;
+        .dcm-modal-tab-btn:hover {
+            background: #0284c7;
             color: #ffffff;
-            border-color: #ef4444;
-            transform: scale(1.04);
+            border-color: #38bdf8;
+            transform: scale(1.08);
         }
 
         /* 👁️ 閲覧ボタン 長押し・右クリック コンテキストメニュー */
@@ -1233,7 +1233,7 @@ $calendar_date = str_replace('/', '-', $target_date);
                 <a href="help.html#sec3" target="_blank" class="sub-help-link" title="胃がん検診データ作成補助機能 導入マニュアルを開きます">
                     胃がん検診データ作成 ↗
                 </a>
-                <a href="canvas_view.php<?= !empty($filter_id) ? '?patient_id=' . urlencode($filter_id) : '' ?>" class="sub-help-link" style="background:rgba(59, 130, 246, 0.25); border-color:#60a5fa; color:#bae6fd;" title="JSON Canvas準拠の患者検査タイムライン・無限キャンバスを開く">
+                <a href="canvas_view.php<?= !empty($filter_id) ? '?patient_id=' . urlencode($filter_id) : '' ?>" onclick="event.preventDefault(); openCanvasModal('<?= htmlspecialchars($filter_id ?? '', ENT_QUOTES, 'UTF-8') ?>');" class="sub-help-link" style="background:rgba(59, 130, 246, 0.25); border-color:#60a5fa; color:#bae6fd;" title="JSON Canvas準拠の患者検査タイムライン・無限キャンバスをモーダルで開く">
                     🗺️ 検査キャンバス ↗
                 </a>
             </div>
@@ -1452,7 +1452,7 @@ $calendar_date = str_replace('/', '-', $target_date);
                                                 計<?= $row['total_exams'] ?>件 📋
                                             </a>
                                         </div>
-                                        <a href="canvas_view.php?patient_id=<?= urlencode($row['id']) ?>" class="badge" style="background:#1e3a8a; color:#93c5fd; padding:1px 5px; font-size:0.68rem; text-decoration:none;" title="この患者の検査タイムラインを無限キャンバスで開く">
+                                        <a href="canvas_view.php?patient_id=<?= urlencode($row['id']) ?>" onclick="event.preventDefault(); openCanvasModal('<?= htmlspecialchars($row['id'], ENT_QUOTES, 'UTF-8') ?>');" class="badge" style="background:#1e3a8a; color:#93c5fd; padding:1px 5px; font-size:0.68rem; text-decoration:none;" title="この患者の検査タイムラインを無限キャンバスで開く">
                                             🗺️
                                         </a>
                                     </div>
@@ -1539,11 +1539,15 @@ $calendar_date = str_replace('/', '-', $target_date);
         </div>
     </div>
 
-    <!-- 🏥 ブラウザ内蔵・高速DICOM/心電図ビューワモーダル (すりガラス＆フローティング) -->
+    <!-- 🏥 ブラウザ内蔵・高速DICOM/心電図/キャンバスビューワモーダル (すりガラス＆フローティング) -->
     <div id="dicomViewerModal" class="dcm-modal-overlay" onclick="handleDcmOverlayClick(event)">
         <div class="dcm-modal-dialog" id="dicomModalDialog" onclick="event.stopPropagation()">
-            <button type="button" class="dcm-modal-close-btn" onclick="closeViewerModal()" title="ビューワーを閉じる (Esc / 戻る)">
-                <span>✕ 閉じる</span> <span style="font-size:0.7rem; opacity:0.75; font-weight:normal;">(Esc)</span>
+            <button type="button" class="dcm-modal-tab-btn" onclick="openCurrentViewerInNewTab()" title="新しいタブで開く (別タブ表示)">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                    <polyline points="15 3 21 3 21 9"></polyline>
+                    <line x1="10" y1="14" x2="21" y2="3"></line>
+                </svg>
             </button>
             <iframe id="dicomViewerIframe" class="dcm-modal-iframe" src="about:blank" allow="fullscreen"></iframe>
         </div>
@@ -1994,7 +1998,7 @@ $calendar_date = str_replace('/', '-', $target_date);
                     <div class="patient-candidate-meta">
                         ${latestDisplay ? `<span class="patient-date">${latestDisplay}</span>` : ''}
                         <span class="patient-count-badge">${p.exam_count} 件の検査</span>
-                        <a href="canvas_view.php?patient_id=${encodeURIComponent(p.id)}" class="badge" onclick="event.stopPropagation()" style="background:#1e3a8a; color:#93c5fd; padding:3px 8px; border-radius:4px; text-decoration:none; font-size:0.75rem;" title="この患者の検査キャンバスを開く">🗺️ キャンバス</a>
+                        <a href="canvas_view.php?patient_id=${encodeURIComponent(p.id)}" class="badge" onclick="event.stopPropagation(); event.preventDefault(); openCanvasModal('${escapeJs(p.id)}');" style="background:#1e3a8a; color:#93c5fd; padding:3px 8px; border-radius:4px; text-decoration:none; font-size:0.75rem;" title="この患者の検査キャンバスを開く">🗺️ キャンバス</a>
                         <span class="patient-select-arrow">→</span>
                     </div>
                 </div>
@@ -2120,7 +2124,25 @@ $calendar_date = str_replace('/', '-', $target_date);
         }
     }
 
-    // モーダルを開く
+    // ⧉ 現在開いているモーダル（DICOM/心電図/キャンバス）を別タブで開く
+    function openCurrentViewerInNewTab() {
+        const iframe = document.getElementById('dicomViewerIframe');
+        if (!iframe || !iframe.src || iframe.src === 'about:blank') return;
+
+        let targetUrl = iframe.src;
+        try {
+            const urlObj = new URL(targetUrl, window.location.origin);
+            if (urlObj.searchParams.get('mode') === 'modal') {
+                urlObj.searchParams.delete('mode');
+                targetUrl = urlObj.toString();
+            }
+        } catch (e) {}
+
+        window.open(targetUrl, '_blank');
+        closeViewerModal();
+    }
+
+    // ビューワーモーダルを開く
     function openViewerModal(target) {
         const modal = document.getElementById('dicomViewerModal');
         const iframe = document.getElementById('dicomViewerIframe');
@@ -2142,6 +2164,29 @@ $calendar_date = str_replace('/', '-', $target_date);
         openViewerModal(target);
     }
 
+    // 🗺️ キャンバスモーダルを開く
+    function openCanvasModal(patientId) {
+        const modal = document.getElementById('dicomViewerModal');
+        const iframe = document.getElementById('dicomViewerIframe');
+        if (!modal || !iframe) return;
+
+        let url = 'canvas_view.php?mode=modal';
+        if (patientId) {
+            url += '&patient_id=' + encodeURIComponent(patientId);
+        }
+
+        iframe.src = url;
+        modal.style.display = 'flex';
+        isModalOpen = true;
+
+        // ブラウザバック抑制：履歴にモーダルステートを追加
+        try {
+            history.pushState({ modalOpen: 'canvas' }, '', '#canvas');
+        } catch (e) {
+            console.warn(e);
+        }
+    }
+
     // モーダルを閉じる
     function closeViewerModal(fromPopState = false) {
         const modal = document.getElementById('dicomViewerModal');
@@ -2151,8 +2196,8 @@ $calendar_date = str_replace('/', '-', $target_date);
 
         if (isModalOpen) {
             isModalOpen = false;
-            // ✕ボタンやEscで閉じた場合、追加されたハッシュ履歴を戻す
-            if (!fromPopState && window.location.hash === '#viewer') {
+            // 外側クリックやEscで閉じた場合、追加されたハッシュ履歴を戻す
+            if (!fromPopState && (window.location.hash === '#viewer' || window.location.hash === '#canvas')) {
                 try {
                     history.back();
                 } catch (e) {}
@@ -2181,7 +2226,7 @@ $calendar_date = str_replace('/', '-', $target_date);
 
     // iframeからのメッセージ（Escキー押下や閉じるボタン）を受信
     window.addEventListener('message', e => {
-        if (e.data && (e.data.action === 'closeDicom' || e.data.action === 'closeECG')) {
+        if (e.data && (e.data.action === 'closeDicom' || e.data.action === 'closeECG' || e.data.action === 'closeCanvas' || e.data.action === 'closeViewer')) {
             closeViewerModal();
         }
     });

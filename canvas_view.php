@@ -976,9 +976,6 @@ if (empty($patient_info) || empty($exam_records)) {
     <!-- トップナビバー -->
     <header class="top-navbar">
         <div class="nav-left">
-            <a href="index.php" style="color:#94a3b8; text-decoration:none; font-size:0.8rem; display:flex; align-items:center; gap:4px;" title="検査一覧画面へ戻る">
-                ◀ 一覧
-            </a>
             <span class="nav-brand">
                 <span>🗺️</span>
                 <span>RS-Base 検査キャンバス</span>
@@ -2021,6 +2018,15 @@ if (empty($patient_info) || empty($exam_records)) {
             if (!str) return '';
             return String(str).replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '\\"');
         }
+
+        // Escキー押下でモーダル閉じる通知を親ウィンドウに送信
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                if (window.parent && window.parent !== window) {
+                    window.parent.postMessage({ action: 'closeCanvas' }, '*');
+                }
+            }
+        });
 
         // ==============================================================================
         // 初期化実行 (ピル生成、実時間タイムライン配置、画面フィット)
