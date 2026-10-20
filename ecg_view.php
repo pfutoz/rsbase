@@ -9,6 +9,7 @@ $pat_id    = $_GET['id'] ?? '';
 $pat_name  = $_GET['name'] ?? '';
 $exam_name = $_GET['kensa'] ?? '心電図';
 $exam_date = $_GET['date'] ?? '';
+$display_date = preg_replace('/^(\d{4}[\/\-]\d{1,2}[\/\-]\d{1,2}\s+\d{1,2}:\d{2})(?::\d{2})?.*$/', '$1', trim($exam_date));
 $sindan    = $_GET['sindan'] ?? '';
 $mode      = $_GET['mode'] ?? 'standalone'; // 'modal' or 'standalone'
 ?>
@@ -63,6 +64,11 @@ $mode      = $_GET['mode'] ?? 'standalone'; // 'modal' or 'standalone'
             z-index: 100;
             flex-shrink: 0;
             gap: 12px;
+            overflow-x: auto;
+            scrollbar-width: none;
+        }
+        .ecg-header::-webkit-scrollbar {
+            display: none;
         }
 
         .ecg-meta {
@@ -103,25 +109,6 @@ $mode      = $_GET['mode'] ?? 'standalone'; // 'modal' or 'standalone'
         .exam-date {
             color: var(--text-muted);
             font-size: 0.8rem;
-        }
-
-        /* 計測値サマリーバー */
-        .ecg-measure-bar {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            background: #111827;
-            border: 1px solid #334155;
-            padding: 4px 10px;
-            border-radius: 6px;
-            font-family: monospace;
-            font-size: 0.76rem;
-            color: #cbd5e1;
-        }
-
-        .ecg-measure-bar span strong {
-            color: var(--accent-cyan);
-            font-size: 0.85rem;
         }
 
         /* ツールボタングループ */
@@ -304,17 +291,7 @@ $mode      = $_GET['mode'] ?? 'standalone'; // 'modal' or 'standalone'
             <span class="badge-id">ID: <?= htmlspecialchars($pat_id ?: '----', ENT_QUOTES, 'UTF-8') ?></span>
             <span class="patient-name"><?= htmlspecialchars($pat_name ?: '患者未指定', ENT_QUOTES, 'UTF-8') ?> 様</span>
             <span class="exam-badge">📈 12誘導心電図</span>
-            <span class="exam-date" id="headerDateLabel"><?= htmlspecialchars($exam_date, ENT_QUOTES, 'UTF-8') ?></span>
-        </div>
-
-        <!-- 計測値サマリー -->
-        <div class="ecg-measure-bar" id="ecgMeasureBar">
-            <span>HR: <strong id="mHR">--</strong> bpm</span>
-            <span>R-R: <strong id="mRR">--</strong> s</span>
-            <span>P-R: <strong id="mPR">--</strong> ms</span>
-            <span>QRS: <strong id="mQRS">--</strong> ms</span>
-            <span>QT/QTc: <strong id="mQT">--</strong>/<strong id="mQTC">--</strong> ms</span>
-            <span>Axis: <strong id="mAxis">--</strong>°</span>
+            <span class="exam-date" id="headerDateLabel"><?= htmlspecialchars($display_date, ENT_QUOTES, 'UTF-8') ?></span>
         </div>
 
         <!-- ツールボタン -->
@@ -343,11 +320,8 @@ $mode      = $_GET['mode'] ?? 'standalone'; // 'modal' or 'standalone'
             <button type="button" class="tool-btn" id="btnLineWidth" onclick="cycleLineWidth()" title="波形の線幅を切り替え (0.8px / 1.0px / 1.2px)">
                 ✏️ 線幅: <span id="labelLineWidth">1.0px</span>
             </button>
-            <button type="button" class="tool-btn" id="btnPrint" title="心電図レポートを印刷">
-                🖨️ 印刷
-            </button>
             <button type="button" class="tool-btn" id="btnLaunchFEV" title="フクダ電子 FEV-05 ビューワを直接起動">
-                🚀 FEV-05
+                🚀
             </button>
             <?php if ($mode === 'modal'): ?>
                 <button type="button" class="tool-btn" id="btnPopout" title="新しいウィンドウで大画面表示">
@@ -405,22 +379,12 @@ $mode      = $_GET['mode'] ?? 'standalone'; // 'modal' or 'standalone'
         const hudZoom = document.getElementById('hudZoom');
         const hudDevice = document.getElementById('hudDevice');
 
-        // 計測値要素
-        const mHR = document.getElementById('mHR');
-        const mRR = document.getElementById('mRR');
-        const mPR = document.getElementById('mPR');
-        const mQRS = document.getElementById('mQRS');
-        const mQT = document.getElementById('mQT');
-        const mQTC = document.getElementById('mQTC');
-        const mAxis = document.getElementById('mAxis');
-
         // ツールボタン
         const btnPanMode = document.getElementById('btnPanMode');
         const btnCaliperMode = document.getElementById('btnCaliperMode');
         const btnFit = document.getElementById('btnFit');
         const btnOneToOne = document.getElementById('btnOneToOne');
         const btnReset = document.getElementById('btnReset');
-        const btnPrint = document.getElementById('btnPrint');
         const btnLaunchFEV = document.getElementById('btnLaunchFEV');
         const btnPopout = document.getElementById('btnPopout');
         const btnCloseModal = document.getElementById('btnCloseModal');
@@ -537,20 +501,18 @@ $mode      = $_GET['mode'] ?? 'standalone'; // 'modal' or 'standalone'
             }
         }
 
+        function formatExamDateNoSec(dtStr) {
+            if (!dtStr) return '';
+            return dtStr.replace(/^(\d{4}[\/\-]\d{1,2}[\/\-]\d{1,2}\s+\d{1,2}:\d{2})(?::\d{2})?.*$/, '$1');
+        }
+
         function populateHeader() {
             if (!ecgData) return;
-            const m = ecgData.measurements || {};
-            mHR.textContent = m.hr || '--';
-            mRR.textContent = m.rr_sec || (m.rr_ms ? (m.rr_ms / 1000).toFixed(3) : '--');
-            mPR.textContent = m.pr_ms || '--';
-            mQRS.textContent = m.qrs_ms || '--';
-            mQT.textContent = m.qt_ms || '--';
-            mQTC.textContent = m.qtc_b ? Math.round(m.qtc_b * 1000) : (m.qtc_f ? Math.round(m.qtc_f * 1000) : '--');
-            mAxis.textContent = m.axis_deg !== undefined ? m.axis_deg : '--';
             hudDevice.textContent = ecgData.device || 'Fukuda Denshi';
 
             if (ecgData.date) {
-                document.getElementById('headerDateLabel').textContent = ecgData.date;
+                const lbl = document.getElementById('headerDateLabel');
+                if (lbl) lbl.textContent = formatExamDateNoSec(ecgData.date);
             }
         }
 
@@ -608,7 +570,8 @@ $mode      = $_GET['mode'] ?? 'standalone'; // 'modal' or 'standalone'
             // ----------------------------------------------------------------------
             ctx.fillStyle = '#1e3a8a';
             ctx.font = 'bold 15px monospace';
-            const patTitle = `${ecgData.date || EXAM_DATE || ''}  12誘導安静時心電図  ID:${PAT_ID}  氏名:${PAT_NAME} 様`;
+            const displayDate = formatExamDateNoSec(ecgData.date || EXAM_DATE || '');
+            const patTitle = `${displayDate}  12誘導安静時心電図  ID:${PAT_ID}  氏名:${PAT_NAME} 様`;
             ctx.fillText(patTitle, gX0, 26);
 
             const m = ecgData.measurements || {};
@@ -965,10 +928,6 @@ $mode      = $_GET['mode'] ?? 'standalone'; // 'modal' or 'standalone'
         btnFit.addEventListener('click', fitToWindow);
         btnOneToOne.addEventListener('click', oneToOne);
         btnReset.addEventListener('click', resetView);
-
-        btnPrint.addEventListener('click', () => {
-            window.print();
-        });
 
         // FEV-05直接起動
         btnLaunchFEV.addEventListener('click', () => {
