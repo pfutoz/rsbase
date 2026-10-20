@@ -314,7 +314,8 @@ if (empty($patient_info) || empty($exam_records)) {
         }
 
         .patient-quick-badge {
-            display: flex;
+            position: relative;
+            display: inline-flex;
             align-items: center;
             gap: 8px;
             background: rgba(255, 255, 255, 0.08);
@@ -322,6 +323,40 @@ if (empty($patient_info) || empty($exam_records)) {
             padding: 4px 10px;
             border-radius: 6px;
             font-size: 0.82rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .patient-quick-badge:hover {
+            background: rgba(255, 255, 255, 0.14);
+            border-color: rgba(59, 130, 246, 0.5);
+        }
+
+        /* 👤 患者情報ホバーポップアップ */
+        .patient-hover-popover {
+            position: absolute;
+            top: calc(100% + 8px);
+            left: 0;
+            z-index: 1000;
+            min-width: 200px;
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(59, 130, 246, 0.4);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
+            border-radius: 8px;
+            padding: 10px 14px;
+            display: none;
+            flex-direction: column;
+            gap: 6px;
+            pointer-events: none;
+            animation: patPopFadeIn 0.18s ease-out;
+        }
+        .patient-quick-badge:hover .patient-hover-popover {
+            display: flex;
+        }
+        @keyframes patPopFadeIn {
+            from { opacity: 0; transform: translateY(-4px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         .pat-id-tag {
@@ -633,6 +668,12 @@ if (empty($patient_info) || empty($exam_records)) {
         .header-xray      { background: linear-gradient(90deg, #3b0764 0%, #7e22ce 100%); color: #e9d5ff; }
         .header-other     { background: linear-gradient(90deg, #1e293b 0%, #334155 100%); color: #cbd5e1; }
 
+        .exam-header-right {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            margin-left: auto;
+        }
         .exam-date-badge {
             font-family: monospace;
             background: rgba(0, 0, 0, 0.35);
@@ -640,6 +681,22 @@ if (empty($patient_info) || empty($exam_records)) {
             border-radius: 4px;
             font-size: 0.74rem;
             color: #ffffff;
+            white-space: nowrap;
+        }
+        .exam-age-badge {
+            background: rgba(59, 130, 246, 0.25);
+            border: 1px solid rgba(147, 197, 253, 0.4);
+            color: #bae6fd;
+            padding: 1px 6px;
+            border-radius: 4px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+        [data-theme="light"] .exam-age-badge {
+            background: #dbeafe;
+            border-color: #93c5fd;
+            color: #1d4ed8;
         }
 
         .exam-card-body {
@@ -709,7 +766,7 @@ if (empty($patient_info) || empty($exam_records)) {
             border-top: 1px solid rgba(255, 255, 255, 0.08);
             display: flex;
             align-items: center;
-            justify-content: space-between;
+            justify-content: flex-end;
             gap: 6px;
         }
 
@@ -979,24 +1036,21 @@ if (empty($patient_info) || empty($exam_records)) {
             <span class="nav-brand">
                 <span>🗺️</span>
                 <span>RS-Base 検査キャンバス</span>
-                <span style="font-size:0.68rem; background:rgba(59,130,246,0.25); border:1px solid #3b82f6; color:#93c5fd; padding:1px 6px; border-radius:4px; margin-left:6px; font-weight:600;">v2.0</span>
             </span>
-            <span class="nav-badge-spec">JSON Canvas v1.0 準拠</span>
 
             <?php if ($patient_info): ?>
                 <div class="patient-quick-badge">
                     <span class="pat-id-tag"><?= htmlspecialchars($patient_info['id']) ?></span>
-                    <strong><?= htmlspecialchars($patient_info['kanja_kanji']) ?></strong>
-                    <span style="color:#94a3b8; font-size:0.75rem;"><?= htmlspecialchars($patient_info['kanja_yomi']) ?></span>
-                    <span style="color:#60a5fa; font-size:0.75rem;"><?= htmlspecialchars($patient_info['age']) ?>歳 (<?= htmlspecialchars($patient_info['sex']) ?>)</span>
-                    <span style="background:rgba(16,185,129,0.2); color:#6ee7b7; padding:1px 5px; border-radius:3px; font-size:0.7rem;">
-                        検査: <?= count($exam_records) ?>件
-                    </span>
-                    <?php if ($is_demo): ?>
-                        <span style="background:rgba(245,158,11,0.25); color:#fcd34d; padding:1px 5px; border-radius:3px; font-size:0.7rem;">
-                            (サンプル表示)
-                        </span>
-                    <?php endif; ?>
+                    <strong style="color:#f8fafc; font-weight:700;"><?= htmlspecialchars($patient_info['kanja_kanji']) ?></strong>
+                    <div class="patient-hover-popover">
+                        <div style="font-size:0.75rem; color:#94a3b8;"><?= htmlspecialchars($patient_info['kanja_yomi']) ?></div>
+                        <div style="font-size:0.85rem; color:#f8fafc; font-weight:600;">
+                            <span style="color:#60a5fa;"><?= htmlspecialchars($patient_info['age']) ?>歳</span> (<?= htmlspecialchars($patient_info['sex']) ?>)
+                        </div>
+                        <div style="font-size:0.75rem; color:#6ee7b7; border-top:1px solid rgba(255,255,255,0.1); padding-top:4px; margin-top:2px;">
+                            📋 検査件数: <strong><?= count($exam_records) ?>件</strong>
+                        </div>
+                    </div>
                 </div>
             <?php endif; ?>
         </div>
@@ -1009,10 +1063,10 @@ if (empty($patient_info) || empty($exam_records)) {
         <div class="nav-right">
             <!-- レイアウトモード切替グループ -->
             <div class="layout-mode-group">
-                <button type="button" class="btn-layout-mode active" id="btnModeProportional" onclick="switchLayoutMode('proportional')" title="検査年月日を実時間間隔で横軸に配置するカレンダータイムライン">
+                <button type="button" class="btn-layout-mode" id="btnModeProportional" onclick="switchLayoutMode('proportional')" title="検査年月日を実時間間隔で横軸に配置するカレンダータイムライン">
                     <span>📅 実時間</span>
                 </button>
-                <button type="button" class="btn-layout-mode" id="btnModeSwimlanes" onclick="switchLayoutMode('swimlanes')" title="検査種別ごとのレーンに分けたスイムレーン表示">
+                <button type="button" class="btn-layout-mode active" id="btnModeSwimlanes" onclick="switchLayoutMode('swimlanes')" title="検査種別ごとのレーンに分けたスイムレーン表示">
                     <span>🔄 種別レーン</span>
                 </button>
                 <button type="button" class="btn-layout-mode" id="btnModeSequential" onclick="switchLayoutMode('sequential')" title="全検査を均等間隔の日付順フローで整列">
@@ -1603,21 +1657,22 @@ if (empty($patient_info) || empty($exam_records)) {
                         ? `<a href="${ecgUrl}" target="_blank" rel="noopener noreferrer" class="btn-view-tab btn-view-ecg" title="心電図Webビューワーを別タブで起動">📈 心電図 ↗</a>`
                         : `<a href="${dcmUrl}" target="_blank" rel="noopener noreferrer" class="btn-view-tab btn-view-dcm" title="DICOM Webビューワーを別タブで起動">👁️ DICOM ↗</a>`;
 
-                    // 検査実施当時の年齢 & 担当医チップ
-                    const ageDisplay = exam.age_at_exam 
-                        ? `<span class="exam-age-chip" title="検査実施当時の年齢">👤 当時 ${escapeHtml(exam.age_at_exam)}歳</span>` 
-                        : (exam.age ? `<span class="exam-age-chip" title="検査実施当時の年齢">👤 当時 ${escapeHtml(exam.age)}歳</span>` : '');
+                    // 検査実施時の年齢（「当時」表記なし） & 担当医
+                    const ageVal = exam.age_at_exam || exam.age || '';
                     const docDisplay = exam.doctor ? `<span class="exam-doctor-chip" title="担当医師">👨‍⚕️ ${escapeHtml(exam.doctor)}</span>` : '';
 
                     el.innerHTML = `
                         <div class="exam-card-header ${headerClass}" onmousedown="startNodeDrag(event, '${node.id}')">
-                            <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:180px;">
+                            <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:145px;" title="${escapeHtml(exam.kensamei)}">
                                 ${getCategoryIcon(exam.category)} ${escapeHtml(exam.kensamei)}
                             </span>
-                            <span class="exam-date-badge">${escapeHtml(exam.date)}</span>
+                            <div class="exam-header-right">
+                                <span class="exam-date-badge">${escapeHtml(exam.date)}</span>
+                                ${ageVal ? `<span class="exam-age-badge" title="検査時の年齢">${escapeHtml(ageVal)}歳</span>` : ''}
+                            </div>
                         </div>
                         <div class="exam-card-body">
-                            ${(ageDisplay || docDisplay) ? `<div class="exam-meta-row">${ageDisplay}${docDisplay}</div>` : ''}
+                            ${docDisplay ? `<div class="exam-meta-row">${docDisplay}</div>` : ''}
                             <div class="exam-sindan-box" title="${escapeHtml(exam.sindan1 || '')}">
                                 <strong>所見:</strong> ${escapeHtml(exam.sindan1 || '特記所見なし')}
                             </div>
@@ -1627,12 +1682,6 @@ if (empty($patient_info) || empty($exam_records)) {
                         </div>
                         <div class="exam-card-footer">
                             ${viewerBtn}
-                            <button type="button" class="btn-jpeg-sm" onclick="triggerLaunch('${escapeJs(exam.folder)}', 'JPEG')" title="RSBase Watcher画像表示">
-                                📷 JPEG
-                            </button>
-                            <button type="button" class="btn-copy-sm" onclick="copyPath('${escapeJs(exam.folder)}')" title="フォルダパスをコピー">
-                                📋 パス
-                            </button>
                         </div>
                     `;
                 }
@@ -2029,10 +2078,10 @@ if (empty($patient_info) || empty($exam_records)) {
         });
 
         // ==============================================================================
-        // 初期化実行 (ピル生成、実時間タイムライン配置、画面フィット)
+        // 初期化実行 (ピル生成、種別レーンタイムライン配置、画面フィット)
         // ==============================================================================
         initFilterPills();
-        switchLayoutMode('proportional');
+        switchLayoutMode('swimlanes');
         setTimeout(() => {
             fitToView();
         }, 100);
