@@ -334,6 +334,15 @@ $mode      = $_GET['mode'] ?? 'standalone'; // 'modal' or 'standalone'
             <button type="button" class="tool-btn" id="btnReset" title="表示リセット [Rキー]">
                 🔄 リセット
             </button>
+            <button type="button" class="tool-btn" id="btnCalWidth" onclick="toggleCalWidth()" title="較正パルス幅の切り替え (0.1s / 0.2s)">
+                ⚡ 較正: <span id="labelCalWidth">0.1s</span>
+            </button>
+            <button type="button" class="tool-btn active" id="btnDriftFilter" onclick="toggleDriftFilter()" title="基線ドリフト除去フィルタのON/OFF">
+                〰️ ドリフト補正: <span id="labelDriftFilter">ON</span>
+            </button>
+            <button type="button" class="tool-btn" id="btnLineWidth" onclick="cycleLineWidth()" title="波形の線幅を切り替え (0.8px / 1.0px / 1.2px)">
+                ✏️ 線幅: <span id="labelLineWidth">1.0px</span>
+            </button>
             <button type="button" class="tool-btn" id="btnPrint" title="心電図レポートを印刷">
                 🖨️ 印刷
             </button>
@@ -431,6 +440,62 @@ $mode      = $_GET['mode'] ?? 'standalone'; // 'modal' or 'standalone'
         let caliperStart = null; // { canvasX, canvasY }
         let caliperEnd = null;
 
+        // 較正パルス幅・ドリフトフィルタ・線幅ステート
+        let calPulseWidthSec = 0.1; // 0.1s (標準) または 0.2s
+        let isDriftFilterOn = true; // ドリフト補正 ON (標準) または OFF
+        let currentLineWidth = 1.0; // 0.8px, 1.0px, 1.2px
+        const lineWidthOptions = [0.8, 1.0, 1.2];
+        let lineWidthIdx = 1; // 1.0px (標準)
+
+        function toggleCalWidth() {
+            calPulseWidthSec = (calPulseWidthSec === 0.1 ? 0.2 : 0.1);
+            const label = document.getElementById('labelCalWidth');
+            if (label) label.textContent = calPulseWidthSec + 's';
+            renderECGCanvas();
+            showToast(`⚡ 較正パルス幅を ${calPulseWidthSec}秒 (${Math.round(calPulseWidthSec * 1000)}ms) に切り替えました`);
+        }
+
+        function toggleDriftFilter() {
+            isDriftFilterOn = !isDriftFilterOn;
+            const btn = document.getElementById('btnDriftFilter');
+            const label = document.getElementById('labelDriftFilter');
+            if (label) label.textContent = (isDriftFilterOn ? 'ON' : 'OFF');
+            if (btn) btn.classList.toggle('active', isDriftFilterOn);
+            renderECGCanvas();
+            showToast(isDriftFilterOn ? '〰️ 基線ドリフト除去フィルタ: ON' : '〰️ 基線ドリフト除去フィルタ: OFF (RAW生波形)');
+        }
+
+        function cycleLineWidth() {
+            lineWidthIdx = (lineWidthIdx + 1) % lineWidthOptions.length;
+            currentLineWidth = lineWidthOptions[lineWidthIdx];
+            const label = document.getElementById('labelLineWidth');
+            if (label) label.textContent = currentLineWidth.toFixed(1) + 'px';
+            renderECGCanvas();
+            showToast(`✏️ 波形の線幅を ${currentLineWidth.toFixed(1)}px に変更しました`);
+        }
+
+        // 基線ドリフト除去フィルタ (高速O(N)プレフィックス累積平均・約0.7秒窓=350サンプル)
+        function applyDriftFilter(wave) {
+            if (!wave || wave.length < 50) return wave;
+            const len = wave.length;
+            const filtered = new Float32Array(len);
+            const win = 350; // 0.7秒窓 (1拍分の低周波変動を平滑化)
+            const halfWin = Math.floor(win / 2);
+
+            const prefix = new Float64Array(len + 1);
+            for (let i = 0; i < len; i++) {
+                prefix[i + 1] = prefix[i] + wave[i];
+            }
+
+            for (let i = 0; i < len; i++) {
+                const start = Math.max(0, i - halfWin);
+                const end = Math.min(len, i + halfWin);
+                const baseline = (prefix[end] - prefix[start]) / (end - start);
+                filtered[i] = wave[i] - baseline;
+            }
+            return filtered;
+        }
+
         function showToast(msg) {
             toast.textContent = msg;
             toast.className = 'show';
@@ -509,9 +574,9 @@ $mode      = $_GET['mode'] ?? 'standalone'; // 'modal' or 'standalone'
             const gX1 = w - 20;
             const gY1 = h - 34;
 
-            // 1mm 小マス (淡いピンク)
-            ctx.strokeStyle = '#fee2e2';
-            ctx.lineWidth = 0.8;
+            // 1mm 小マス (フクダ純正帳票に合わせた鮮明な淡いピンク)
+            ctx.strokeStyle = '#fecdd3';
+            ctx.lineWidth = 0.6;
             ctx.beginPath();
             for (let x = gX0; x <= gX1; x += 4) {
                 ctx.moveTo(x, gY0); ctx.lineTo(x, gY1);
@@ -521,9 +586,9 @@ $mode      = $_GET['mode'] ?? 'standalone'; // 'modal' or 'standalone'
             }
             ctx.stroke();
 
-            // 5mm 大マス (サーモンピンク)
-            ctx.strokeStyle = '#fca5a5';
-            ctx.lineWidth = 1.0;
+            // 5mm 大マス (はっきりした標準方眼サーモンピンク)
+            ctx.strokeStyle = '#f87171';
+            ctx.lineWidth = 0.9;
             ctx.beginPath();
             for (let x = gX0; x <= gX1; x += 20) {
                 ctx.moveTo(x, gY0); ctx.lineTo(x, gY1);
@@ -534,7 +599,7 @@ $mode      = $_GET['mode'] ?? 'standalone'; // 'modal' or 'standalone'
             ctx.stroke();
 
             // 外枠
-            ctx.strokeStyle = '#f87171';
+            ctx.strokeStyle = '#ef4444';
             ctx.lineWidth = 1.2;
             ctx.strokeRect(gX0, gY0, gX1 - gX0, gY1 - gY0);
 
@@ -603,34 +668,45 @@ $mode      = $_GET['mode'] ?? 'standalone'; // 'modal' or 'standalone'
             const pxPerMv = 40.0; // 10mm/mV = 40px/mV
             const pxPerSample = 100.0 / 500.0; // 25mm/s (100px/s, 500Hz)
 
-            // キャリブレーションパルス描画 (1mV = 40px, 0.2s = 20px)
-            function drawCalPulse(x, y) {
-                ctx.strokeStyle = '#2563eb';
-                ctx.lineWidth = 1.0;
+            // 較正パルス幅 (0.1秒 = 10px = 2.5mm / 0.2秒 = 20px = 5.0mm)
+            const calPulseWidthPx = (calPulseWidthSec === 0.2 ? 20 : 10);
+
+            // 較正パルス描画 (1mV = 40px, 黒色実線、基線と一体描画)
+            function drawCalPulse(startX, cy) {
+                ctx.strokeStyle = '#000000';
+                ctx.lineWidth = currentLineWidth;
                 ctx.beginPath();
-                ctx.moveTo(x, y);
-                ctx.lineTo(x, y - 40);
-                ctx.lineTo(x + 20, y - 40);
-                ctx.lineTo(x + 20, y);
-                ctx.lineTo(x + 25, y);
+                ctx.moveTo(startX, cy);
+                ctx.lineTo(startX, cy - 40); // 1mV (10mm = 40px)
+                ctx.lineTo(startX + calPulseWidthPx, cy - 40); // 0.1s (10px) または 0.2s (20px)
+                ctx.lineTo(startX + calPulseWidthPx, cy);
+                ctx.lineTo(startX + calPulseWidthPx + 6, cy);
                 ctx.stroke();
+                return startX + calPulseWidthPx + 6;
             }
 
             // 左列 6誘導 (I, II, III, aVR, aVL, aVF)
-            const xLeft = gX0 + 38;
-            const leftSampleCount = 2200; // 約4.4秒間
+            const calStartX = gX0 + 8;
+            const xLeft = calStartX + calPulseWidthPx + 8;
+            const leftSampleCount = 2250; // 約4.5秒間
+
             leftLeads.forEach((name, idx) => {
                 const cy = baseYStart + idx * rowSpacing;
 
+                // 誘導名ラベル (パルス左下に青文字で重ならず配置)
                 ctx.fillStyle = '#1d4ed8';
                 ctx.font = 'bold 12px sans-serif';
-                ctx.fillText(name, gX0 + 5, cy + 5);
-                drawCalPulse(gX0 + 5, cy);
+                ctx.fillText(name, calStartX, cy + 14);
 
-                const wave = leads[name] || [];
+                // 較正パルス描画 (黒色実線)
+                drawCalPulse(calStartX, cy);
+
+                let rawWave = leads[name] || [];
+                let wave = isDriftFilterOn ? applyDriftFilter(rawWave) : rawWave;
                 const len = Math.min(leftSampleCount, wave.length);
+
                 ctx.strokeStyle = '#000000';
-                ctx.lineWidth = 1.2;
+                ctx.lineWidth = currentLineWidth;
                 ctx.beginPath();
                 for (let s = 0; s < len; s++) {
                     const px = xLeft + s * pxPerSample;
@@ -645,17 +721,21 @@ $mode      = $_GET['mode'] ?? 'standalone'; // 'modal' or 'standalone'
             const gXMid = gX0 + (gX1 - gX0) / 2;
             const xRight = gXMid + 32;
             const rightSampleCount = 2250; // 約4.5秒間
+
             rightLeads.forEach((name, idx) => {
                 const cy = baseYStart + idx * rowSpacing;
 
+                // 誘導名ラベル
                 ctx.fillStyle = '#1d4ed8';
                 ctx.font = 'bold 12px sans-serif';
-                ctx.fillText(name, gXMid + 8, cy + 5);
+                ctx.fillText(name, gXMid + 6, cy + 14);
 
-                const wave = leads[name] || [];
+                let rawWave = leads[name] || [];
+                let wave = isDriftFilterOn ? applyDriftFilter(rawWave) : rawWave;
                 const len = Math.min(rightSampleCount, wave.length);
+
                 ctx.strokeStyle = '#000000';
-                ctx.lineWidth = 1.2;
+                ctx.lineWidth = currentLineWidth;
                 ctx.beginPath();
                 for (let s = 0; s < len; s++) {
                     const px = xRight + s * pxPerSample;
@@ -669,7 +749,8 @@ $mode      = $_GET['mode'] ?? 'standalone'; // 'modal' or 'standalone'
             // フッター注記
             ctx.fillStyle = '#1e3a8a';
             ctx.font = '11px sans-serif';
-            ctx.fillText('25.0mm/sec   10mm/mV   フィルタ:HUM強,筋電,ドリフト', gX0 + 10, gY1 + 18);
+            const filterText = isDriftFilterOn ? 'フィルタ:HUM強,筋電,ドリフト(補正中)' : 'フィルタ:HUM強,筋電(ドリフトOFF/RAW)';
+            ctx.fillText(`25.0mm/sec   10mm/mV   較正:${calPulseWidthSec}s(1mV)   線幅:${currentLineWidth.toFixed(1)}px   ${filterText}`, gX0 + 10, gY1 + 18);
 
             // フッター基準マーク (緑の小さな三角)
             ctx.fillStyle = '#10b981';

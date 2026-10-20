@@ -27,6 +27,13 @@ if (!file_exists($file)) {
     exit;
 }
 
+if (is_dir($file)) {
+    $candidates = glob(rtrim($file, '\\/') . '/*.{ECG,ecg,001}', GLOB_BRACE);
+    if (!empty($candidates)) {
+        $file = $candidates[0];
+    }
+}
+
 $mtime = @filemtime($file) ?: time();
 $cache_file = $cache_dir . md5($file . '_' . $mtime) . '.json';
 
