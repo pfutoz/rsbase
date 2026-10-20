@@ -12,6 +12,12 @@ $exam_date = $_GET['date'] ?? '';
 $display_date = preg_replace('/^(\d{4}[\/\-]\d{1,2}[\/\-]\d{1,2}\s+\d{1,2}:\d{2})(?::\d{2})?.*$/', '$1', trim($exam_date));
 $sindan    = $_GET['sindan'] ?? '';
 $mode      = $_GET['mode'] ?? 'standalone'; // 'modal' or 'standalone'
+
+// 内視鏡データ判定（検査名ヒント）: エコーやレントゲン・CT等を除外し、内視鏡・消化管カメラを検出
+$is_endoscopy_hint = (bool)preg_match('/内視鏡|胃|大腸|十二指腸|食道|直腸|結腸|咽頭|喉頭|気管支|GF|CF|IF|BF|ES|カメラ|スコープ|ESD|EMR|ERCP|ポリペク|生検|IEE|NBI|LCI/iu', $exam_name);
+if (preg_match('/エコー|超音波|US|XP|CR|CT|MR|RF|透視|レントゲン|マンモ/iu', $exam_name)) {
+    $is_endoscopy_hint = false;
+}
 ?>
 <!DOCTYPE html>
 <html lang="ja">
@@ -987,7 +993,7 @@ $mode      = $_GET['mode'] ?? 'standalone'; // 'modal' or 'standalone'
             <button type="button" class="action-btn active" id="btnFit" title="全体フィット: 画像全体を枠内に収める [Fキー]">
                 ⏹️全体
             </button>
-            <button type="button" class="action-btn" id="btnOlympusFit" title="オリンパスフィット: 左側文字情報を除外し、円形観察領域を中心に画面一杯に拡大表示 [Oキー / ダブルクリック]">
+            <button type="button" class="action-btn" id="btnOlympusFit" style="<?= $is_endoscopy_hint ? '' : 'display:none;' ?>" title="オリンパスフィット: 左側文字情報を除外し、円形観察領域を中心に画面一杯に拡大表示 [Oキー / ダブルクリック]">
                 ⏹️O社
             </button>
             <button type="button" class="action-btn" id="btnOneToOne" title="原寸大 (1:1) で表示">
@@ -1089,13 +1095,19 @@ $mode      = $_GET['mode'] ?? 'standalone'; // 'modal' or 'standalone'
             </div>
 
             <!-- 画面下部 内視鏡病変強調ドック (IEE) -->
-            <div class="iee-dock" id="ieeDock" title="内視鏡 病巣・微細血管強調モード">
+            <div class="iee-dock" id="ieeDock" style="<?= $is_endoscopy_hint ? '' : 'display:none;' ?>" title="内視鏡 病巣・微細血管強調モード">
                 <span class="iee-label">🔬 病巣強調:</span>
                 <button type="button" class="iee-btn active" data-mode="normal" title="通常表示 (白色光)">
                     🌈 通常
                 </button>
                 <button type="button" class="iee-btn" data-mode="lci" title="発赤強調 (LCI風): 早期胃癌・ポリープ・炎症の境界を赤と白の対比で極限まで浮き彫りにする">
                     🔴 発赤(LCI)
+                </button>
+                <button type="button" class="iee-btn" data-mode="txi" title="自然強調 (TXI風): 明るさを保ったまま凹凸テクスチャと微小な色調変化(発赤/淡い変化)を強調">
+                    🔆 自然(TXI)
+                </button>
+                <button type="button" class="iee-btn" data-mode="pale" title="褪色強調 (Pale/SSA/P): 見逃しやすい白っぽい平坦病変・粘液付着・鋸歯状病変の境界を強調">
+                    ⚪ 褪色(SSA/P)
                 </button>
                 <button type="button" class="iee-btn" data-mode="nbi" title="血管強調 (NBI風): 青緑色光効果で微細血管や腺管ピットパターンを茶褐色に際立たせる">
                     🟢 血管(NBI)
@@ -1199,6 +1211,41 @@ $mode      = $_GET['mode'] ?? 'standalone'; // 'modal' or 'standalone'
                    -0.3  3.0 -0.3
                    -0.2 -0.3 -0.2" preserveAlpha="true" />
             </filter>
+            <!-- ⑥ TXI風・自然強調 (明るさを維持した凹凸構造＋微細色差強調) -->
+            <filter id="iee-txi" color-interpolation-filters="sRGB">
+                <feColorMatrix type="matrix" values="
+                    1.20 -0.12 -0.06 0  0.02
+                   -0.06  1.14 -0.05 0  0.01
+                   -0.05 -0.06  1.15 0  0.01
+                    0     0     0    1  0" />
+                <feConvolveMatrix order="3" kernelMatrix="
+                   -0.2 -0.3 -0.2
+                   -0.3  3.0 -0.3
+                   -0.2 -0.3 -0.2" preserveAlpha="true" />
+                <feComponentTransfer>
+                    <feFuncR type="linear" slope="1.06" intercept="0.01" />
+                    <feFuncG type="linear" slope="1.04" intercept="0.01" />
+                    <feFuncB type="linear" slope="1.04" intercept="0.01" />
+                </feComponentTransfer>
+            </filter>
+
+            <!-- ⑦ 褪色・平坦病変強調 (Pale / SSA/P: 白っぽい平坦病変・鋸歯状病変の境界抽出) -->
+            <filter id="iee-pale" color-interpolation-filters="sRGB">
+                <feColorMatrix type="matrix" values="
+                    0.78  0.18  0.06 0 -0.02
+                   -0.12  1.22 -0.04 0  0.03
+                    0.06 -0.16  1.38 0  0.05
+                    0     0     0    1  0" />
+                <feConvolveMatrix order="3" kernelMatrix="
+                   -0.25 -0.4 -0.25
+                   -0.4   3.6 -0.4
+                   -0.25 -0.4 -0.25" preserveAlpha="true" />
+                <feComponentTransfer>
+                    <feFuncR type="linear" slope="0.95" intercept="0.02" />
+                    <feFuncG type="linear" slope="1.10" intercept="-0.02" />
+                    <feFuncB type="linear" slope="1.15" intercept="-0.03" />
+                </feComponentTransfer>
+            </filter>
         </defs>
     </svg>
 
@@ -1237,6 +1284,7 @@ $mode      = $_GET['mode'] ?? 'standalone'; // 'modal' or 'standalone'
         const EXAM_DATE   = <?= json_encode($exam_date, JSON_UNESCAPED_UNICODE) ?>;
         const EXAM_SINDAN = <?= json_encode($sindan, JSON_UNESCAPED_UNICODE) ?>;
         const IS_MODAL    = <?= json_encode($mode === 'modal') ?>;
+        const IS_ENDOSCOPY_HINT = <?= json_encode($is_endoscopy_hint) ?>;
 
         // DOM要素
         const stage = document.getElementById('dcmImageStage');
@@ -1301,9 +1349,51 @@ $mode      = $_GET['mode'] ?? 'standalone'; // 'modal' or 'standalone'
         let brightness = 100;  // Window Level (WL) 相当 (100%基準)
         let isInverted = false;
         let activeMouseTool = 'ww_wl'; // 'ww_wl', 'pan', 'zoom'
-        let activeIeeMode = 'normal';  // 'normal', 'lci', 'nbi', 'ihb', 'texture', 'indigo'
+        let activeIeeMode = 'normal';  // 'normal', 'lci', 'txi', 'pale', 'nbi', 'ihb', 'texture', 'indigo'
+        let isEndoscopyDetected = IS_ENDOSCOPY_HINT; // 内視鏡判定ステート
         let isOlympusFitMode = false;  // O社内視鏡フィットモードフラグ
         let isCropMode = false;        // 範囲指定コピーモードフラグ
+
+        // 内視鏡向けUI（下部病巣強調ドック & O社フィットボタン）の動的表示切替
+        function setEndoscopyUIVisibility(isEndo) {
+            isEndoscopyDetected = isEndo;
+            if (ieeDock) {
+                ieeDock.style.display = isEndo ? 'flex' : 'none';
+            }
+            if (btnOlympusFit) {
+                btnOlympusFit.style.display = isEndo ? 'inline-flex' : 'none';
+            }
+        }
+
+        // 画像色成分サンプリングによる内視鏡(カラー)自動判定 (XP/CR/CT等のグレースケール除外)
+        function detectEndoscopyFromImage(img) {
+            if (IS_ENDOSCOPY_HINT) {
+                setEndoscopyUIVisibility(true);
+                return;
+            }
+            try {
+                const sampleCanvas = document.createElement('canvas');
+                sampleCanvas.width = 40;
+                sampleCanvas.height = 40;
+                const sCtx = sampleCanvas.getContext('2d', { willReadFrequently: true });
+                sCtx.drawImage(img, 0, 0, 40, 40);
+                const pData = sCtx.getImageData(0, 0, 40, 40).data;
+                let colorVariance = 0;
+                for (let i = 0; i < pData.length; i += 4) {
+                    const r = pData[i];
+                    const g = pData[i + 1];
+                    const b = pData[i + 2];
+                    colorVariance += Math.abs(r - g) + Math.abs(g - b);
+                    if (colorVariance > 400) {
+                        setEndoscopyUIVisibility(true);
+                        return;
+                    }
+                }
+                setEndoscopyUIVisibility(false);
+            } catch (err) {
+                setEndoscopyUIVisibility(IS_ENDOSCOPY_HINT);
+            }
+        }
         let isCropDragging = false;
         let cropStartX = 0;
         let cropStartY = 0;
@@ -1332,6 +1422,7 @@ $mode      = $_GET['mode'] ?? 'standalone'; // 'modal' or 'standalone'
         // 初期化: DICOMファイルリスト取得
         // --------------------------------------------------------------------------
         async function initViewer() {
+            setEndoscopyUIVisibility(IS_ENDOSCOPY_HINT);
             if (!FOLDER_PATH) {
                 alert("フォルダパスが指定されていません");
                 return;
@@ -1477,6 +1568,7 @@ $mode      = $_GET['mode'] ?? 'standalone'; // 'modal' or 'standalone'
                             if (thisRequestId !== currentSliceRequestId) return; // 古いリクエストは破棄
                             img.src = imgUrl;
                             if (hudResolution) hudResolution.textContent = `${tempImg.naturalWidth} x ${tempImg.naturalHeight}`;
+                            detectEndoscopyFromImage(tempImg);
                             pendingCount--;
                             if (pendingCount <= 0) loader.style.display = 'none';
 
@@ -1542,6 +1634,8 @@ $mode      = $_GET['mode'] ?? 'standalone'; // 'modal' or 'standalone'
             const names = {
                 'normal': '🌈 通常表示 (白色光)',
                 'lci': '🔴 発赤強調 (LCI風: 早期病変・炎症拾い上げ)',
+                'txi': '🔆 自然強調 (TXI風: 凹凸＋微細色差・明るさ維持)',
+                'pale': '⚪ 褪色強調 (Pale/SSA/P: 白っぽい平坦病変・鋸歯状病変)',
                 'nbi': '🟢 血管・ピット強調 (NBI風: 微細血管・腺管質的診断)',
                 'ihb': '📊 血流マップ (ヘモグロビン濃度強調)',
                 'texture': '🏔️ 凹凸・構造強調 (テクスチャ・境界シャープ化)',
@@ -1561,6 +1655,10 @@ $mode      = $_GET['mode'] ?? 'standalone'; // 'modal' or 'standalone'
                 filterParts.push(`url(#iee-${activeIeeMode})`);
                 if (activeIeeMode === 'lci') {
                     filterParts.push('saturate(135%)');
+                } else if (activeIeeMode === 'txi') {
+                    filterParts.push('saturate(120%)');
+                } else if (activeIeeMode === 'pale') {
+                    filterParts.push('saturate(115%)');
                 } else if (activeIeeMode === 'nbi') {
                     filterParts.push('saturate(125%)');
                 }
@@ -1788,12 +1886,12 @@ $mode      = $_GET['mode'] ?? 'standalone'; // 'modal' or 'standalone'
             }
         }, { passive: false });
 
-        // ダブルクリック: O社フィット ⇔ 全体フィット トグル
+        // ダブルクリック: O社フィット ⇔ 全体フィット トグル (内視鏡時のみ。非内視鏡時は全体フィット)
         stage.addEventListener('dblclick', () => {
-            if (isOlympusFitMode) {
-                fitToWindow();
-            } else {
+            if (isEndoscopyDetected && !isOlympusFitMode) {
                 olympusFit();
+            } else {
+                fitToWindow();
             }
         });
 
@@ -1812,7 +1910,9 @@ $mode      = $_GET['mode'] ?? 'standalone'; // 'modal' or 'standalone'
             } else if (e.key === 'f' || e.key === 'F') {
                 fitToWindow();
             } else if (e.key === 'o' || e.key === 'O') {
-                olympusFit();
+                if (isEndoscopyDetected) {
+                    olympusFit();
+                }
             } else if (e.key === '1') {
                 setLayout(1);
             } else if (e.key === '2') {
@@ -1900,6 +2000,28 @@ $mode      = $_GET['mode'] ?? 'standalone'; // 'modal' or 'standalone'
            -0.20,  1.25, -0.05, 0, -0.02,
            -0.10, -0.20,  1.30, 0,  0.00,
             0,     0,     0,    1,  0
+        ];
+        const MAT_TXI = [
+            1.20, -0.12, -0.06, 0,  0.02,
+           -0.06,  1.14, -0.05, 0,  0.01,
+           -0.05, -0.06,  1.15, 0,  0.01,
+            0,     0,     0,    1,  0
+        ];
+        const KERNEL_TXI = [
+           -0.2, -0.3, -0.2,
+           -0.3,  3.0, -0.3,
+           -0.2, -0.3, -0.2
+        ];
+        const MAT_PALE = [
+            0.78,  0.18,  0.06, 0, -0.02,
+           -0.12,  1.22, -0.04, 0,  0.03,
+            0.06, -0.16,  1.38, 0,  0.05,
+            0,     0,     0,    1,  0
+        ];
+        const KERNEL_PALE = [
+           -0.25, -0.4, -0.25,
+           -0.4,   3.6, -0.4,
+           -0.25, -0.4, -0.25
         ];
         const MAT_NBI = [
             0.35,  0.15,  0.05, 0, -0.05,
@@ -1996,6 +2118,12 @@ $mode      = $_GET['mode'] ?? 'standalone'; // 'modal' or 'standalone'
         function applyIeeFilterToImageData(imageData, mode) {
             if (mode === 'lci') {
                 applyColorMatrix(imageData, MAT_LCI);
+            } else if (mode === 'txi') {
+                applyColorMatrix(imageData, MAT_TXI);
+                applyKernel3x3(imageData, KERNEL_TXI);
+            } else if (mode === 'pale') {
+                applyColorMatrix(imageData, MAT_PALE);
+                applyKernel3x3(imageData, KERNEL_PALE);
             } else if (mode === 'nbi') {
                 applyColorMatrix(imageData, MAT_NBI);
             } else if (mode === 'ihb') {

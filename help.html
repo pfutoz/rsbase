@@ -1613,7 +1613,7 @@
                 <ul style="font-size:0.8rem; color:#475569; padding-left:18px; line-height:1.6;">
                     <li><strong>左側テキスト除外・画像最大化:</strong> オリンパス内視鏡画像特有の「左側文字情報領域（約35%）」を自動除外し、右側の円形観察視野（約65%）を中心に約1.5倍で画面いっぱいに拡大表示</li>
                     <li><strong>富士フイルム・一般画像との共存:</strong> 富士フイルム内視鏡や胸部レントゲン等は通常の「⏹️全体」で枠内最大表示</li>
-                    <li><strong>ダブルクリック＆ショートカット:</strong> 画面のダブルクリック、またはキーボード <kbd>O</kbd> キーで「全体フィット」と「O社フィット」を交互にトグル切替</li>
+                    <li><strong>ダブルクリック＆ショートカット:</strong> 内視鏡画像表示時、画面のダブルクリックまたはキーボード <kbd>O</kbd> キーで「全体フィット」と「O社フィット」を交互にトグル切替（レントゲン時は非表示）</li>
                 </ul>
             </div>
 
@@ -1621,8 +1621,10 @@
             <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:14px;">
                 <div style="font-weight:700; color:#047857; font-size:0.88rem; margin-bottom:6px;">🔬 内視鏡 病巣・微細血管強調モード（IEE ドック）</div>
                 <ul style="font-size:0.8rem; color:#475569; padding-left:18px; line-height:1.6;">
-                    <li><strong>画面下部フローティングドック:</strong> GPUハードウェアアクセラレーションにより、高精細画像をリアルタイム処理。底面密着・超薄型（約24px厚）で観察視野を圧迫しません</li>
+                    <li><strong>内視鏡自動判定＆スマート表示:</strong> 検査名とDICOM画像の色成分（カラー/RGBかモノクロ/XPか）を自動判別し、<strong>内視鏡データの時のみ下部IEEドック＆O社フィットを表示</strong>。一般レントゲン・CT等では自動的に非表示となり、観察視野を最大化します</li>
                     <li><strong>🔴 発赤(LCI):</strong> 赤色と白色の対比を最大化し、早期胃癌・ポリープ・ピロリ炎症を浮き彫りに</li>
+                    <li><strong>🔆 自然(TXI):</strong> オリンパス最新技術風。明るさを保ったまま凹凸テクスチャと微小な色調変化（淡い発赤・変化）を強調</li>
+                    <li><strong>⚪ 褪色(SSA/P):</strong> 見逃しやすい白っぽい平坦病変・粘液付着・大腸鋸歯状病変（SSA/P）の輪郭境界を強調</li>
                     <li><strong>🟢 血管(NBI):</strong> 青緑光シミュレーション。微細血管・腺管ピットパターンを茶褐色に強調</li>
                     <li><strong>📊 血流マップ(IHb):</strong> ヘモグロビン濃度サーモグラフィで充血・血管網を可視化</li>
                     <li><strong>🏔️ 構造強調:</strong> 粘膜ひだ・微細境界の輪郭をシャープに強調</li>
