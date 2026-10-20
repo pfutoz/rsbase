@@ -3,35 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RS-Base 高速画像ファイリング & ビューワ連携 動作画面付き総合ヘルプ</title>
+    <title>RS-Base 検査一覧・患者検索・Webビューワ・検査キャンバス 総合操作マニュアル Ver 2.0</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary: #1e40af;
-            --primary-light: #3b82f6;
+            --primary: #1d4ed8;
+            --primary-dark: #0b192c;
+            --primary-navy: #1e3a8a;
+            --primary-light: #2563eb;
             --primary-bg: #eff6ff;
-            --accent: #0d9488;
-            --accent-bg: #f0fdfa;
-            --warning: #b45309;
-            --warning-bg: #fef3c7;
-            --warning-border: #fde68a;
-            --danger: #b91c1c;
-            --danger-bg: #fef2f2;
-            --danger-border: #fecaca;
-            --success: #15803d;
-            --success-bg: #f0fdf4;
-            --success-border: #bbf7d0;
-            --bg-page: #f8fafc;
+            --accent-green: #059669;
+            --accent-amber: #d97706;
+            --accent-teal: #0f766e;
+            --bg-page: #e2e8f0;
             --bg-card: #ffffff;
             --text-main: #0f172a;
             --text-muted: #64748b;
-            --border: #e2e8f0;
+            --border: #cbd5e1;
             --radius-sm: 6px;
             --radius-md: 10px;
-            --radius-lg: 16px;
-            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --radius-lg: 14px;
+            --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05);
             --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
-            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.04);
+            --shadow-lg: 0 10px 20px -3px rgba(15, 23, 42, 0.12);
+        }
+
+        html {
+            scroll-behavior: smooth;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -41,90 +39,146 @@
             background-color: var(--bg-page);
             color: var(--text-main);
             line-height: 1.7;
-            padding: 24px 16px;
+            padding: 16px 12px 40px;
             -webkit-font-smoothing: antialiased;
         }
 
-        .container { max-width: 1080px; margin: 0 auto; }
+        .container { max-width: 1100px; margin: 0 auto; }
 
+        /* ヘッダーセクション（濃紺→青グラデーション） */
         .header-section {
-            background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 50%, #0369a1 100%);
+            background: linear-gradient(90deg, #0b192c 0%, #1e3a8a 52%, #2563eb 100%);
             color: white;
-            padding: 32px 28px;
+            padding: 24px 26px;
             border-radius: var(--radius-lg);
-            box-shadow: var(--shadow-lg);
-            margin-bottom: 28px;
+            box-shadow: 0 4px 14px rgba(11, 25, 44, 0.25);
+            margin-bottom: 16px;
             position: relative;
-            overflow: hidden;
         }
         .header-badge {
             display: inline-block;
-            background: rgba(255, 255, 255, 0.18);
-            backdrop-filter: blur(8px);
-            padding: 4px 12px;
+            background: rgba(255, 255, 255, 0.16);
+            backdrop-filter: blur(6px);
+            padding: 3px 10px;
             border-radius: 9999px;
-            font-size: 0.8rem;
+            font-size: 0.74rem;
             font-weight: 600;
-            letter-spacing: 0.05em;
-            text-transform: uppercase;
-            margin-bottom: 12px;
+            letter-spacing: 0.04em;
+            margin-bottom: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.22);
+            color: #bae6fd;
         }
         .header-section h1 {
-            font-size: 1.85rem;
+            font-size: 1.55rem;
             font-weight: 700;
-            margin-bottom: 8px;
-            letter-spacing: -0.02em;
-        }
-        .header-section p {
-            color: #e0f2fe;
-            font-size: 0.95rem;
-            max-width: 820px;
-        }
-
-        .card {
-            background: var(--bg-card);
-            border-radius: var(--radius-md);
-            padding: 26px 28px;
-            margin-bottom: 24px;
-            box-shadow: var(--shadow-md);
-            border: 1px solid var(--border);
-        }
-        .card-title {
-            font-size: 1.25rem;
-            font-weight: 700;
-            color: var(--primary);
-            margin-bottom: 16px;
+            margin-bottom: 6px;
+            letter-spacing: -0.01em;
             display: flex;
             align-items: center;
             gap: 10px;
-            border-bottom: 2px solid #f1f5f9;
-            padding-bottom: 10px;
+        }
+        .header-section p {
+            color: #e2e8f0;
+            font-size: 0.88rem;
+            max-width: 860px;
+            line-height: 1.6;
         }
 
-        /* 💻 ブラウザ風ウィンドウモックアップ */
-        .window-mockup {
-            background: #ffffff;
-            border: 1px solid #cbd5e1;
-            border-radius: 10px;
-            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.05);
-            overflow: hidden;
-            margin: 20px 0 26px 0;
-        }
-        .window-titlebar {
-            background: #e2e8f0;
+        /* クイック目次ナビゲーション（スティッキー対応） */
+        .nav-toc {
+            position: sticky;
+            top: 10px;
+            z-index: 100;
+            background: rgba(255, 255, 255, 0.94);
+            backdrop-filter: blur(8px);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
             padding: 8px 14px;
+            margin-bottom: 18px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
             display: flex;
             align-items: center;
-            gap: 12px;
-            border-bottom: 1px solid #cbd5e1;
+            justify-content: space-between;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .toc-title {
+            font-size: 0.78rem;
+            font-weight: 700;
+            color: #1e3a8a;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .toc-links {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+        .toc-link {
+            font-size: 0.76rem;
+            font-weight: 600;
+            color: #334155;
+            background: #f1f5f9;
+            padding: 3px 9px;
+            border-radius: 6px;
+            text-decoration: none;
+            border: 1px solid #cbd5e1;
+            transition: all 0.15s;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .toc-link:hover {
+            background: #1e3a8a;
+            color: #ffffff;
+            border-color: #1e3a8a;
+        }
+
+        /* カード共通 */
+        .card {
+            background: var(--bg-card);
+            border-radius: var(--radius-md);
+            padding: 22px 24px;
+            margin-bottom: 18px;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border);
+        }
+        .card-title {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: #1e3a8a;
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border-bottom: 2px solid #f1f5f9;
+            padding-bottom: 8px;
+        }
+
+        /* 💻 最新ブラウザ風ウィンドウモックアップ */
+        .window-mockup {
+            background: #e2e8f0;
+            border: 1px solid #94a3b8;
+            border-radius: 10px;
+            box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.15);
+            overflow: hidden;
+            margin: 16px 0 22px 0;
+        }
+        .window-titlebar {
+            background: #1e293b;
+            padding: 7px 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
         .window-buttons {
             display: flex;
-            gap: 6px;
+            gap: 5px;
         }
         .window-btn {
-            width: 11px;
-            height: 11px;
+            width: 10px;
+            height: 10px;
             border-radius: 50%;
             display: inline-block;
         }
@@ -132,187 +186,475 @@
         .btn-min { background: #f59e0b; }
         .btn-max { background: #10b981; }
         .window-address-bar {
-            background: #ffffff;
-            padding: 4px 14px;
-            border-radius: 6px;
-            font-size: 0.8rem;
-            color: #475569;
+            background: #0f172a;
+            padding: 3px 12px;
+            border-radius: 5px;
+            font-size: 0.74rem;
+            color: #94a3b8;
             flex-grow: 1;
             font-family: 'JetBrains Mono', monospace;
-            border: 1px solid #cbd5e1;
+            border: 1px solid #334155;
             display: flex;
             align-items: center;
             gap: 6px;
         }
         .window-content {
-            padding: 16px 20px;
-            background: #f8fafc;
+            padding: 10px 12px;
+            background: #e2e8f0; /* 最新グレー背景 */
         }
 
-        /* 🏥 モックアップ内のUI要素 */
+        /* モック画面内のヘッダー（最新グラデーション再現） */
         .mock-header {
+            background: linear-gradient(90deg, #0b192c 0%, #1e3a8a 52%, #2563eb 100%);
+            padding: 6px 12px;
+            border-radius: 6px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background: #ffffff;
-            padding: 12px 16px;
-            border-radius: 8px;
-            border: 1px solid #e2e8f0;
-            margin-bottom: 12px;
+            margin-bottom: 8px;
+            color: #ffffff;
+            font-size: 0.82rem;
+            flex-wrap: wrap;
+            gap: 6px;
         }
-        .mock-title { font-size: 1.05rem; font-weight: 700; color: #1e3a8a; }
-        .mock-controls { display: flex; align-items: center; gap: 8px; font-size: 0.82rem; }
-        .mock-select {
-            padding: 3px 8px;
+        .mock-title-area {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .mock-title { font-size: 0.95rem; font-weight: 700; color: #ffffff; }
+        .mock-tag-link {
+            font-size: 0.68rem;
+            color: #bae6fd;
+            background: rgba(255, 255, 255, 0.12);
+            padding: 1px 6px;
             border-radius: 4px;
-            border: 1px solid #cbd5e1;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            font-weight: 500;
+        }
+        .mock-controls { display: flex; align-items: center; gap: 6px; font-size: 0.75rem; }
+        .mock-mode-box {
+            background: rgba(255, 255, 255, 0.14);
+            border: 1px solid rgba(255, 255, 255, 0.24);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.72rem;
             font-weight: 600;
-            background: #f1f5f9;
+            color: #ffffff;
+        }
+        .mock-btn-nav {
+            background: rgba(255, 255, 255, 0.16);
+            border: 1px solid rgba(255, 255, 255, 0.28);
+            color: #ffffff;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.72rem;
+            font-weight: 500;
+        }
+        .mock-date {
+            background: #ffffff;
+            color: #0f172a;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: 600;
+            font-size: 0.72rem;
+        }
+        .mock-btn-dl {
+            background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+            color: #ffffff;
+            padding: 2px 7px;
+            border-radius: 4px;
+            font-size: 0.72rem;
+            font-weight: 600;
+            border: 1px solid #34d399;
+        }
+        .mock-btn-help {
+            background: rgba(255, 255, 255, 0.2);
+            color: #fef08a;
+            border: 1px solid rgba(254, 240, 138, 0.4);
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.75rem;
         }
 
-        /* 📋 モックテーブル */
+        /* モック画面内のフィルタパネル */
+        .mock-filter-panel {
+            background: #ffffff;
+            padding: 6px 10px;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+        }
+        .mock-filter-rows {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            flex: 1;
+        }
+        .mock-filter-row {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            flex-wrap: wrap;
+        }
+        .mock-filter-label {
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: #475569;
+            min-width: 76px;
+        }
+        .mock-toggle {
+            font-size: 0.7rem;
+            padding: 1px 6px;
+            border-radius: 10px;
+            border: 1px solid #cbd5e1;
+            background: #f1f5f9;
+            color: #334155;
+            font-weight: 500;
+        }
+        .mock-toggle.active {
+            background: linear-gradient(135deg, #1e40af 0%, #2563eb 100%);
+            color: #ffffff;
+            border-color: #1e40af;
+            font-weight: 600;
+        }
+
+        /* 虫眼鏡検索ボタン（最新ノーブルブルー再現） */
+        .mock-search-btn {
+            background: linear-gradient(135deg, #0b192c 0%, #1e40af 60%, #2563eb 100%);
+            color: #ffffff;
+            border: 1.5px solid #60a5fa;
+            width: 30px;
+            height: 30px;
+            border-radius: 6px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 5px rgba(30, 64, 175, 0.3);
+            flex-shrink: 0;
+            position: relative;
+        }
+
+        /* モックテーブル */
+        .mock-table-card {
+            background: #ffffff;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            overflow: hidden;
+        }
         .mock-table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 0.84rem;
-            background: #ffffff;
-            border-radius: 6px;
-            overflow: hidden;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            font-size: 0.78rem;
+            text-align: left;
         }
         .mock-table th, .mock-table td {
-            padding: 8px 10px;
-            border: 1px solid #e2e8f0;
-            text-align: left;
+            padding: 4px 8px;
+            border-bottom: 1px solid #e2e8f0;
+            line-height: 1.35;
         }
         .mock-table th {
             background: #f1f5f9;
-            color: #334155;
-            font-weight: 600;
-            font-size: 0.8rem;
+            color: #475569;
+            font-weight: 700;
+            font-size: 0.72rem;
+            border-bottom: 2px solid var(--border);
         }
         .mock-table tr:hover td {
-            background-color: #f8fafc;
+            background-color: #f0f7ff;
         }
 
-        /* インタラクティブクリックバッジ */
-        .demo-badge-custom {
-            background: #2563eb;
-            color: white;
-            padding: 3px 8px;
+        /* 各種バッジスタイル */
+        .badge-renban {
+            background: #e0f2fe;
+            color: #0369a1;
+            padding: 1px 5px;
             border-radius: 4px;
             font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: inline-block;
-            user-select: none;
+            font-size: 0.72rem;
+            border: 1px solid #bae6fd;
         }
-        .demo-badge-custom:hover {
-            background: #1d4ed8;
-            transform: scale(1.05);
-        }
-        .demo-badge-custom:active { transform: scale(0.95); }
-
-        .demo-badge-ecg {
-            background: #b45309;
-            color: white;
-            padding: 3px 8px;
+        .badge-kensa {
+            background: #f0fdf4;
+            color: #166534;
+            padding: 2px 6px;
             border-radius: 4px;
             font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
+            font-size: 0.74rem;
+            border: 1px solid #bbf7d0;
             display: inline-block;
-            user-select: none;
         }
-        .demo-badge-ecg:hover { background: #92400e; transform: scale(1.05); }
-
-        .demo-folder-click {
-            color: #0d9488;
-            font-weight: 600;
-            cursor: pointer;
-            text-decoration: underline dotted;
-            padding: 2px 4px;
+        .badge-ecg {
+            background: #fdf2f8;
+            color: #db2777;
+            padding: 2px 6px;
             border-radius: 4px;
-            transition: all 0.2s;
-            user-select: none;
+            font-weight: 600;
+            font-size: 0.74rem;
+            border: 1px solid #fbcfe8;
             display: inline-block;
         }
-        .demo-folder-click:hover {
-            background: #ccfbf1;
+        .badge-id {
+            font-family: monospace;
+            background: #f8fafc;
+            color: #1e3a8a;
+            padding: 1px 5px;
+            border-radius: 4px;
+            font-weight: 700;
+            font-size: 0.74rem;
+            border: 1px solid var(--border);
+        }
+        .name-link {
+            color: #1d4ed8;
+            font-weight: 700;
+        }
+        .age-click-btn {
             color: #0f766e;
-            transform: scale(1.08);
+            font-weight: 700;
+            text-decoration: underline dotted;
+            padding: 1px 4px;
+            border-radius: 3px;
+            background: #ccfbf1;
+            display: inline-block;
         }
 
-        .demo-link {
-            color: #2563eb;
-            text-decoration: none;
-            cursor: pointer;
-            font-weight: 500;
+        /* ゼブラグループ & 閲覧ボタン & メタデータ */
+        .mock-table tr.row-patient-a td { background-color: #f0f7ff; }
+        .mock-table tr.row-patient-b td { background-color: #ffffff; }
+        .btn-view-dcm-mock {
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+            background: #2563eb;
+            color: #ffffff;
+            font-size: 0.68rem;
+            font-weight: 700;
+            padding: 2px 7px;
+            border-radius: 4px;
+            box-shadow: 0 1px 2px rgba(37,99,235,0.3);
+            white-space: nowrap;
         }
-        .demo-link:hover { text-decoration: underline; }
+        .btn-view-ecg-mock {
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+            background: #ec4899;
+            color: #ffffff;
+            font-size: 0.68rem;
+            font-weight: 700;
+            padding: 2px 7px;
+            border-radius: 4px;
+            box-shadow: 0 1px 2px rgba(236,72,153,0.3);
+            white-space: nowrap;
+        }
+        .badge-doctor {
+            display: inline-block;
+            font-size: 0.68rem;
+            color: #0f172a;
+            background: #f1f5f9;
+            padding: 1px 4px;
+            border-radius: 3px;
+            border: 1px solid #cbd5e1;
+            white-space: nowrap;
+        }
+        .badge-count {
+            display: inline-block;
+            font-size: 0.68rem;
+            color: #1e40af;
+            background: #dbeafe;
+            padding: 1px 4px;
+            border-radius: 3px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
 
-        /* 📍 アクション解説ピン */
+        /* 📍 赤丸ピン番号バッジ */
         .pin-badge {
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            width: 20px;
-            height: 20px;
+            width: 18px;
+            height: 18px;
             background: #ef4444;
             color: white;
             border-radius: 50%;
-            font-size: 0.72rem;
+            font-size: 0.68rem;
             font-weight: 700;
-            margin-right: 4px;
+            margin-right: 3px;
             vertical-align: middle;
-            animation: pulse 2s infinite;
-        }
-        @keyframes pulse {
-            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
-            70% { transform: scale(1.05); box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); }
-            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+            box-shadow: 0 1px 3px rgba(239, 68, 68, 0.4);
         }
 
-        /* 🍞 トースト通知モック */
-        .mock-toast {
-            visibility: hidden;
-            background: #1e293b;
-            color: #ffffff;
-            padding: 10px 18px;
+        /* 機能解説グリッド */
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(310px, 1fr));
+            gap: 14px;
+            margin: 16px 0;
+        }
+        .feature-box {
+            background: #ffffff;
+            border: 1px solid var(--border);
             border-radius: 8px;
-            position: fixed;
-            bottom: 24px;
-            left: 50%;
-            transform: translateX(-50%);
-            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
-            font-size: 0.88rem;
-            z-index: 1000;
+            padding: 14px 16px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+        }
+        .feature-box-title {
+            font-weight: 700;
+            font-size: 0.92rem;
+            margin-bottom: 6px;
             display: flex;
             align-items: center;
-            gap: 10px;
-            transition: all 0.3s;
-            opacity: 0;
+            gap: 6px;
         }
-        .mock-toast.show {
-            visibility: visible;
-            opacity: 1;
-            bottom: 36px;
+        .feature-box p {
+            font-size: 0.82rem;
+            color: #334155;
+            line-height: 1.6;
+        }
+
+        /* 🔍 検索モーダルの静的UIモック */
+        .modal-mockup {
+            background: #ffffff;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            box-shadow: 0 12px 28px rgba(15, 23, 42, 0.18);
+            max-width: 580px;
+            margin: 16px auto;
+            overflow: hidden;
+        }
+        .modal-mock-header {
+            background: linear-gradient(90deg, #0b192c 0%, #1e3a8a 60%, #2563eb 100%);
+            padding: 10px 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: #ffffff;
+        }
+        .modal-mock-title {
+            font-size: 0.92rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .modal-mock-close {
+            color: #cbd5e1;
+            font-size: 1.2rem;
+            line-height: 1;
+        }
+        .modal-mock-body {
+            padding: 14px 16px;
+            background: #ffffff;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .modal-mock-searchbar {
+            display: flex;
+            gap: 6px;
+        }
+        .modal-mock-input {
+            flex: 1;
+            padding: 7px 10px;
+            font-size: 0.85rem;
+            border: 2px solid #2563eb;
+            border-radius: 6px;
+            outline: none;
+            background: #ffffff;
+            font-weight: 600;
+            color: #0f172a;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+        }
+        .modal-mock-submit {
+            background: linear-gradient(135deg, #1e40af 0%, #2563eb 100%);
+            color: #ffffff;
+            border: none;
+            padding: 7px 16px;
+            border-radius: 6px;
+            font-size: 0.82rem;
+            font-weight: 700;
+        }
+        .modal-mock-hint {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.72rem;
+            color: #64748b;
+        }
+        .modal-mock-list {
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            background: #fafafa;
+            overflow: hidden;
+        }
+        .modal-mock-item {
+            padding: 8px 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #f1f5f9;
+            background: #ffffff;
+        }
+        .modal-mock-item.selected {
+            background: #eff6ff;
+            border-left: 3px solid #2563eb;
+        }
+        .modal-mock-item:last-child { border-bottom: none; }
+        .mock-pat-id {
+            font-family: monospace;
+            font-weight: 700;
+            font-size: 0.8rem;
+            background: #dbeafe;
+            color: #1e40af;
+            padding: 2px 6px;
+            border-radius: 4px;
+            border: 1px solid #bfdbfe;
+        }
+        .mock-pat-name {
+            font-size: 0.86rem;
+            font-weight: 700;
+            color: #0f172a;
+        }
+        .mock-pat-meta {
+            font-size: 0.74rem;
+            color: #475569;
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        .mock-count-badge {
+            background: #ecfdf5;
+            color: #047857;
+            padding: 1px 6px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            border: 1px solid #a7f3d0;
         }
 
         /* 🪟 Windows風ダイアログモックアップ */
         .dialog-mockup {
-            width: 380px;
+            width: 360px;
             background: #ffffff;
             border: 1px solid #94a3b8;
             border-radius: 8px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.18);
             overflow: hidden;
-            margin: 16px auto;
-            font-size: 0.85rem;
+            margin: 14px auto;
+            font-size: 0.82rem;
         }
         .dialog-titlebar {
             background: #f1f5f9;
-            padding: 8px 12px;
+            padding: 6px 12px;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -320,32 +662,29 @@
             font-weight: 600;
             color: #1e293b;
         }
-        .dialog-body {
-            padding: 16px;
-        }
+        .dialog-body { padding: 14px 16px; }
         .dialog-input {
             width: 100%;
-            padding: 6px 10px;
+            padding: 6px 8px;
             border: 1px solid #94a3b8;
             border-radius: 4px;
-            margin-top: 8px;
-            font-size: 0.88rem;
+            margin-top: 6px;
+            font-size: 0.84rem;
         }
         .dialog-footer {
             background: #f8fafc;
-            padding: 8px 12px;
+            padding: 6px 12px;
             display: flex;
             justify-content: flex-end;
-            gap: 8px;
+            gap: 6px;
             border-top: 1px solid #e2e8f0;
         }
         .dialog-btn {
-            padding: 4px 16px;
+            padding: 3px 14px;
             border: 1px solid #cbd5e1;
             border-radius: 4px;
             background: #ffffff;
-            cursor: pointer;
-            font-size: 0.82rem;
+            font-size: 0.78rem;
             font-weight: 500;
         }
         .dialog-btn-primary {
@@ -361,66 +700,174 @@
             border-radius: 8px;
             overflow: hidden;
             font-family: 'JetBrains Mono', Consolas, monospace;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
-            margin: 16px 0;
-            font-size: 0.82rem;
-            line-height: 1.6;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.25);
+            margin: 14px 0;
+            font-size: 0.8rem;
+            line-height: 1.5;
         }
         .terminal-header {
             background: #1e293b;
             padding: 6px 12px;
+            color: #94a3b8;
+            font-size: 0.72rem;
             display: flex;
             align-items: center;
-            gap: 8px;
-            color: #94a3b8;
-            font-size: 0.75rem;
+            gap: 6px;
         }
         .terminal-body {
-            padding: 14px 16px;
+            padding: 12px 14px;
             overflow-x: auto;
         }
         .term-green { color: #4ade80; }
         .term-cyan { color: #38bdf8; }
         .term-yellow { color: #facc15; }
 
-        .feature-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 16px;
-            margin: 18px 0;
-        }
-        .feature-box {
-            background: #ffffff;
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 16px;
-        }
-        .feature-box-title {
-            font-weight: 700;
-            font-size: 0.95rem;
-            margin-bottom: 8px;
-            display: flex;
+        /* ダウンロードリンク用ボタンスタイル */
+        .btn-download-link {
+            display: inline-flex;
             align-items: center;
             gap: 6px;
+            background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+            color: #1d4ed8;
+            padding: 7px 14px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 0.82rem;
+            border: 1px solid #bfdbfe;
+            margin: 6px 0;
+            box-shadow: 0 1px 3px rgba(37, 99, 235, 0.1);
+            transition: all 0.15s;
+        }
+        .btn-download-link:hover {
+            background: #1d4ed8;
+            color: #ffffff;
+            border-color: #1d4ed8;
+            box-shadow: 0 2px 6px rgba(37, 99, 235, 0.25);
+        }
+        .btn-download-green {
+            background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+            color: #047857;
+            border-color: #a7f3d0;
+        }
+        .btn-download-green:hover {
+            background: #059669;
+            color: #ffffff;
+            border-color: #059669;
         }
 
-        .alert-tip {
-            background: var(--success-bg);
-            border-left: 4px solid var(--success);
+        .step-badge {
+            background: #1e3a8a;
+            color: #ffffff;
+            font-size: 0.72rem;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 4px;
+            margin-right: 6px;
+            display: inline-block;
+        }
+
+        /* 📁 エクスプローラー風モック */
+        .explorer-mockup {
+            background: #ffffff;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 10px 14px;
+            margin: 10px 0;
+            font-size: 0.78rem;
+            color: #334155;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            box-shadow: inset 0 1px 2px rgba(0,0,0,0.03);
+        }
+        .explorer-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 3px 6px;
+            border-radius: 4px;
+        }
+        .explorer-item:hover {
+            background: #f1f5f9;
+        }
+
+        /* 注意・ヒント・アラート */
+        .alert-box {
             padding: 12px 16px;
             border-radius: var(--radius-sm);
-            margin: 14px 0;
-            font-size: 0.88rem;
-            color: #14532d;
+            margin: 12px 0;
+            font-size: 0.84rem;
+            line-height: 1.6;
+        }
+        .alert-tip {
+            background: #ecfdf5;
+            border-left: 4px solid #059669;
+            color: #064e3b;
+        }
+        .alert-warning {
+            background: #fefce8;
+            border-left: 4px solid #d97706;
+            color: #78350f;
+        }
+        .alert-info {
+            background: #eff6ff;
+            border-left: 4px solid #2563eb;
+            color: #1e3a8a;
+        }
+
+        /* ショートカットキーバッジ */
+        kbd {
+            font-family: 'JetBrains Mono', monospace;
+            background: #f1f5f9;
+            border: 1px solid #cbd5e1;
+            border-bottom: 2px solid #94a3b8;
+            color: #1e293b;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.76rem;
+            font-weight: 700;
+            display: inline-block;
+            margin: 0 2px;
+        }
+
+        /* 表・テーブル */
+        .info-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.82rem;
+            margin: 12px 0;
+        }
+        .info-table th, .info-table td {
+            padding: 8px 12px;
+            border: 1px solid var(--border);
+            text-align: left;
+        }
+        .info-table th {
+            background: #f1f5f9;
+            color: #334155;
+            font-weight: 700;
+        }
+
+        pre code {
+            display: block;
+            background: #0f172a;
+            color: #f8fafc;
+            padding: 10px 14px;
+            border-radius: 6px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.82rem;
+            overflow-x: auto;
+            margin: 8px 0;
         }
 
         .footer {
             text-align: center;
-            margin-top: 36px;
+            margin-top: 28px;
             color: var(--text-muted);
-            font-size: 0.84rem;
+            font-size: 0.78rem;
             border-top: 1px solid var(--border);
-            padding-top: 20px;
+            padding-top: 16px;
         }
     </style>
 </head>
@@ -430,21 +877,44 @@
 
     <!-- ヘッダー -->
     <header class="header-section">
-        <span class="header-badge">Interactive Visual Help Guide</span>
-        <h1>🏥 RS-Base 検査一覧 &amp; ビューワ連携 動作画面付き総合ヘルプ</h1>
-        <p>画面上の各ボタンやセルをクリックしたときに「どのような処理が動き、どのアプリが立ち上がるか」を実際の画面モックアップを操作しながら直感的に理解できるビジュアルガイドです。</p>
+        <span class="header-badge">Ver 2.0 Major Release (2026年最新運用版)</span>
+        <h1>🏥 RS-Base 検査一覧・患者検索・Webビューワ・検査キャンバス 総合操作マニュアル <span style="font-size:0.75rem; background:rgba(255,255,255,0.2); padding:2px 8px; border-radius:10px; border:1px solid rgba(255,255,255,0.3); vertical-align:middle;">v2.0</span></h1>
+        <p>日々の画像・心電図ビューワ直起動、患者別ゼブラグループ表示・独立閲覧列、患者横断検索、胃がん検診向け一括JPEG変換・保存、実時間カレンダー比例タイムライン（JSON Canvas v2.0）、そして新設されたブラウザ内完結の「高機能Web DICOMビューワー」および「12誘導心電図Webビューワー」の全機能を網羅した公式ガイドです。</p>
     </header>
 
-    <!-- 1. 動作画面シミュレータ（index.php） -->
-    <section class="card">
-        <div class="card-title">
-            <span class="icon">🖥️</span>
-            1. Web検査一覧画面（index.php）の操作画面シミュレータ
+    <!-- クイック目次ナビゲーション -->
+    <nav class="nav-toc">
+        <div class="toc-title">
+            <span>📑</span>
+            <span>クイック目次:</span>
         </div>
-        <p>以下のモックアップは、院内で稼働中の <code>index.php</code> 画面を再現したものです。<br>
-        <strong>赤丸のピン番号（①〜⑥）の箇所を実際にクリックして、動作をお試しください。</strong>（※患者情報は架空のサンプルです）</p>
+        <div class="toc-links">
+            <a href="#sec1" class="toc-link">① 一覧操作 (v2.0)</a>
+            <a href="#sec2" class="toc-link">② 患者横断検索</a>
+            <a href="#sec3" class="toc-link">③ 胃がん検診データ作成</a>
+            <a href="#sec4" class="toc-link">④ 環境構築・ツール配置</a>
+            <a href="#sec5" class="toc-link">⑤ FAQ</a>
+            <a href="#sec6" class="toc-link" style="background:#eff6ff; color:#1d4ed8; border-color:#93c5fd;">⑥ 🗺️ 検査キャンバス (v2.0)</a>
+            <a href="#sec7" class="toc-link" style="background:#f0fdf4; color:#166534; border-color:#bbf7d0;">⑦ 👁️ Web DICOMビューワ</a>
+            <a href="#sec8" class="toc-link" style="background:#fdf2f8; color:#db2777; border-color:#fbcfe8;">⑧ 📈 12誘導心電図Webビューワ</a>
+        </div>
+    </nav>
 
-        <!-- ブラウザウィンドウモックアップ -->
+    <!-- ==========================================
+         第1章: Web検査一覧画面の見方と基本操作
+         ========================================== -->
+    <section class="card" id="sec1">
+        <div class="card-title">
+            <span>🖥️</span>
+            <span>第1章: Web検査一覧画面（index.php Ver 2.0）の見方と基本操作</span>
+            <span class="badge" style="background:#dbeafe; color:#1d4ed8; font-size:0.75rem; margin-left:auto;">大幅刷新</span>
+        </div>
+        <p style="font-size:0.86rem; color:#475569;">
+            画面全体が100vh（画面高さいっぱいのデスクトップアプリ型レイアウト）に進化。上部操作バーと検索パネルは画面上部に固定され、テーブルヘッダーはスクロール時も最上部にスティッキー固定されます。<br>
+            <strong>患者別のゼブラ背景色分け</strong>と<strong>縦に整列した専用閲覧ボタン列</strong>により、視線移動で見失うことなく目的の検査・画像・心電図へ瞬時にアクセスできます。
+        </p>
+
+        <!-- 最新デザインのブラウザモックアップ (Ver 2.0) -->
         <div class="window-mockup">
             <div class="window-titlebar">
                 <div class="window-buttons">
@@ -453,303 +923,782 @@
                     <span class="window-btn btn-max"></span>
                 </div>
                 <div class="window-address-bar">
-                    🔒 http://192.168.1.16/rsbase/index.php?mode=custom
+                    🔒 http://192.168.1.16/rsbase/index.php
                 </div>
             </div>
             <div class="window-content">
-                <!-- モック画面ヘッダー -->
+                <!-- モック画面ヘッダー（濃紺→青グラデーション） -->
                 <div class="mock-header">
-                    <div class="mock-title">🏥 RS-Base 検査・画像ビューア</div>
+                    <div class="mock-title-area">
+                        <span class="mock-title">🏥 RS-Base 検査・画像ビューア</span>
+                        <span style="font-size:0.68rem; background:rgba(255,255,255,0.18); border:1px solid rgba(255,255,255,0.3); border-radius:10px; padding:1px 6px; color:#bae6fd; font-weight:700;">v2.0</span>
+                        <span class="mock-tag-link">胃がん検診データ作成 ↗</span>
+                        <span class="mock-tag-link" style="background:rgba(59,130,246,0.3); border-color:#60a5fa; color:#bae6fd;">🗺️ 検査キャンバス ↗</span>
+                    </div>
                     <div class="mock-controls">
-                        <span>モード:</span>
-                        <select class="mock-select" id="demoModeSelect" onchange="changeDemoMode(this.value)">
-                            <option value="custom" selected>カスタムビューワ (直起動)</option>
-                            <option value="jpeg">胃がん検診JPEG変換</option>
-                            <option value="rsbase">RSBaseモード (本家CGI)</option>
-                        </select>
-                        <span style="background:#e2e8f0; padding:2px 8px; border-radius:4px; font-weight:600;">2026/09/30</span>
-                        <a href="watcher.zip" style="text-decoration:none; background:#10b981; color:white; padding:3px 8px; border-radius:4px; font-size:0.75rem; font-weight:600;">📥 常駐DL</a>
+                        <span class="mock-mode-box">モード: カスタムビューワ (直起動)</span>
+                        <span class="mock-btn-nav">◀ 前日</span>
+                        <span class="mock-date">2026/10/20</span>
+                        <span class="mock-btn-nav">翌日 ▶</span>
+                        <span class="mock-btn-dl">📥 常駐スクリプトDL</span>
+                        <span class="mock-btn-help">?</span>
                     </div>
                 </div>
 
-                <!-- モックテーブル -->
-                <table class="mock-table">
-                    <thead>
-                        <tr>
-                            <th style="width: 12%;"><span class="pin-badge">①</span> 連番</th>
-                            <th style="width: 18%;"><span class="pin-badge">②</span> 検査名</th>
-                            <th style="width: 14%;">検査日</th>
-                            <th style="width: 15%;"><span class="pin-badge">③</span> 検査ID</th>
-                            <th style="width: 17%;"><span class="pin-badge">④</span> 患者氏名</th>
-                            <th style="width: 13%;"><span class="pin-badge">⑤</span> 年齢 / 性別</th>
-                            <th>診断・所見</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <!-- 1行目: 内視鏡 (胃がん検診対象) -->
-                        <tr>
-                            <td>
-                                <span class="demo-link" onclick="triggerInfo('① 連番クリック', '本家RS-Baseのデータ編集画面（2000.cgi）を別ブラウザタブで開きます。コメントの修正や受診科の変更が可能です。')">
-                                    152 ✏️
-                                </span>
-                            </td>
-                            <td>
-                                <span class="demo-badge-custom" id="badgeDemo1" onclick="triggerLaunch(this, 'NORMAL', 'ES_General')">
-                                    内視鏡 🚀
-                                </span>
-                            </td>
-                            <td>2026/09/30</td>
-                            <td>
-                                <span class="demo-link" onclick="triggerInfo('③ 検査IDクリック', '院内電子カルテビューワ（karteview.php）を別タブで開き、患者ID [100234] のカルテを即座に展開します。')">
-                                    100234 📋
-                                </span>
-                            </td>
-                            <td>
-                                <span class="demo-link" onclick="triggerInfo('④ 患者氏名クリック', '患者ID [100234] の全検査履歴（過去の全画像）で一覧を絞り込み表示します。')">
-                                    山田 太郎
-                                </span>
-                                <small style="display:block; color:#64748b; font-size:0.7rem;">ヤマダ タロウ</small>
-                            </td>
-                            <td>
-                                <!-- 年齢クリック：JPEG変換トリガー -->
-                                <span class="demo-folder-click" id="ageDemo1" onclick="triggerAgeClick(this, '\\\\192.168.1.164\\data\\20260930\\100234\\')" title="クリックしてJPEG変換">
-                                    68
-                                </span> 
-                                / 男
-                            </td>
-                            <td style="color:#64748b;">胃潰瘍疑い・定期フォロー</td>
-                        </tr>
+                <!-- モック画面フィルタパネル -->
+                <div class="mock-filter-panel">
+                    <div class="mock-filter-rows">
+                        <div class="mock-filter-row">
+                            <span class="mock-filter-label">検査絞り込み:</span>
+                            <span class="mock-toggle active">すべて表示</span>
+                            <span class="mock-toggle">内視鏡</span>
+                            <span class="mock-toggle">心電図</span>
+                            <span class="mock-toggle">US</span>
+                            <span class="mock-toggle">XP</span>
+                        </div>
+                        <div class="mock-filter-row">
+                            <span class="mock-filter-label">よみがな抽出:</span>
+                            <span class="mock-toggle active">すべて</span>
+                            <span class="mock-toggle">ア行</span>
+                            <span class="mock-toggle">カ行</span>
+                            <span class="mock-toggle">サ行</span>
+                            <span class="mock-toggle">タ行</span>
+                            <span class="mock-toggle">ヤ行</span>
+                        </div>
+                    </div>
+                    <!-- 虫眼鏡ボタン（ピン⑦） -->
+                    <div class="mock-search-btn" title="患者検索 (F2 / /)">
+                        <span class="pin-badge" style="position:absolute; top:-6px; right:-6px;">⑦</span>
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="11" cy="11" r="7"></circle>
+                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                        </svg>
+                    </div>
+                </div>
 
-                        <!-- 2行目: 心電図 -->
-                        <tr>
-                            <td>
-                                <span class="demo-link" onclick="triggerInfo('① 連番クリック', '本家RS-Baseのデータ編集画面（2000.cgi）を別ブラウザタブで開きます。')">
-                                    151 ✏️
-                                </span>
-                            </td>
-                            <td>
-                                <span class="demo-badge-ecg" id="badgeDemo2" onclick="triggerLaunch(this, 'ECG', '心電図')">
-                                    心電図 📈
-                                </span>
-                            </td>
-                            <td>2026/09/30</td>
-                            <td>
-                                <span class="demo-link" onclick="triggerInfo('③ 検査IDクリック', '電子カルテビューワを開き、患者ID [100188] のカルテを展開します。')">
-                                    100188 📋
-                                </span>
-                            </td>
-                            <td>
-                                <span class="demo-link" onclick="triggerInfo('④ 患者氏名クリック', '佐藤 花子 さんの全検査履歴で絞り込みます。')">
-                                    佐藤 花子
-                                </span>
-                                <small style="display:block; color:#64748b; font-size:0.7rem;">サトウ ハナコ</small>
-                            </td>
-                            <td>
-                                <span class="demo-folder-click" id="ageDemo2" onclick="triggerAgeClick(this, '\\\\192.168.1.164\\data\\20260930\\100188.ecg\\')" title="クリックしてJPEG変換">
-                                    54
-                                </span> 
-                                / 女
-                            </td>
-                            <td style="color:#64748b;">洞調律・正常心電図</td>
-                        </tr>
-                    </tbody>
-                </table>
+                <!-- モック画面テーブル (Ver 2.0: 9カラム・患者ゼブラ表示) -->
+                <div class="mock-table-card">
+                    <table class="mock-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 8%;"><span class="pin-badge">①</span> 連番</th>
+                                <th style="width: 10%;"><span class="pin-badge">②</span> 閲覧</th>
+                                <th style="width: 13%;"><span class="pin-badge">③</span> 検査名</th>
+                                <th style="width: 12%;">検査日/時刻</th>
+                                <th style="width: 10%;"><span class="pin-badge">④</span> 検査ID</th>
+                                <th style="width: 15%;"><span class="pin-badge">⑤</span> 患者氏名</th>
+                                <th style="width: 13%;"><span class="pin-badge">⑥</span> 年齢/性別/生年</th>
+                                <th style="width: 10%;">担当医/累計</th>
+                                <th>診断・所見</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- 患者A: 山田 太郎 (背景: 淡い水色 #f0f7ff) -->
+                            <tr class="row-patient-a">
+                                <td><span class="badge-renban">194285 ✏️</span></td>
+                                <td><span class="btn-view-dcm-mock">👁️ DICOM</span></td>
+                                <td><span class="badge-kensa">内視鏡 🚀</span></td>
+                                <td>2026/10/20 <small style="color:#64748b; font-size:0.68rem; display:block;">09:14:22</small></td>
+                                <td><span class="badge-id">100234 📋</span></td>
+                                <td>
+                                    <span class="name-link">山田 太郎</span>
+                                    <small style="display:block; color:#64748b; font-size:0.68rem;">ヤマダ タロウ</small>
+                                </td>
+                                <td>
+                                    <span class="age-click-btn">68</span> / 男
+                                    <small style="display:block; color:#64748b; font-size:0.68rem;">S33.05.12</small>
+                                </td>
+                                <td>
+                                    <span class="badge-doctor">👨‍⚕️ 鈴木</span>
+                                    <span class="badge-count">📊 12回</span>
+                                </td>
+                                <td style="color:#64748b;">胃ポリープ精査 (経過観察)</td>
+                            </tr>
+                            <tr class="row-patient-a">
+                                <td><span class="badge-renban">194286 ✏️</span></td>
+                                <td><span class="btn-view-ecg-mock">📈 心電図</span></td>
+                                <td><span class="badge-ecg">心電図 📈</span></td>
+                                <td>2026/10/20 <small style="color:#64748b; font-size:0.68rem; display:block;">09:40:05</small></td>
+                                <td><span class="badge-id">100234 📋</span></td>
+                                <td>
+                                    <span class="name-link">山田 太郎</span>
+                                    <small style="display:block; color:#64748b; font-size:0.68rem;">ヤマダ タロウ</small>
+                                </td>
+                                <td>
+                                    <span class="age-click-btn">68</span> / 男
+                                    <small style="display:block; color:#64748b; font-size:0.68rem;">S33.05.12</small>
+                                </td>
+                                <td>
+                                    <span class="badge-doctor">👨‍⚕️ 鈴木</span>
+                                    <span class="badge-count">📊 13回</span>
+                                </td>
+                                <td style="color:#64748b;">同日術前心電図・洞調律</td>
+                            </tr>
+                            <!-- 患者B: 佐藤 花子 (背景: 白 #ffffff) -->
+                            <tr class="row-patient-b">
+                                <td><span class="badge-renban">194287 ✏️</span></td>
+                                <td><span class="btn-view-dcm-mock">👁️ DICOM</span></td>
+                                <td><span class="badge-kensa">胸部XP 🚀</span></td>
+                                <td>2026/10/20 <small style="color:#64748b; font-size:0.68rem; display:block;">10:05:18</small></td>
+                                <td><span class="badge-id">100188 📋</span></td>
+                                <td>
+                                    <span class="name-link">佐藤 花子</span>
+                                    <small style="display:block; color:#64748b; font-size:0.68rem;">サトウ ハナコ</small>
+                                </td>
+                                <td>
+                                    <span class="age-click-btn">54</span> / 女
+                                    <small style="display:block; color:#64748b; font-size:0.68rem;">S47.11.03</small>
+                                </td>
+                                <td>
+                                    <span class="badge-doctor">👨‍⚕️ 田中</span>
+                                    <span class="badge-count">📊 3回</span>
+                                </td>
+                                <td style="color:#64748b;">胸部X線2方向・特記なし</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
 
-        <!-- アクション詳細解説カード群 -->
+        <!-- アクションピンの解説一覧 (Ver 2.0) -->
         <div class="feature-grid">
             <div class="feature-box">
-                <div class="feature-box-title" style="color:#0d9488;">
-                    <span class="pin-badge" style="background:#0d9488;">⑤</span> 年齢クリック（最重要機能）
+                <div class="feature-box-title" style="color:#1d4ed8;">
+                    <span class="pin-badge">①</span> 連番クリック（本家RS-Base 2000.cgi 編集）
                 </div>
-                <p style="font-size:0.85rem; color:#334155;">
-                    「<strong>年齢</strong>」の数字をクリックすると、<strong>選択モードに関係なく常に「DICOM UNCパスの複写」＋「JPEG変換トリガー送信」</strong>が同時実行されます。<br>
-                    胃がん検診などのDICOM一括JPEG変換専用のワンクリック操作です。
-                </p>
+                <p>本家RS-Baseのデータ登録・編集画面（<code>2000.cgi</code>）を別タブで開きます。受診科や診断コメント、カルテ所見の修正が可能です。</p>
+            </div>
+
+            <div class="feature-box" style="border: 1.5px solid #2563eb; background: #eff6ff;">
+                <div class="feature-box-title" style="color:#1d4ed8;">
+                    <span class="pin-badge">②</span> 【新設】独立閲覧ボタン列（ブラウザ高速ビューワー）
+                </div>
+                <p><strong>縦にビシッと揃った専用ボタン列！</strong> 検査種別を自動判別し、心電図なら「📈 心電図」、画像なら「👁️ DICOM」ボタンを表示。外部アプリの立ち上げ待ち時間ゼロで別タブ即座プレビューが可能です。</p>
+            </div>
+
+            <div class="feature-box">
+                <div class="feature-box-title" style="color:#059669;">
+                    <span class="pin-badge">③</span> 検査名バッジクリック（ネイティブアプリ直起動）
+                </div>
+                <p>クライアントPC上のネイティブ専用ビューワー（内視鏡・US・XPは <code>rsview.exe</code>、心電図は <code>FEV-05.exe</code>）を瞬時にトリガー起動します。</p>
+            </div>
+
+            <div class="feature-box">
+                <div class="feature-box-title" style="color:#1e3a8a;">
+                    <span class="pin-badge">④</span> 検査IDクリック（電子カルテ連携）
+                </div>
+                <p>院内Web電子カルテビューワ（<code>karteview.php</code>）を自動展開し、当該患者のカルテ情報を即座に呼び出します。</p>
             </div>
 
             <div class="feature-box">
                 <div class="feature-box-title" style="color:#2563eb;">
-                    <span class="pin-badge" style="background:#2563eb;">②</span> 検査名バッジクリック
+                    <span class="pin-badge">⑤</span> 患者氏名クリック（個別履歴）
                 </div>
-                <p style="font-size:0.85rem; color:#334155;">
-                    通常画像（内視鏡・US）は <code>rsview.exe</code>、心電図は <code>FEV-05.exe</code> がローカルPC上で瞬時に直起動します。<br>
-                    ※「RSBaseモード」時は本家CGIが別タブで開きます。
-                </p>
+                <p>当該患者の過去の全検査画像履歴で一覧を即時絞り込みます（<code>index.php?patient_id=...</code>）。氏名横の「🗺️」からは検査キャンバスも起動可能です。</p>
             </div>
 
             <div class="feature-box">
-                <div class="feature-box-title" style="color:#4f46e5;">
-                    <span class="pin-badge" style="background:#4f46e5;">③</span> 検査IDクリック（カルテ連携）
+                <div class="feature-box-title" style="color:#0f766e;">
+                    <span class="pin-badge">⑥</span> 年齢クリック（胃がん検診 JPEG変換）
                 </div>
-                <p style="font-size:0.85rem; color:#334155;">
-                    患者IDをクリックすると、院内Web電子カルテビューワへ直接パラメータが渡り、その患者のカルテが別タブで一瞬で展開されます。
+                <p><strong>胃がん検診などの最重要機能。</strong>モード設定に関係なく、常に「DICOM UNCパスの複写」＋「JPEG変換トリガー」を同時実行します。生年月日の和暦（昭和・平成・令和）も併記。</p>
+            </div>
+
+            <div class="feature-box">
+                <div class="feature-box-title" style="color:#1e40af;">
+                    <span class="pin-badge">⑦</span> 虫眼鏡アイコン（患者横断検索）
+                </div>
+                <p>過去全期間のデータベースから患者ID・氏名・フリガナで高速検索できるモーダルを開きます（キーボードショートカット <kbd>F2</kbd> または <kbd>/</kbd> 対応）。</p>
+            </div>
+
+            <div class="feature-box" style="border: 1.5px solid #10b981; background: #ecfdf5;">
+                <div class="feature-box-title" style="color:#047857;">
+                    🦓 患者別ゼブラグルーピング（視線迷子防止）
+                </div>
+                <p>同じ患者が同日に複数検査（内視鏡＋心電図＋XP等）を受けている場合、同一背景色（淡い水色）でグループ化。患者が切り替わると白色に反転するため、横に長い画面でも視線を見失いません。</p>
+            </div>
+
+            <div class="feature-box">
+                <div class="feature-box-title" style="color:#6366f1;">
+                    📊 メタデータの充実（サブ時刻・担当医・累計）
+                </div>
+                <p>秒単位の検査実施時刻（<code>sub_time</code>）、担当医師名（<code>👨‍⚕️ 医師名</code>）、および患者の過去累計検査回数（<code>📊 〇回</code>）を常時表示。臨床に必要な文脈を一目で把握できます。</p>
+            </div>
+
+            <div class="feature-box">
+                <div class="feature-box-title" style="color:#0284c7;">
+                    📌 100vh アプリケーションレイアウト
+                </div>
+                <p>ヘッダーと検索パネルが上部に固定され、テーブルヘッダー（列名）は常に最上部にスティッキー固定。どれだけ下へスクロールしても列を見失うことなく快適に一覧操作できます。</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==========================================
+         第2章: 患者横断検索モーダルの使い方
+         ========================================== -->
+    <section class="card" id="sec2">
+        <div class="card-title">
+            <span>🔍</span>
+            <span>第2章: 患者横断検索（ID・氏名・カナ）機能の使い方</span>
+        </div>
+        <p style="font-size:0.86rem; color:#475569;">
+            当日データに限らず、過去すべてのデータベース（<code>gazouDB</code>）から患者を瞬時に検索・特定できる機能です。
+        </p>
+
+        <!-- 検索モーダルの静的モックアップ -->
+        <div class="modal-mockup">
+            <div class="modal-mock-header">
+                <div class="modal-mock-title">
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#60a5fa" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="11" cy="11" r="7"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                    <span>患者検索（ID・氏名）</span>
+                </div>
+                <span class="modal-mock-close">&times;</span>
+            </div>
+            <div class="modal-mock-body">
+                <div class="modal-mock-searchbar">
+                    <input type="text" class="modal-mock-input" value="山田" readonly>
+                    <button type="button" class="modal-mock-submit">検索</button>
+                </div>
+                <div class="modal-mock-hint">
+                    <span>💡 Enterキーで検索実行 / 候補選択。Escキーで閉じます。</span>
+                    <span style="font-weight:700; color:#1e40af;">2 件該当</span>
+                </div>
+                <div class="modal-mock-list">
+                    <div class="modal-mock-item selected">
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <span class="mock-pat-id">8920</span>
+                            <div>
+                                <span class="mock-pat-name">山田 太郎</span>
+                                <small style="display:block; color:#64748b; font-size:0.68rem;">ヤマダ タロウ</small>
+                            </div>
+                        </div>
+                        <div class="mock-pat-meta">
+                            <span>最新: 2026/09/15</span>
+                            <span class="mock-count-badge">5 件</span>
+                            <span style="color:#2563eb; font-weight:700;">➔</span>
+                        </div>
+                    </div>
+                    <div class="modal-mock-item">
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <span class="mock-pat-id">100234</span>
+                            <div>
+                                <span class="mock-pat-name">山田 健一</span>
+                                <small style="display:block; color:#64748b; font-size:0.68rem;">ヤマダ ケンイチ</small>
+                            </div>
+                        </div>
+                        <div class="mock-pat-meta">
+                            <span>最新: 2026/08/20</span>
+                            <span class="mock-count-badge">3 件</span>
+                            <span style="color:#94a3b8; font-weight:700;">➔</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <h3 style="font-size:0.96rem; color:#1e3a8a; margin:16px 0 8px;">⌨️ 便利なキーボードショートカット一覧</h3>
+        <table class="info-table">
+            <thead>
+                <tr>
+                    <th style="width: 25%;">キー</th>
+                    <th>機能・動作</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><kbd>F2</kbd> または <kbd>/</kbd></td>
+                    <td>どの入力欄にもフォーカスしていない状態で押すと、<strong>一瞬で検索モーダルが開き、検索窓に自動フォーカス</strong>します。</td>
+                </tr>
+                <tr>
+                    <td><kbd>↑</kbd> / <kbd>↓</kbd></td>
+                    <td>検索候補の一覧上で、選択カーソルを上下に移動します。</td>
+                </tr>
+                <tr>
+                    <td><kbd>Enter</kbd></td>
+                    <td>
+                        ・入力直後：検索を実行します。<br>
+                        ・候補選択時：選択中の患者を確定し、その患者の全検査画像一覧へジャンプします。<br>
+                        <strong>※候補が1件のみヒットした場合は、Enterを押すだけで即時にその患者画面へ遷移します。</strong>
+                    </td>
+                </tr>
+                <tr>
+                    <td><kbd>Esc</kbd></td>
+                    <td>検索モーダルを閉じ、元の検査一覧画面に戻ります。</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="alert-box alert-tip">
+            💡 <strong>あいまい・正規化検索の強力な仕様:</strong><br>
+            ・<strong>患者ID</strong>: 全角数字（<code>０８９２０</code>）でも、先頭ゼロ付き（<code>08920</code>）でも、ゼロなし（<code>8920</code>）でも自動正規化して即座にヒットします。<br>
+            ・<strong>患者氏名</strong>: 漢字氏名はもちろん、ひらがな（<code>やまだ</code>）、全角カタカナ（<code>ヤマダ</code>）、半角カタカナ（<code>ﾔﾏﾀﾞ</code>）のどれを入力しても相互変換して正確にヒットします。
+        </div>
+    </section>
+
+    <!-- ==========================================
+         第3章: 胃がん検診データ作成補助機能
+         ========================================== -->
+    <section class="card" id="sec3">
+        <div class="card-title">
+            <span>📷</span>
+            <span>第3章: 胃がん検診データ作成補助機能 概要と日常操作手順</span>
+        </div>
+        
+        <div class="alert-box alert-info">
+            <strong>🏥 本機能の目的と仕組み:</strong><br>
+            本機能は、Webブラウザ（<code>index.php</code>）上の表示からワンクリックで内視鏡DICOMフォルダのUNCパスをクリップボードへコピーし、バックグラウンドでPythonツールを自動起動して、デスクトップ等の指定フォルダへJPEG形式で一括変換・保存する完全自動化システムです。
+        </div>
+
+        <h3 style="font-size:0.96rem; color:#1e3a8a; margin:18px 0 8px;">🔄 実際の操作手順（Step 1 〜 Step 4）</h3>
+        
+        <div style="display:flex; flex-direction:column; gap:14px; margin-top:12px;">
+            <!-- Step 1 -->
+            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:14px;">
+                <div style="font-weight:700; color:#1e3a8a; font-size:0.9rem; margin-bottom:4px;">
+                    <span class="step-badge">Step 1</span> ブラウザで対象患者の「年齢部分」をクリック
+                </div>
+                <p style="font-size:0.84rem; color:#475569; margin-left: 60px;">
+                    <code>index.php</code> を開き、対象患者の行にある<strong>「年齢」の数字</strong>をクリックします。<br>
+                    ※「年齢」クリックは、通常モード・カスタムモード等に関わらず、常にDICOM UNCパスのコピーとJPEG変換トリガー送信が予約されています。
+                </p>
+                <div style="margin: 8px 0 0 60px; font-size:0.82rem; color:#0f766e; background:#ccfbf1; padding:6px 12px; border-radius:6px; display:inline-block;">
+                    📋 <strong>画面下部のトースト通知:</strong> 「フォルダパスをコピーしました。JPEG変換トリガーを送信しました。」が表示されます。
+                </div>
+            </div>
+
+            <!-- Step 2 -->
+            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:14px;">
+                <div style="font-weight:700; color:#1e3a8a; font-size:0.9rem; margin-bottom:4px;">
+                    <span class="step-badge">Step 2</span> 保存時の「サブフォルダ名」ダイアログがポップアップ
+                </div>
+                <p style="font-size:0.84rem; color:#475569; margin-left: 60px;">
+                    クライアントPCで常駐している <code>watcher.vbs</code> がトリガーを検知し、画面中央に以下のVBScriptダイアログが自動で表示されます。<br>
+                    検診管理用のサブフォルダ名（例: <code>1111</code> や <code>胃がん検診_山田</code> など）を入力して「OK」を押します。
+                </p>
+                <!-- ダイアログモック -->
+                <div class="dialog-mockup">
+                    <div class="dialog-titlebar">
+                        <span>フォルダ名指定</span>
+                        <span style="color:#94a3b8; font-weight:700;">✕</span>
+                    </div>
+                    <div class="dialog-body">
+                        <div style="color:#334155;">保存するサブフォルダ名を入力してください:</div>
+                        <input type="text" class="dialog-input" value="1111" readonly>
+                    </div>
+                    <div class="dialog-footer">
+                        <button type="button" class="dialog-btn dialog-btn-primary">OK</button>
+                        <button type="button" class="dialog-btn">キャンセル</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 3 -->
+            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:14px;">
+                <div style="font-weight:700; color:#1e3a8a; font-size:0.9rem; margin-bottom:4px;">
+                    <span class="step-badge">Step 3</span> Python一括変換スクリプトが自動起動
+                </div>
+                <p style="font-size:0.84rem; color:#475569; margin-left: 60px;">
+                    「OK」をクリックすると、黒いコマンド画面（<code>dicom_convert.py</code>）が自動で立ち上がり、指定患者のDICOMフォルダから全画像を一括で高速JPEG変換します。
+                </p>
+                <!-- コマンド画面モック -->
+                <div class="terminal-mockup">
+                    <div class="terminal-header">
+                        <span>●</span> C:\Windows\System32\cmd.exe - python dicom_convert.py
+                    </div>
+                    <div class="terminal-body">
+                        <div>==========================================================</div>
+                        <div>  🏥 <span class="term-cyan">胃がん検診 DICOM → JPEG 単発変換 &amp; ベリファイ 🚀 [Ver 1.5]</span></div>
+                        <div>==========================================================</div>
+                        <div>【DEBUG】入力DICOMフォルダ: [\\192.168.1.164\data\20261020\100234\]</div>
+                        <div>【DEBUG】出力先ベース: [C:\Users\Owner\Desktop\JPEG]</div>
+                        <div>【DEBUG】出力先JPEGフォルダ: [C:\Users\Owner\Desktop\JPEG\1111]</div>
+                        <br>
+                        <div>出力先フォルダを新規作成しました: C:\Users\Owner\Desktop\JPEG\1111</div>
+                        <div class="term-green">✔ [1/14] CT0001.dcm ➔ CT0001.jpg 変換完了 (2048x1536)</div>
+                        <div class="term-green">✔ [2/14] CT0002.dcm ➔ CT0002.jpg 変換完了 (2048x1536)</div>
+                        <div class="term-green">✔ [3/14] CT0003.dcm ➔ CT0003.jpg 変換完了 (2048x1536)</div>
+                        <div class="term-green">...</div>
+                        <div class="term-green">✔ [14/14] CT0014.dcm ➔ CT0014.jpg 変換完了 (2048x1536)</div>
+                        <br>
+                        <div class="term-yellow">==========================================================</div>
+                        <div class="term-yellow">  🎉 すべての変換処理が正常に完了しました！（合計: 14枚）</div>
+                        <div class="term-yellow">==========================================================</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 4 -->
+            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:14px;">
+                <div style="font-weight:700; color:#1e3a8a; font-size:0.9rem; margin-bottom:4px;">
+                    <span class="step-badge">Step 4</span> デスクトップの「JPEG」フォルダに保存完了
+                </div>
+                <p style="font-size:0.84rem; color:#475569; margin-left: 60px;">
+                    ログイン中のユーザーのデスクトップ上にある <code>JPEG\[入力したサブフォルダ名]\</code> に、高画質なJPEG画像が連番で保存されます。
+                </p>
+                <div class="explorer-mockup" style="margin-left: 60px; max-width: 480px;">
+                    <div style="font-weight:700; color:#1e3a8a; border-bottom:1px solid #e2e8f0; padding-bottom:4px;">
+                        📁 C:\Users\Owner\Desktop\JPEG\1111\
+                    </div>
+                    <div class="explorer-item">🖼️ CT0001.jpg <span style="color:#94a3b8; font-size:0.72rem;">(1.2 MB)</span></div>
+                    <div class="explorer-item">🖼️ CT0002.jpg <span style="color:#94a3b8; font-size:0.72rem;">(1.1 MB)</span></div>
+                    <div class="explorer-item">🖼️ CT0003.jpg <span style="color:#94a3b8; font-size:0.72rem;">(1.3 MB)</span></div>
+                    <div class="explorer-item">🖼️ ... 他 11ファイル</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==========================================
+         第4章: 環境構築・ツール配置（Python・DicomTool）
+         ========================================== -->
+    <section class="card" id="sec4">
+        <div class="card-title">
+            <span>⚙️</span>
+            <span>第4章: クライアントPC側の環境構築とツールの配置</span>
+        </div>
+        <p style="font-size:0.86rem; color:#475569;">
+            胃がん検診データ作成機能（DICOM→JPEG一括変換）を診察室PCで動かすための初期環境設定です。<br>
+            <strong>【方法A】のZIPによる自動セットアップ</strong>、または<strong>【方法B】の手動構築</strong>のどちらでも設定できます。
+        </p>
+
+        <!-- 方法A: かんたん自動セットアップ -->
+        <h3 style="font-size:0.98rem; color:#059669; margin:18px 0 8px;">
+            【方法A】ZIPファイルによる自動セットアップ（推奨・最短）
+        </h3>
+        <p style="font-size:0.84rem; color:#334155; margin-bottom:8px;">
+            必要なスクリプト・配置バッチが一式揃ったZIPファイルをダウンロードして実行するだけで完了します。
+        </p>
+        <div style="margin: 8px 0 14px;">
+            <a href="watcher.zip" download class="btn-download-link btn-download-green">
+                📥 一括導入パッケージ（watcher.zip）をダウンロード
+            </a>
+        </div>
+        <ol style="margin-left: 20px; font-size:0.84rem; line-height: 1.8; color:#334155;">
+            <li>上記のボタンから <code>watcher.zip</code> をダウンロードします。</li>
+            <li>ダウンロードした <code>watcher.zip</code> を<strong>右クリック ➔「すべて展開...」</strong>で解凍します。</li>
+            <li>解凍されたフォルダ内にある <strong><code>setup.bat</code> をダブルクリック</strong>して実行します。</li>
+            <li>セキュリティ保護の自動解除・スタートアップへの登録が行われます。「Enter」キーを押して黒い画面を閉じれば、セットアップ完了です！</li>
+        </ol>
+
+        <!-- 方法B: 手動環境構築 -->
+        <h3 style="font-size:0.98rem; color:#1e3a8a; margin:24px 0 8px; border-top:1px solid #e2e8f0; padding-top:18px;">
+            【方法B】手動で個別に環境構築・ツール配置を行う場合
+        </h3>
+        <p style="font-size:0.84rem; color:#475569;">
+            Pythonやライブラリ、各スクリプトを個別に設定する場合は、以下のステップに沿って進めます。
+        </p>
+
+        <!-- 1. Python環境の構築 -->
+        <div style="margin-top:14px;">
+            <h4 style="font-size:0.92rem; color:#1e3a8a; margin-bottom:6px;">1. Python環境の構築（クライアントPC側）</h4>
+            <p style="font-size:0.84rem; color:#475569;">
+                Pythonがインストールされていない端末の場合は、以下の手順で環境を構築します。
+            </p>
+            
+            <h5 style="font-size:0.86rem; color:#334155; margin:10px 0 4px;">Step 1: Pythonのインストール</h5>
+            <ul style="margin-left: 20px; font-size:0.84rem; line-height: 1.8; color:#334155;">
+                <li>
+                    <a href="https://www.python.org/downloads/" target="_blank" style="color:#1d4ed8; font-weight:700;">Python公式サイト</a>へアクセスし、最新の安定版（Python 3.x系）のインストーラーをダウンロードします。<br>
+                    ※または院内サーバーのインストーラー（<code>DicomTool\python-3.13.15-amd64.exe</code>）も利用可能です。
+                </li>
+                <li>
+                    <strong>⚠️【最重要】インストーラーを実行し、最下部にある 「Add python.exe to PATH」に必ずチェックを入れてから</strong>インストールを進めます。
+                </li>
+                <li>
+                    コマンドプロンプト（<code>cmd</code>）を開き、バージョンを確認します：
+                    <pre><code>python --version</code></pre>
+                    （正常な出力例：<code>Python 3.13.x</code>）
+                </li>
+            </ul>
+
+            <h5 style="font-size:0.86rem; color:#334155; margin:12px 0 4px;">Step 2: 必要な外部ライブラリの導入</h5>
+            <p style="font-size:0.84rem; color:#334155;">
+                DICOM解析および画像変換用のライブラリ（<code>pydicom</code>, <code>Pillow</code>）をインストールします。コマンドプロンプトで以下を実行します：
+            </p>
+            <pre><code>pip install pydicom Pillow</code></pre>
+        </div>
+
+        <!-- 2. ツール一式（DicomTool）の配置 -->
+        <div style="margin-top:18px;">
+            <h4 style="font-size:0.92rem; color:#1e3a8a; margin-bottom:6px;">2. ツール一式（DicomTool）の配置</h4>
+            <ul style="margin-left: 20px; font-size:0.84rem; line-height: 1.8; color:#334155;">
+                <li>
+                    <strong>dicom_convert.py</strong>：メインの変換スクリプトです。以下のボタンからダウンロードして、クライアントPC上の適切なディレクトリ（例: <code>C:\Users\Owner\Desktop\DicomTool\</code>）に配置してください。<br>
+                    <a href="dicom_convert.py" download class="btn-download-link">
+                        📥 dicom_convert.py をダウンロード
+                    </a>
+                </li>
+                <li>
+                    <strong>config.txt</strong>：出力先設定ファイル。初回実行時に自動生成されます。変更したい場合は1行目のパスを書き換えてください。デフォルトではログイン中のユーザーのデスクトップにある <code>JPEG</code> フォルダを指します。
+                </li>
+            </ul>
+        </div>
+
+        <!-- 3. 常駐監視スクリプト（watcher.vbs）の配置と設定 -->
+        <div style="margin-top:18px;">
+            <h4 style="font-size:0.92rem; color:#1e3a8a; margin-bottom:6px;">3. 常駐監視スクリプト（watcher.vbs）の配置と設定</h4>
+            <p style="font-size:0.84rem; color:#334155;">
+                Webからの指示を受け取ってPythonを自動起動させるためのVBScriptを設定します。
+            </p>
+            
+            <h5 style="font-size:0.86rem; color:#334155; margin:10px 0 4px;">Step 1: スクリプトのダウンロードと配置</h5>
+            <ul style="margin-left: 20px; font-size:0.84rem; line-height: 1.8; color:#334155;">
+                <li>
+                    以下のボタンからダウンロードします。<br>
+                    <a href="watcher.vbs" download class="btn-download-link">
+                        📥 watcher.vbs をダウンロード (.vbs)
+                    </a>
+                </li>
+                <li>クライアントPCのスタートアップフォルダ等（<code>Windowsキー + R</code> ➔ <code>shell:startup</code> と入力して開くフォルダ）に配置すると、PC起動時に自動で常駐します。</li>
+            </ul>
+
+            <!-- ANSI文字コード警告 -->
+            <div class="alert-box alert-warning">
+                <strong>⚠️ 超重要：watcher.vbs の文字コードに関する注意点（ANSI / Shift_JIS）</strong><br>
+                VBScript（<code>.vbs</code>）内に日本語コメントやメッセージが含まれている場合、文字コードが <strong>「ANSI（Shift_JIS）」</strong> 以外（UTF-8など）になっていると、全角文字が文字化けしてスクリプトが正常に動作しません。<br>
+                メモ帳などで編集・保存する場合は、<strong>保存時の文字コードを必ず「ANSI」に指定</strong>してください。
+            </div>
+
+            <h5 style="font-size:0.86rem; color:#334155; margin:12px 0 4px;">Step 2: toolDir（ツール格納パス）の書き換え</h5>
+            <p style="font-size:0.84rem; color:#334155;">
+                ダウンロードした <code>watcher.vbs</code> をメモ帳などで開き、ツールの保存場所（パス）がクライアント環境に合っているか確認し、適切に書き換えます。
+            </p>
+            <pre><code>toolDir = "C:\Users\Owner\Desktop\DicomTool\" ' ※実際の環境のパスに変更してください</code></pre>
+        </div>
+    </section>
+
+    <!-- ==========================================
+         第5章: トラブルシューティング（FAQ）
+         ========================================== -->
+    <section class="card" id="sec5">
+        <div class="card-title">
+            <span>❓</span>
+            <span>第5章: トラブルシューティング &amp; よくある質問（FAQ）</span>
+        </div>
+        
+        <div style="display:flex; flex-direction:column; gap:12px;">
+            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:12px 16px;">
+                <div style="font-weight:700; color:#1e3a8a; font-size:0.88rem; margin-bottom:4px;">
+                    Q1. 年齢をクリックしても、フォルダ名入力ダイアログが出ません。
+                </div>
+                <p style="font-size:0.82rem; color:#334155; line-height:1.6;">
+                    <strong>A.</strong> クライアントPC側で常駐ソフト（<code>watcher.vbs</code>）が動いていない可能性があります。<br>
+                    ・タスクマネージャーを開き、「詳細」タブに <code>wscript.exe</code> が常駐しているか確認してください。<br>
+                    ・動いていない場合は、<code>watcher.vbs</code> をダブルクリックして起動するか、<code>setup.bat</code> を再実行してください。
+                </p>
+            </div>
+
+            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:12px 16px;">
+                <div style="font-weight:700; color:#1e3a8a; font-size:0.88rem; margin-bottom:4px;">
+                    Q2. コマンド画面に「'python' は内部コマンドまたは外部コマンドとして認識されていません」と表示されます。
+                </div>
+                <p style="font-size:0.82rem; color:#334155; line-height:1.6;">
+                    <strong>A.</strong> Pythonインストール時に「Add python.exe to PATH」のチェックが入っていなかったことが原因です。<br>
+                    Pythonインストーラーを再度起動し、「Modify」➔「Next」と進んで、環境変数への追加（Add to PATH）にチェックを入れて完了させてください。
+                </p>
+            </div>
+
+            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:12px 16px;">
+                <div style="font-weight:700; color:#1e3a8a; font-size:0.88rem; margin-bottom:4px;">
+                    Q3. フォルダ名入力で日本語を入力したら文字化け・エラーになりました。
+                </div>
+                <p style="font-size:0.82rem; color:#334155; line-height:1.6;">
+                    <strong>A.</strong> <code>watcher.vbs</code> をメモ帳等で保存した際に文字コードが <code>UTF-8</code> に変わってしまった可能性があります。<br>
+                    メモ帳で <code>watcher.vbs</code> を開き、「名前を付けて保存」から文字コード欄で <strong>「ANSI」</strong> を選択して上書き保存してください。
+                </p>
+            </div>
+
+            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:12px 16px;">
+                <div style="font-weight:700; color:#1e3a8a; font-size:0.88rem; margin-bottom:4px;">
+                    Q4. JPEG画像の保存先を、デスクトップではなくネットワークドライブ（NAS等）に変更したいです。
+                </div>
+                <p style="font-size:0.82rem; color:#334155; line-height:1.6;">
+                    <strong>A.</strong> <code>DicomTool</code> フォルダ内の <code>config.txt</code> をメモ帳で開き、1行目を希望のパス（例: <code>Z:\胃がん検診画像\</code> や <code>\\Server\share\JPEG</code>）に書き換えて保存してください。次回実行時からその場所へ自動保存されます。
                 </p>
             </div>
         </div>
     </section>
 
-    <!-- 2. クライアントPC側の連動画面（常駐VBS & Python） -->
-    <section class="card">
+    <!-- ==========================================
+         第6章: 検査タイムライン・無限キャンバス (JSON Canvas)
+         ========================================== -->
+    <!-- ==========================================
+         第6章: 検査タイムライン・無限キャンバス (canvas_view.php Ver 2.0)
+         ========================================== -->
+    <section class="card" id="sec6">
         <div class="card-title">
-            <span class="icon">⚡</span>
-            2. クライアントPC側で起こる連動画面（常駐ソフトと変換ツール）
+            <span>🗺️</span>
+            <span>第6章: 検査タイムライン・無限キャンバス（canvas_view.php Ver 2.0）</span>
+            <span class="badge" style="background:#dbeafe; color:#1d4ed8; font-size:0.75rem; margin-left:auto;">v2.0 大幅強化</span>
         </div>
-        <p>Web画面で「年齢」または「検査名」をクリックした際、クライアントPC側で常駐ソフト（<code>watcher.vbs</code>）がミリ秒で検知して実行する実際の画面推移です。</p>
-
-        <!-- ステップ1: InputBoxダイアログ -->
-        <h3 style="font-size:1rem; color:#1e293b; margin:16px 0 8px 0;">
-            ステップ①: 年齢クリック時に表示される「フォルダ名入力ダイアログ」
-        </h3>
-        <p style="font-size:0.88rem; color:#64748b;">
-            常駐スクリプトがトリガーを検知すると、画面中央に以下のVBScriptダイアログが自動ポップアップします。保存したいサブフォルダ名（例: <code>胃がん検診_山田</code> など）を入力して「OK」を押します。
+        <p style="font-size:0.86rem; color:#475569; margin-bottom:14px;">
+            患者の生涯にわたる全検査履歴（内視鏡、心電図、超音波、胸部XP等）を2次元の無限キャンバス上に可視化。オープン標準 <strong>JSON Canvas (v1.0 Spec)</strong> に完全準拠し、完全ローカル（院内オフライン）で動作します。<br>
+            Ver 2.0では、<strong>検査種別の動的絞り込みピル</strong>、<strong>正確なカレンダー時間軸比例タイムライン（年月ルーラー付き）</strong>、<strong>検査当時の年齢バッジ表示</strong>、<strong>ブラウザ内新タブWebビューワー直結（DICOM/心電図）</strong>を新たに搭載しました。
         </p>
 
-        <div class="dialog-mockup">
-            <div class="dialog-titlebar">
-                <span>フォルダ名指定</span>
-                <span style="cursor:pointer; color:#94a3b8;">✕</span>
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:12px; margin-bottom:16px;">
+            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:14px;">
+                <div style="font-weight:700; color:#1e3a8a; font-size:0.88rem; margin-bottom:6px;">📅 実時間カレンダータイムライン（年月ルーラー）</div>
+                <ul style="font-size:0.8rem; color:#475569; padding-left:18px; line-height:1.6;">
+                    <li><strong>実時間スケール比例:</strong> 検査間隔（日数）に応じた正確な横軸位置にカードを配置（20年の長期フォローも一目瞭然）</li>
+                    <li><strong>年月ルーラー:</strong> キャンバス背景に破線と「📅 2005年」「📅 2010年」の目盛りガイドを自動描画</li>
+                    <li><strong>マルチトラック衝突回避:</strong> 同日または近接日の複数検査はY軸方向（縦）に自動スタック整列され重複を防止</li>
+                </ul>
             </div>
-            <div class="dialog-body">
-                <div>保存するサブフォルダ名を入力してください:</div>
-                <input type="text" class="dialog-input" value="胃がん検診_山田" readonly>
+
+            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:14px;">
+                <div style="font-weight:700; color:#1e3a8a; font-size:0.88rem; margin-bottom:6px;">🔍 検査種別の動的絞り込みピル</div>
+                <ul style="font-size:0.8rem; color:#475569; padding-left:18px; line-height:1.6;">
+                    <li><strong>ヘッダーピル群:</strong> 「全検査」「🔬 内視鏡」「❤️ 心電図」「📡 超音波」「🩻 胸部XP」を件数バッジ付きで表示</li>
+                    <li><strong>スマート非表示:</strong> 当該患者に受診歴のない種別は自動で除外され、すっきりとしたUIを維持</li>
+                    <li><strong>ワンクリック再配置:</strong> ピル選択と同時に非該当カードを除外し、キャンバスが最適な倍率へ自動フィット</li>
+                </ul>
             </div>
-            <div class="dialog-footer">
-                <button type="button" class="dialog-btn dialog-btn-primary">OK</button>
-                <button type="button" class="dialog-btn">キャンセル</button>
+
+            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:14px;">
+                <div style="font-weight:700; color:#1e3a8a; font-size:0.88rem; margin-bottom:6px;">👤 検査実施当時の年齢チップ表示</div>
+                <ul style="font-size:0.8rem; color:#475569; padding-left:18px; line-height:1.6;">
+                    <li><strong>正確な当時年齢:</strong> 生年月日と各検査実施日から「👤 当時 〇〇歳」を自動算出してカード内にバッジ表示</li>
+                    <li><strong>担当医情報:</strong> 記録がある場合は「👨‍⚕️ 担当医名」チップもカード内に併記</li>
+                    <li><strong>経年変化の直感理解:</strong> 10年・20年の加齢に伴う所見推移を視覚的にストレスなく把握可能</li>
+                </ul>
+            </div>
+
+            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:14px;">
+                <div style="font-weight:700; color:#1e3a8a; font-size:0.88rem; margin-bottom:6px;">🚀 専用Webビューワー新タブ直接起動</div>
+                <ul style="font-size:0.8rem; color:#475569; padding-left:18px; line-height:1.6;">
+                    <li><strong>心電図検査:</strong> 「📈 心電図 ↗」ボタンで12誘導心電図Webビューワー（ecg_view.php）を別タブ展開</li>
+                    <li><strong>DICOM・画像検査:</strong> 「👁️ DICOM ↗」ボタンで高速Web DICOMビューワー（dicom_view.php）を別タブ展開</li>
+                    <li><strong>画面併用:</strong> キャンバスの全体俯瞰を維持したまま、隣のタブで高解像度画像や波形を自在に確認</li>
+                </ul>
+            </div>
+
+            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:14px;">
+                <div style="font-weight:700; color:#1e3a8a; font-size:0.88rem; margin-bottom:6px;">🔄 3大レイアウトワンクリック切替</div>
+                <ul style="font-size:0.8rem; color:#475569; padding-left:18px; line-height:1.6;">
+                    <li><strong>📅 実時間（デフォルト）:</strong> カレンダー時間軸比例＋年月ルーラー</li>
+                    <li><strong>🔄 種別レーン:</strong> 内視鏡・心電図・US・XPごとの並行スイムレーン形式</li>
+                    <li><strong>⏳ 順序フロー:</strong> 全検査を等間隔の日付順フローで一列表示</li>
+                </ul>
+            </div>
+
+            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:14px;">
+                <div style="font-weight:700; color:#1e3a8a; font-size:0.88rem; margin-bottom:6px;">💾 Obsidian連携 (.canvas) &amp; 付箋メモ</div>
+                <ul style="font-size:0.8rem; color:#475569; padding-left:18px; line-height:1.6;">
+                    <li><strong>.canvas 保存:</strong> Obsidian等にインポート可能な標準ファイルをワンクリック出力</li>
+                    <li><strong>付箋メモ:</strong> 「➕ 付箋」で次回フォロー予定や要確認部位などのフリーメモカードを追加可能</li>
+                    <li><strong>パン・ズーム:</strong> 背景ドラッグでパン、マウスホイールでズーム、HUDの「⛶」で全体フィット</li>
+                </ul>
             </div>
         </div>
 
-        <!-- ステップ2: コマンドプロンプト実行画面 -->
-        <h3 style="font-size:1rem; color:#1e293b; margin:24px 0 8px 0;">
-            ステップ②: 自動起動するPython変換スクリプト（dicom_convert.py）
-        </h3>
-        <p style="font-size:0.88rem; color:#64748b;">
-            「OK」を押すと直ちに黒いコマンドプロンプト画面が起動し、指定患者のDICOM画像（<code>.dcm</code>）を一括JPEG変換します。
-        </p>
-
-        <div class="terminal-mockup">
-            <div class="terminal-header">
-                <span>●</span> C:\Windows\System32\cmd.exe - python dicom_convert.py
-            </div>
-            <div class="terminal-body">
-                <div>==========================================================</div>
-                <div>  🏥 <span class="term-cyan">胃がん検診 DICOM → JPEG 単発変換 &amp; ベリファイ 🚀 [Ver 1.5]</span></div>
-                <div>==========================================================</div>
-                <div>【DEBUG】入力DICOMフォルダ: [\\192.168.1.164\data\20260930\100234\]</div>
-                <div>【DEBUG】出力先ベース: [C:\Users\Owner\Desktop\JPEG]</div>
-                <div>【DEBUG】出力先JPEGフォルダ: [C:\Users\Owner\Desktop\JPEG\胃がん検診_山田]</div>
-                <br>
-                <div>出力先フォルダを新規作成しました: C:\Users\Owner\Desktop\JPEG\胃がん検診_山田</div>
-                <div class="term-green">✔ [1/14] CT0001.dcm ➔ 001.jpg 変換完了 (2048x1536)</div>
-                <div class="term-green">✔ [2/14] CT0002.dcm ➔ 002.jpg 変換完了 (2048x1536)</div>
-                <div class="term-green">✔ [3/14] CT0003.dcm ➔ 003.jpg 変換完了 (2048x1536)</div>
-                <div class="term-green">...</div>
-                <div class="term-green">✔ [14/14] CT0014.dcm ➔ 014.jpg 変換完了 (2048x1536)</div>
-                <br>
-                <div class="term-yellow">==========================================================</div>
-                <div class="term-yellow">  🎉 すべての変換処理が正常に完了しました！（合計: 14枚）</div>
-                <div class="term-yellow">==========================================================</div>
-            </div>
-        </div>
-
-        <div class="alert-tip">
-            💡 <strong>生成された画像の保存先:</strong><br>
-            ご自身のPCデスクトップ上の <code>JPEG\[入力したフォルダ名]\</code> 配下に高画質JPEG画像が自動保存されます。
+        <div class="alert-box alert-success" style="background:#eff6ff; border-left:4px solid #2563eb; color:#1e40af; padding:12px 14px; border-radius:6px; font-size:0.82rem;">
+            💡 <strong>起動方法:</strong> 画面上部ヘッダーの「🗺️ 検査キャンバス ↗」、または患者検索モーダル内・一覧テーブルの各患者名横にある「🗺️」アイコンをクリックすると開きます。
         </div>
     </section>
 
-    <!-- 3. かんたん導入（セットアップ）手順 -->
-    <section class="card">
+    <!-- ==========================================
+         第7章: 高機能Web DICOMビューワー (dicom_view.php)
+         ========================================== -->
+    <section class="card" id="sec7">
         <div class="card-title">
-            <span class="icon">📦</span>
-            3. 初めて使う端末への「かんたん導入（setup.bat）」
+            <span>👁️</span>
+            <span>第7章: 高機能Web DICOMビューワー（dicom_view.php Ver 2.0）</span>
+            <span class="badge" style="background:#ecfdf5; color:#047857; font-size:0.75rem; margin-left:auto;">新機能</span>
         </div>
-        <p>ビューワ直起動やJPEG一括変換を動かすため、診察室PCに一度だけ常駐ソフトを導入します。</p>
+        <p style="font-size:0.86rem; color:#475569; margin-bottom:14px;">
+            外部ネイティブソフト（RSView等）のインストールや起動待ち時間を一切不要とし、院内のあらゆる端末のブラウザ上で約0.03秒で高速起動する内蔵DICOMビューワーです。<br>
+            内視鏡、胸部XP、CT、超音波（US）などのマルチフレーム・連番画像を忠実かつ軽快に表示・操作できます。
+        </p>
 
-        <ol style="margin-left: 20px; font-size: 0.9rem; line-height: 1.8;">
-            <li>画面上部の「<strong>📥 常駐スクリプトDL</strong>」から <code>watcher.zip</code> をダウンロードします。</li>
-            <li>ダウンロードしたZIPを<strong>右クリック ➔「すべて展開...」</strong>で解凍します。</li>
-            <li>解凍されたフォルダ内の <strong><code>setup.bat</code> をダブルクリック</strong>します。</li>
-            <li>黒い画面が表示され、セキュリティ解除・配置・スタートアップ登録が自動完了します。キーを押して画面を閉じれば、導入完了です！</li>
-        </ol>
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:12px; margin-bottom:16px;">
+            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:14px;">
+                <div style="font-weight:700; color:#047857; font-size:0.88rem; margin-bottom:6px;">🖼️ 縦横比維持センタリング &amp; スクロール最適化</div>
+                <ul style="font-size:0.8rem; color:#475569; padding-left:18px; line-height:1.6;">
+                    <li><strong>アスペクト比完全維持:</strong> 画像の歪み・潰れを防止し、ビューポート中央に美しくセンタリング描画</li>
+                    <li><strong>縦スクロールサムネイル:</strong> 画像枚数が80枚を超える胃カメラや大腸カメラでもサムネイルが縮小潰れせず、滑らかに縦スクロール一覧可能</li>
+                    <li><strong>キーボード操作:</strong> <kbd>←</kbd> / <kbd>→</kbd> キーでコマ送り・戻し、<kbd>+</kbd> / <kbd>-</kbd> で拡大縮小</li>
+                </ul>
+            </div>
+
+            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:14px;">
+                <div style="font-weight:700; color:#047857; font-size:0.88rem; margin-bottom:6px;">🎛️ WW/WL階調調整 &amp; 画像ツール</div>
+                <ul style="font-size:0.8rem; color:#475569; padding-left:18px; line-height:1.6;">
+                    <li><strong>マウスドラッグWW/WL:</strong> 画面上でのドラッグ操作でウィンドウ幅（コントラスト）とウィンドウレベル（明るさ）を無段階調整</li>
+                    <li><strong>臨床プリセット:</strong> 軟部組織、肺野、骨条件などのワンタッチプリセット切り替え</li>
+                    <li><strong>白黒反転・等倍リセット:</strong> レントゲン等の反転観察やパン移動・ズームリセットがワンクリック</li>
+                </ul>
+            </div>
+
+            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:14px;">
+                <div style="font-weight:700; color:#047857; font-size:0.88rem; margin-bottom:6px;">📥 胃がん検診 JPEG一括保存 &amp; 単コマ出力</div>
+                <ul style="font-size:0.8rem; color:#475569; padding-left:18px; line-height:1.6;">
+                    <li><strong>一括ZIPダウンロード:</strong> 胃がん検診提出に必要な全コマのJPEG変換アーカイブをブラウザ上で一発作成・保存</li>
+                    <li><strong>現在コマ保存:</strong> 気になる病変や特記所見コマを即座に高画質JPEGファイルとしてダウンロード</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==========================================
+         第8章: 12誘導心電図Webビューワー (ecg_view.php)
+         ========================================== -->
+    <section class="card" id="sec8">
+        <div class="card-title">
+            <span>📈</span>
+            <span>第8章: 12誘導心電図Webビューワー（ecg_view.php Ver 2.0）</span>
+            <span class="badge" style="background:#fdf2f8; color:#db2777; font-size:0.75rem; margin-left:auto;">新機能</span>
+        </div>
+        <p style="font-size:0.86rem; color:#475569; margin-bottom:14px;">
+            院内のフクダ電子（Fukuda Denshi）心電計から送信されたバイナリ波形データを完全解析し、ブラウザ上で本物の心電図方眼紙にリアルタイム描画する新開発の専用Webビューワーです。<br>
+            専用端末や重厚なクライアントソフトを立ち上げることなく、診察机のWebブラウザから瞬時に12誘導波形と臨床計測値を精査できます。
+        </p>
+
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:12px; margin-bottom:16px;">
+            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:14px;">
+                <div style="font-weight:700; color:#db2777; font-size:0.88rem; margin-bottom:6px;">📐 医療標準 心電図方眼紙グリッド</div>
+                <ul style="font-size:0.8rem; color:#475569; padding-left:18px; line-height:1.6;">
+                    <li><strong>国際標準仕様:</strong> 送り速度 <code>25mm/sec</code>、感度 <code>10mm/mV</code> に完全準拠したピンク/オレンジ方眼紙</li>
+                    <li><strong>精密目盛り:</strong> 1mm細線（0.04秒 / 0.1mV）および 5mm太線（0.20秒 / 0.5mV）を忠実に再現</li>
+                    <li><strong>校正パルス:</strong> 各誘導の先頭に1.0mVのキャリブレーション方形波を自動描画</li>
+                </ul>
+            </div>
+
+            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:14px;">
+                <div style="font-weight:700; color:#db2777; font-size:0.88rem; margin-bottom:6px;">🩺 自動計測パラメータ・オーバーレイ</div>
+                <ul style="font-size:0.8rem; color:#475569; padding-left:18px; line-height:1.6;">
+                    <li><strong>心拍数 (HR):</strong> 心電計が解析した正確な心拍数（例: <code>68 bpm</code>）</li>
+                    <li><strong>PR間隔 / QRS幅:</strong> 房室伝導時間および心室脱分極時間（例: <code>PR: 156ms</code>, <code>QRS: 92ms</code>）</li>
+                    <li><strong>QT / QTc間隔:</strong> Bazett補正式によるQTc（例: <code>QT: 402ms / QTc: 428ms</code>）</li>
+                    <li><strong>電気軸 (Axis):</strong> 前頭面QRS電気軸角度（例: <code>Axis: +54°</code>）</li>
+                </ul>
+            </div>
+
+            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:14px;">
+                <div style="font-weight:700; color:#db2777; font-size:0.88rem; margin-bottom:6px;">🔬 誘導切り替え &amp; ズーム拡大</div>
+                <ul style="font-size:0.8rem; color:#475569; padding-left:18px; line-height:1.6;">
+                    <li><strong>12誘導一括モード:</strong> 標準肢誘導（I, II, III, aVR, aVL, aVF）＋胸部誘導（V1〜V6）を一画面で一覧比較</li>
+                    <li><strong>単一誘導フォーカス:</strong> 特定誘導（II誘導やV1誘導など）を画面全体に拡大して細かな不整脈やST変化を精査</li>
+                    <li><strong>計測用十字クロスヘア:</strong> マウスカーソル位置の時間（ms）と電圧（mV）をリアルタイムに数値表示</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="alert-box alert-success" style="background:#eff6ff; border-left:4px solid #2563eb; color:#1e40af; padding:12px 14px; border-radius:6px; font-size:0.82rem;">
+            💡 <strong>心電図ビューワーの起動:</strong> 一覧画面（index.php）の閲覧列「📈 心電図」ボタン、または検査キャンバス（canvas_view.php）の心電図カード下にある「📈 心電図 ↗」ボタンをクリックすると即座に立ち上がります。
+        </div>
     </section>
 
     <div class="footer">
-        RS-Base 高速画像ファイリングシステム ビジュアルヘルプ &copy; 2026 当院システム管理部
+        RS-Base 高速画像ファイリング &amp; 検査ビューワ連携システム 総合マニュアル &copy; 2026 当院システム管理部
     </div>
 
 </div>
-
-<!-- トースト通知UIモック -->
-<div id="mockToast" class="mock-toast">
-    <span style="font-size:1.2rem;">📋</span>
-    <span id="mockToastMsg">フォルダパスをコピーしました。<br>JPEG変換トリガーを送信しました。</span>
-</div>
-
-<!-- インタラクティブ動作スクリプト -->
-<script>
-function showToast(msg) {
-    const toast = document.getElementById('mockToast');
-    const toastMsg = document.getElementById('mockToastMsg');
-    toastMsg.innerHTML = msg;
-    toast.className = 'mock-toast show';
-    setTimeout(() => {
-        toast.className = 'mock-toast';
-    }, 3200);
-}
-
-// 年齢クリック時シミュレーション
-function triggerAgeClick(element, path) {
-    const originalText = element.textContent;
-    element.textContent = "📷 起動OK";
-    element.style.color = "#15803d";
-    element.style.fontWeight = "bold";
-
-    showToast("<strong>フォルダパスをコピーしました:</strong><br>" + path + "<br><span style='color:#38bdf8;'>📷 JPEG変換トリガーを送信しました！</span>");
-
-    setTimeout(() => {
-        element.textContent = originalText;
-        element.style.color = "";
-        element.style.fontWeight = "";
-    }, 2500);
-}
-
-// 検査名クリック時シミュレーション
-function triggerLaunch(element, mode, kensaName) {
-    const originalText = element.textContent;
-    element.textContent = "🚀 起動OK";
-    
-    if (mode === 'ECG') {
-        showToast("📈 フクダ電子 心電図ビューワ（FEV-05.exe）の起動指示を送信しました！");
-    } else {
-        showToast("🖼️ 通常画像ビューワ（rsview.exe）の起動指示を送信しました！");
-    }
-
-    setTimeout(() => {
-        element.textContent = originalText;
-    }, 2000);
-}
-
-function triggerInfo(title, desc) {
-    alert("【" + title + "】\n\n" + desc);
-}
-
-function changeDemoMode(mode) {
-    const b1 = document.getElementById('badgeDemo1');
-    if (mode === 'jpeg') {
-        b1.textContent = "内視鏡 📷 JPEG";
-        b1.style.background = "#0d9488";
-    } else if (mode === 'rsbase') {
-        b1.textContent = "内視鏡 🔗";
-        b1.style.background = "#475569";
-    } else {
-        b1.textContent = "内視鏡 🚀";
-        b1.style.background = "#2563eb";
-    }
-}
-</script>
 
 </body>
 </html>

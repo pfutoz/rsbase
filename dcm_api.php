@@ -1,0 +1,240 @@
+<?php
+// ==============================================================================
+// RS-Base 高速ダイレクトDICOMストリーミングAPI (dcm_api.php)
+// 内視鏡JPEGダイレクト抽出 (30ms) ＋ 非圧縮(US/XP)自動変換 & キャッシュ
+// ==============================================================================
+
+ob_start();
+
+$cache_dir = __DIR__ . '/tmp/dcm_cache/';
+if (!file_exists($cache_dir)) {
+    @mkdir($cache_dir, 0777, true);
+}
+
+// フォルダパスの正規化
+$raw_folder = $_GET['folder'] ?? $_POST['folder'] ?? '';
+$folder = rtrim(trim(str_replace('/', '\\', $raw_folder)), '\\');
+
+// アクション判定
+$action = $_GET['action'] ?? $_POST['action'] ?? '';
+
+// ① ファイル一覧の取得 (action=list)
+if ($action === 'list') {
+    header('Content-Type: application/json; charset=UTF-8');
+    ob_clean();
+
+    if (empty($folder) || !is_dir($folder)) {
+        echo json_encode([
+            'status' => 'error',
+            'message' => '指定されたDICOMフォルダが存在しないか、アクセスできません: ' . $folder
+        ], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+
+    try {
+        $dir_handle = opendir($folder);
+        $files = [];
+
+        if ($dir_handle) {
+            while (($file = readdir($dir_handle)) !== false) {
+                if ($file === '.' || $file === '..') continue;
+                $full_path = $folder . '\\' . $file;
+                if (is_dir($full_path)) continue;
+
+                // 拡張子が .dcm または拡張子なしの検査ファイル
+                $ext = strtolower(pathinfo($file, PATHINFO_EXTENSION));
+                if ($ext === 'dcm' || empty($ext) || $ext === 'ecg') {
+                    $files[] = [
+                        'filename' => $file,
+                        'size'     => @filesize($full_path) ?: 0,
+                        'mtime'    => @filemtime($full_path) ?: 0
+                    ];
+                }
+            }
+            closedir($dir_handle);
+        }
+
+        // 自然順ソート (001.dcm, 002.dcm, 003.dcm...)
+        usort($files, function($a, $b) {
+            return strnatcasecmp($a['filename'], $b['filename']);
+        });
+
+        echo json_encode([
+            'status' => 'success',
+            'folder' => $folder,
+            'total'  => count($files),
+            'files'  => $files
+        ], JSON_UNESCAPED_UNICODE);
+
+    } catch (Exception $e) {
+        echo json_encode([
+            'status' => 'error',
+            'message' => 'フォルダ読み込みエラー: ' . $e->getMessage()
+        ], JSON_UNESCAPED_UNICODE);
+    }
+    exit;
+}
+
+// ② 胃がん検診用 JPEG一括ZIPダウンロード (action=zip)
+if ($action === 'zip') {
+    ob_clean();
+    $target_files = $_POST['files'] ?? [];
+    if (empty($target_files) && isset($_GET['files'])) {
+        $target_files = explode(',', $_GET['files']);
+    }
+
+    if (empty($folder) || !is_dir($folder)) {
+        header('HTTP/1.1 400 Bad Request');
+        echo "フォルダが存在しません";
+        exit;
+    }
+
+    $zip_filename = basename(rtrim($folder, '\\/')) . '_JPEG.zip';
+    $tmp_zip_path = $cache_dir . 'download_' . md5($folder . time()) . '.zip';
+
+    $zip = new ZipArchive();
+    if ($zip->open($tmp_zip_path, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== true) {
+        header('HTTP/1.1 500 Internal Server Error');
+        echo "ZIPファイルの作成に失敗しました";
+        exit;
+    }
+
+    // ファイル指定がなければフォルダ内の全DCMを対象
+    if (empty($target_files)) {
+        $scan = scandir($folder);
+        foreach ($scan as $f) {
+            if ($f === '.' || $f === '..') continue;
+            if (is_file($folder . '\\' . $f) && strtolower(pathinfo($f, PATHINFO_EXTENSION)) === 'dcm') {
+                $target_files[] = $f;
+            }
+        }
+    }
+
+    foreach ($target_files as $f) {
+        $dcm_path = $folder . '\\' . basename($f);
+        if (file_exists($dcm_path)) {
+            $jpeg_data = get_dcm_jpeg_bytes($dcm_path, false, $cache_dir);
+            if ($jpeg_data !== null) {
+                $base = pathinfo($f, PATHINFO_FILENAME);
+                $zip->addFromString($base . '.jpg', $jpeg_data);
+            }
+        }
+    }
+
+    $zip->close();
+
+    if (file_exists($tmp_zip_path)) {
+        header('Content-Type: application/zip');
+        header('Content-Disposition: attachment; filename="' . $zip_filename . '"');
+        header('Content-Length: ' . filesize($tmp_zip_path));
+        header('Pragma: no-cache');
+        readfile($tmp_zip_path);
+        @unlink($tmp_zip_path);
+        exit;
+    } else {
+        header('HTTP/1.1 500 Internal Server Error');
+        echo "ZIPファイルの生成に失敗しました";
+        exit;
+    }
+}
+
+// ③ 画像ストリーミング配信 (action未指定 または action=image)
+$file = $_GET['file'] ?? '';
+$is_thumb = isset($_GET['thumb']) && $_GET['thumb'] === '1';
+
+if (empty($folder) || empty($file)) {
+    ob_clean();
+    header('HTTP/1.1 400 Bad Request');
+    echo "パラメータが不足しています";
+    exit;
+}
+
+$full_path = $folder . '\\' . basename($file);
+if (!file_exists($full_path)) {
+    ob_clean();
+    header('HTTP/1.1 404 Not Found');
+    echo "DICOMファイルが見つかりません: " . htmlspecialchars($full_path);
+    exit;
+}
+
+$jpeg_data = get_dcm_jpeg_bytes($full_path, $is_thumb, $cache_dir);
+
+if ($jpeg_data !== null) {
+    ob_clean();
+    header('Content-Type: image/jpeg');
+    header('Content-Length: ' . strlen($jpeg_data));
+    header('Cache-Control: public, max-age=86400'); // 1日キャッシュ
+    echo $jpeg_data;
+    exit;
+} else {
+    ob_clean();
+    header('Content-Type: image/svg+xml');
+    echo '<svg xmlns="http://www.w3.org/2000/svg" width="300" height="200" viewBox="0 0 300 200"><rect fill="#1e293b" width="100%" height="100%"/><text fill="#94a3b8" x="50%" y="50%" text-anchor="middle" font-size="14">画像取得エラー</text></svg>';
+    exit;
+}
+
+// ==============================================================================
+// 内部関数: 高速JPEG抽出 & キャッシュ機構
+// ==============================================================================
+function get_dcm_jpeg_bytes($dcm_path, $is_thumb, $cache_dir) {
+    $mtime = @filemtime($dcm_path) ?: time();
+    $cache_key = md5($dcm_path . '_' . $mtime . ($is_thumb ? '_thumb' : '_full'));
+    $cache_file = $cache_dir . $cache_key . '.jpg';
+
+    // 1. キャッシュが存在すればそのまま返却 (1ms)
+    if (file_exists($cache_file) && filesize($cache_file) > 0) {
+        return file_get_contents($cache_file);
+    }
+
+    // 2. 内視鏡など：埋め込みJPEGのダイレクト抽出 (30ms)
+    $handle = @fopen($dcm_path, 'rb');
+    if ($handle) {
+        $content = stream_get_contents($handle);
+        fclose($handle);
+
+        $soi = strpos($content, "\xFF\xD8\xFF");
+        if ($soi !== false) {
+            $eoi = strrpos($content, "\xFF\xD9");
+            if ($eoi !== false && $eoi > $soi) {
+                $raw_jpeg = substr($content, $soi, $eoi - $soi + 2);
+
+                if ($is_thumb) {
+                    $img = @imagecreatefromstring($raw_jpeg);
+                    if ($img !== false) {
+                        $w = imagesx($img);
+                        $h = imagesy($img);
+                        $tw = 200;
+                        $th = (int)($h * ($tw / $w));
+                        $thumb_img = imagecreatetruecolor($tw, $th);
+                        imagecopyresampled($thumb_img, $img, 0, 0, 0, 0, $tw, $th, $w, $h);
+                        ob_start();
+                        imagejpeg($thumb_img, null, 80);
+                        $thumb_jpeg = ob_get_clean();
+                        @file_put_contents($cache_file, $thumb_jpeg);
+                        return $thumb_jpeg;
+                    }
+                }
+
+                @file_put_contents($cache_file, $raw_jpeg);
+                return $raw_jpeg;
+            }
+        }
+    }
+
+    // 3. 非圧縮DICOM (US, レントゲン等)：Python/Pillow フォールバック (約200ms)
+    $py_script = __DIR__ . '/dcm_render.py';
+    if (file_exists($py_script)) {
+        $py_bin = 'C:\\Users\\Owner\\AppData\\Local\\Programs\\Python\\Python313\\python.exe';
+        if (!file_exists($py_bin)) {
+            $py_bin = 'python';
+        }
+        $thumb_arg = $is_thumb ? ' thumb' : '';
+        $cmd = escapeshellarg($py_bin) . ' ' . escapeshellarg($py_script) . ' ' . escapeshellarg($dcm_path) . ' ' . escapeshellarg($cache_file) . $thumb_arg;
+        exec($cmd, $out, $ret);
+        if ($ret === 0 && file_exists($cache_file)) {
+            return file_get_contents($cache_file);
+        }
+    }
+
+    return null;
+}

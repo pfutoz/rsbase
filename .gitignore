@@ -4,6 +4,7 @@
 
 # Backup files
 *.bak
+*.pre_design_backup
 
 # OS generated files
 Thumbs.db

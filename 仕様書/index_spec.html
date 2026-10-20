@@ -355,7 +355,7 @@
             <li><strong>モード切替プルダウン</strong>: <code>rsbase</code> / <code>custom</code> / <code>jpeg</code> を選択するとURLパラメータを更新して即時リロード。</li>
             <li><strong>日付ナビゲーション</strong>: 「◀ 前日」「翌日 ▶」ボタン、および <code>&lt;input type="date"&gt;</code> によるカレンダー選択（当日: <code>date('Y/m/d')</code> が初期値）。</li>
             <li><strong>患者絞り込み解除ボタン</strong>: <code>patient_id</code> 指定中に表示され、通常の日付表示一覧へワンクリックで復帰。</li>
-            <li><strong>常駐スクリプトDLリンク</strong>: <code>watcher.zip</code> を直接ダウンロードできるボタン（<code>custom</code> または <code>jpeg</code> モード時に表示）。</li>
+            <li><strong>常駐スクリプトDLリンク</strong>: <code>watcher.vbs</code> を直接ダウンロードできるボタン（<code>custom</code> または <code>jpeg</code> モード時に表示）。</li>
             <li><strong>ヘルプ・マニュアルリンク</strong>: <code>help.html</code>（ヘルプ）および <code>igankenshin.html</code>（胃がん検診マニュアル）への外部リンク。</li>
         </ul>
     </section>
@@ -487,17 +487,35 @@
             <li><strong>患者氏名</strong>: カタカナよみ（<code>kanja_yomi</code>）の日本語50音順でソート。</li>
             <li><strong>検査名</strong>: 検査名文字列の五十音・アルファベット順でソート。</li>
         </ul>
+
+        <h3>④ 患者横断検索モーダル機能（<code>.search-icon-btn</code> &amp; <code>#searchModal</code>）</h3>
+        <p>当日データにとどまらず、過去すべてのデータベース（<code>gazouDB</code>）から患者ID・患者名で横断検索できるモーダルダイアログ機能です。</p>
+        <ul>
+            <li><strong>アニメーション付き虫眼鏡アイコン</strong>: 絞り込みパネル右端に配置。パルス波紋アニメーション（目を引く視覚インジケータ）とホバー時の回転・ズームエフェクトを備えます。</li>
+            <li><strong>統合検索入力ボックス</strong>: 1つの入力欄に患者ID（半角・全角問わず、先頭ゼロ除去も自動）、漢字氏名、フリガナ（ひらがな/全角カタカナ/半角カタカナ）のどれを入力しても自動判定・正規化して部分一致検索。</li>
+            <li><strong>検索実行タイミング</strong>: Enterキー押下または「検索」ボタンクリック時に非同期AJAXでデータベース（Read-Only SELECT）へ問い合わせ。</li>
+            <li><strong>候補一覧表示</strong>: 該当患者のIDバッジ、漢字氏名、カナよみ、最新受診日、過去検査件数をスマートに一覧表示（上限50件）。</li>
+            <li><strong>選択時アクション</strong>: 候補行クリックまたは上下キー＋Enterで選択すると、メイン画面が当該患者の過去全検査一覧（<code>index.php?patient_id=[id]&amp;mode=[mode]</code>）へと遷移。候補が1件のみの場合はEnterキーで即時確定・遷移。</li>
+            <li><strong>キーボードショートカット対応</strong>:
+                <ul>
+                    <li><code>Esc</code>: モーダルを閉じる</li>
+                    <li><code>F2</code> または <code>/</code>（他入力欄非フォーカス時）: モーダルを開いて検索欄へ自動フォーカス</li>
+                    <li><code>↑</code> / <code>↓</code>: 候補の選択移動</li>
+                    <li><code>Enter</code>: 検索実行、または選択候補の確定</li>
+                </ul>
+            </li>
+        </ul>
     </section>
 
-    <!-- 5. 非同期トリガー生成API仕様 (POST) -->
+    <!-- 5. 非同期通信API仕様 (AJAX / POST) -->
     <section class="card">
         <div class="card-title">
             <span class="icon">⚡</span>
-            5. 非同期トリガー生成API仕様（AJAX通信）
+            5. 非同期通信API仕様（AJAX通信）
         </div>
-        <p>Webブラウザからクライアント端末常駐の <code>watcher.vbs</code> へ起動命令を伝達するためのバックエンド仕様です。</p>
+        <p>Webブラウザからクライアント端末常駐の <code>watcher.vbs</code> への起動伝達、およびPostgreSQLデータベースからの患者横断検索を行うためのバックエンドAPI仕様です。</p>
 
-        <h3>エンドポイント仕様</h3>
+        <h3>① ビューワ起動トリガー生成（action=launch）</h3>
         <table>
             <tr><th>URL</th><td><code>index.php</code></td></tr>
             <tr><th>HTTPメソッド</th><td><code>POST</code></td></tr>
@@ -505,7 +523,7 @@
             <tr><th>レスポンス形式</th><td><code>application/json; charset=UTF-8</code></td></tr>
         </table>
 
-        <h3>リクエストパラメータ</h3>
+        <h4>リクエストパラメータ</h4>
         <table>
             <thead>
                 <tr><th>パラメータ名</th><th>型</th><th>必須</th><th>説明</th></tr>
@@ -517,7 +535,7 @@
             </tbody>
         </table>
 
-        <h3>サーバー側処理フロー</h3>
+        <h4>サーバー側処理フロー</h4>
         <ol>
             <li>リクエスト送信元クライアントのIPアドレスを <code>$_SERVER['REMOTE_ADDR']</code> より特定。</li>
             <li><code>tmp/</code> ディレクトリの存在を確認（なければ <code>mkdir(..., 0777, true)</code>）。</li>
@@ -531,6 +549,53 @@
 {"status": "error", "message": "トリガーファイルの書き込み失敗: ..."}</code></pre>
             </li>
         </ol>
+
+        <h3>② 患者横断検索API（action=search_patient）</h3>
+        <table>
+            <tr><th>URL</th><td><code>index.php</code></td></tr>
+            <tr><th>HTTPメソッド</th><td><code>POST</code></td></tr>
+            <tr><th>Content-Type</th><td><code>application/x-www-form-urlencoded</code></td></tr>
+            <tr><th>レスポンス形式</th><td><code>application/json; charset=UTF-8</code></td></tr>
+        </table>
+
+        <h4>リクエストパラメータ</h4>
+        <table>
+            <thead>
+                <tr><th>パラメータ名</th><th>型</th><th>必須</th><th>説明</th></tr>
+            </thead>
+            <tbody>
+                <tr><td><code>action</code></td><td>String</td><td>○</td><td><code>search_patient</code> 固定</td></tr>
+                <tr><td><code>query</code></td><td>String</td><td>○</td><td>検索キーワード（患者ID、漢字氏名、ひらがな、カナ等）</td></tr>
+            </tbody>
+        </table>
+
+        <h4>データベース検索ロジック（Read-Only厳守）</h4>
+        <ul>
+            <li>全角数字を半角数字へ変換し、先頭ゼロ除去のID（<code>8920</code>）と入力値（<code>08920</code>）を生成。</li>
+            <li>ひらがな・全角カタカナ・半角カタカナの相互変換（<code>mb_convert_kana</code>）を行い、DB側の半角カナ表記にも完全対応。</li>
+            <li><code>SHIFT_JIS (CP932)</code> にエンコードの上、<code>gazou_tbl</code> に対し <code>GROUP BY id, kanja_kanji, kanja_yomi</code> で最新検査日と検査件数を集約検索（上限50件）。</li>
+        </ul>
+
+        <h4>レスポンス仕様</h4>
+        <pre><code>// 成功時
+{
+  "status": "success",
+  "data": [
+    {
+      "id": "8920",
+      "kanja_kanji": "山田 太郎",
+      "kanja_yomi": "ﾔﾏﾀﾞ ﾀﾛｳ",
+      "latest_date": "2026/09/15",
+      "exam_count": 5
+    }
+  ]
+}
+
+// 失敗時
+{
+  "status": "error",
+  "message": "データベース検索エラー: ..."
+}</code></pre>
     </section>
 
     <div class="footer">
