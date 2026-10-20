@@ -480,10 +480,18 @@ $mode      = $_GET['mode'] ?? 'standalone'; // 'modal' or 'standalone'
 
             try {
                 const res = await fetch(`ecg_api.php?file=${encodeURIComponent(FILE_PATH)}`);
-                if (!res.ok) throw new Error("HTTPエラー: " + res.status);
-                const json = await res.json();
+                const text = await res.text();
+                let json;
+                try {
+                    json = JSON.parse(text);
+                } catch (parseErr) {
+                    console.error("Non-JSON ECG response:", text);
+                    alert("心電図解析エラー: サーバー応答がJSON形式ではありません。\n" + text.slice(0, 150));
+                    loader.style.display = 'none';
+                    return;
+                }
 
-                if (json.status !== 'success' || !json.data) {
+                if (!res.ok || json.status !== 'success' || !json.data) {
                     alert("心電図データの解析に失敗しました: " + (json.message || 'データが空です'));
                     loader.style.display = 'none';
                     return;
@@ -938,8 +946,10 @@ $mode      = $_GET['mode'] ?? 'standalone'; // 'modal' or 'standalone'
             formData.append('launch_mode', 'ECG');
 
             fetch('index.php', { method: 'POST', body: formData })
-                .then(r => r.json())
-                .then(d => {
+                .then(r => r.text())
+                .then(text => {
+                    let d;
+                    try { d = JSON.parse(text); } catch(err) { throw new Error(text.slice(0, 100)); }
                     if (d.status === 'success') {
                         showToast("🚀 フクダ電子 FEV-05 起動指示送信完了");
                     } else {

@@ -4,11 +4,48 @@
 // 内視鏡JPEGダイレクト抽出 (30ms) ＋ 非圧縮(US/XP)自動変換 & キャッシュ
 // ==============================================================================
 
+ini_set('display_errors', '0');
+error_reporting(E_ALL);
+
+// 未捕捉致命的エラー時のJSONフェイルオーバー
+register_shutdown_function(function() {
+    $err = error_get_last();
+    if ($err && ($err['type'] & (E_ERROR | E_PARSE | E_CORE_ERROR | E_COMPILE_ERROR))) {
+        while (ob_get_level() > 0) {
+            @ob_end_clean();
+        }
+        if (!headers_sent()) {
+            header('Content-Type: application/json; charset=UTF-8');
+            http_response_code(500);
+        }
+        echo json_encode([
+            'status' => 'error',
+            'message' => 'API内部エラーが発生しました: ' . $err['message']
+        ], JSON_UNESCAPED_UNICODE);
+    }
+});
+
 ob_start();
 
 $cache_dir = __DIR__ . '/tmp/dcm_cache/';
 if (!file_exists($cache_dir)) {
     @mkdir($cache_dir, 0777, true);
+}
+
+if (!function_exists('atomic_write_file')) {
+    /**
+     * アトミック安全書き込み (一時ファイルに書いてからrename)
+     */
+    function atomic_write_file($path, $data) {
+        $temp = $path . '.' . uniqid('tmp_', true);
+        if (@file_put_contents($temp, $data) !== false) {
+            if (@rename($temp, $path)) {
+                return true;
+            }
+            @unlink($temp);
+        }
+        return false;
+    }
 }
 
 if (!function_exists('purge_expired_cache')) {
@@ -79,8 +116,10 @@ $action = $_GET['action'] ?? $_POST['action'] ?? '';
 
 // ① ファイル一覧の取得 (action=list)
 if ($action === 'list') {
+    while (ob_get_level() > 0) {
+        @ob_end_clean();
+    }
     header('Content-Type: application/json; charset=UTF-8');
-    ob_clean();
 
     if (empty($folder) || !is_dir($folder)) {
         echo json_encode([
@@ -91,7 +130,7 @@ if ($action === 'list') {
     }
 
     try {
-        $dir_handle = opendir($folder);
+        $dir_handle = @opendir($folder);
         $files = [];
 
         if ($dir_handle) {
@@ -125,7 +164,7 @@ if ($action === 'list') {
             'files'  => $files
         ], JSON_UNESCAPED_UNICODE);
 
-    } catch (Exception $e) {
+    } catch (Throwable $e) {
         echo json_encode([
             'status' => 'error',
             'message' => 'フォルダ読み込みエラー: ' . $e->getMessage()
@@ -240,59 +279,81 @@ function get_dcm_jpeg_bytes($dcm_path, $is_thumb, $cache_dir) {
     $cache_key = md5($dcm_path . '_' . $mtime . ($is_thumb ? '_thumb' : '_full'));
     $cache_file = $cache_dir . $cache_key . '.jpg';
 
-    // 1. キャッシュが存在すればそのまま返却 (1ms)
-    if (file_exists($cache_file) && filesize($cache_file) > 0) {
-        return file_get_contents($cache_file);
+    // 1. キャッシュが存在すれば検証して返却 (破損/0バイトキャッシュは自動破棄)
+    if (file_exists($cache_file)) {
+        $sz = @filesize($cache_file);
+        if ($sz !== false && $sz > 100) {
+            $cached = @file_get_contents($cache_file);
+            if ($cached !== false && strlen($cached) > 100 && substr($cached, 0, 2) === "\xFF\xD8") {
+                return $cached;
+            }
+        }
+        @unlink($cache_file);
     }
 
     // 2. 内視鏡など：埋め込みJPEGのダイレクト抽出 (30ms)
-    $handle = @fopen($dcm_path, 'rb');
-    if ($handle) {
-        $content = stream_get_contents($handle);
-        fclose($handle);
+    try {
+        $handle = @fopen($dcm_path, 'rb');
+        if ($handle) {
+            $content = stream_get_contents($handle);
+            fclose($handle);
 
-        $soi = strpos($content, "\xFF\xD8\xFF");
-        if ($soi !== false) {
-            $eoi = strrpos($content, "\xFF\xD9");
-            if ($eoi !== false && $eoi > $soi) {
-                $raw_jpeg = substr($content, $soi, $eoi - $soi + 2);
+            $soi = strpos($content, "\xFF\xD8\xFF");
+            if ($soi !== false) {
+                $eoi = strrpos($content, "\xFF\xD9");
+                if ($eoi !== false && $eoi > $soi) {
+                    $raw_jpeg = substr($content, $soi, $eoi - $soi + 2);
 
-                if ($is_thumb) {
-                    $img = @imagecreatefromstring($raw_jpeg);
-                    if ($img !== false) {
-                        $w = imagesx($img);
-                        $h = imagesy($img);
-                        $tw = 200;
-                        $th = (int)($h * ($tw / $w));
-                        $thumb_img = imagecreatetruecolor($tw, $th);
-                        imagecopyresampled($thumb_img, $img, 0, 0, 0, 0, $tw, $th, $w, $h);
-                        ob_start();
-                        imagejpeg($thumb_img, null, 80);
-                        $thumb_jpeg = ob_get_clean();
-                        @file_put_contents($cache_file, $thumb_jpeg);
-                        return $thumb_jpeg;
+                    if ($is_thumb) {
+                        $img = @imagecreatefromstring($raw_jpeg);
+                        if ($img !== false) {
+                            $w = imagesx($img);
+                            $h = imagesy($img);
+                            $tw = 200;
+                            $th = max(1, (int)($h * ($tw / max(1, $w))));
+                            $thumb_img = imagecreatetruecolor($tw, $th);
+                            imagecopyresampled($thumb_img, $img, 0, 0, 0, 0, $tw, $th, $w, $h);
+                            ob_start();
+                            imagejpeg($thumb_img, null, 80);
+                            $thumb_jpeg = ob_get_clean();
+                            imagedestroy($thumb_img);
+                            imagedestroy($img);
+                            atomic_write_file($cache_file, $thumb_jpeg);
+                            return $thumb_jpeg;
+                        }
                     }
-                }
 
-                @file_put_contents($cache_file, $raw_jpeg);
-                return $raw_jpeg;
+                    atomic_write_file($cache_file, $raw_jpeg);
+                    return $raw_jpeg;
+                }
             }
         }
+    } catch (Throwable $e) {
+        error_log("dcm_api extract error: " . $e->getMessage());
     }
 
     // 3. 非圧縮DICOM (US, レントゲン等)：Python/Pillow フォールバック (約200ms)
-    $py_script = __DIR__ . '/dcm_render.py';
-    if (file_exists($py_script)) {
-        $py_bin = find_python_bin();
-        $thumb_arg = $is_thumb ? ' thumb' : '';
-        $cmd = escapeshellarg($py_bin) . ' ' . escapeshellarg($py_script) . ' ' . escapeshellarg($dcm_path) . ' ' . escapeshellarg($cache_file) . $thumb_arg . ' 2>&1';
-        exec($cmd, $out, $ret);
-        if ($ret === 0 && file_exists($cache_file)) {
-            return file_get_contents($cache_file);
+    try {
+        $py_script = __DIR__ . '/dcm_render.py';
+        if (file_exists($py_script)) {
+            $py_bin = find_python_bin();
+            $thumb_arg = $is_thumb ? ' thumb' : '';
+            $temp_render = $cache_file . '.' . uniqid('py_', true) . '.jpg';
+            $cmd = escapeshellarg($py_bin) . ' ' . escapeshellarg($py_script) . ' ' . escapeshellarg($dcm_path) . ' ' . escapeshellarg($temp_render) . $thumb_arg . ' 2>&1';
+            exec($cmd, $out, $ret);
+            if ($ret === 0 && file_exists($temp_render) && filesize($temp_render) > 100) {
+                @rename($temp_render, $cache_file);
+                return @file_get_contents($cache_file);
+            }
+            if (file_exists($temp_render)) {
+                @unlink($temp_render);
+            }
+            if ($ret !== 0) {
+                error_log("dcm_render.py error (ret=$ret): " . implode("\n", $out));
+            }
         }
-        if ($ret !== 0) {
-            error_log("dcm_render.py error (ret=$ret): " . implode("\n", $out));
-        }
+    } catch (Throwable $e) {
+        error_log("dcm_api python fallback error: " . $e->getMessage());
     }
 
     return null;

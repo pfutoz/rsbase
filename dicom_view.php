@@ -1341,10 +1341,18 @@ $mode      = $_GET['mode'] ?? 'standalone'; // 'modal' or 'standalone'
 
             try {
                 const res = await fetch(`dcm_api.php?action=list&folder=${encodeURIComponent(FOLDER_PATH)}`);
-                if (!res.ok) throw new Error("HTTPエラー: " + res.status);
-                const data = await res.json();
+                const text = await res.text();
+                let data;
+                try {
+                    data = JSON.parse(text);
+                } catch (parseErr) {
+                    console.error("Non-JSON API response:", text);
+                    alert("DICOM一覧の取得エラー: サーバー応答がJSON形式ではありません。\n" + text.slice(0, 150));
+                    loader.style.display = 'none';
+                    return;
+                }
 
-                if (data.status !== 'success' || !data.files || data.files.length === 0) {
+                if (!res.ok || data.status !== 'success' || !data.files || data.files.length === 0) {
                     alert("DICOM画像が見つかりませんでした: " + (data.message || 'ファイルが0件です'));
                     loader.style.display = 'none';
                     return;
@@ -2380,8 +2388,10 @@ $mode      = $_GET['mode'] ?? 'standalone'; // 'modal' or 'standalone'
             formData.append('launch_mode', 'NORMAL');
 
             fetch('index.php', { method: 'POST', body: formData })
-                .then(r => r.json())
-                .then(d => {
+                .then(r => r.text())
+                .then(text => {
+                    let d;
+                    try { d = JSON.parse(text); } catch(err) { throw new Error(text.slice(0, 100)); }
                     if (d.status === 'success') {
                         showToast("🚀 外部ビューワ起動トリガー送信完了");
                     } else {

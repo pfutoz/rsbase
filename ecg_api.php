@@ -4,12 +4,49 @@
 // フクダ電子 (12L anal + wave) 解析・JSON返却 & キャッシュ機構
 // ==============================================================================
 
+ini_set('display_errors', '0');
+error_reporting(E_ALL);
+
+// 未捕捉致命的エラー時のJSONフェイルオーバー
+register_shutdown_function(function() {
+    $err = error_get_last();
+    if ($err && ($err['type'] & (E_ERROR | E_PARSE | E_CORE_ERROR | E_COMPILE_ERROR))) {
+        while (ob_get_level() > 0) {
+            @ob_end_clean();
+        }
+        if (!headers_sent()) {
+            header('Content-Type: application/json; charset=UTF-8');
+            http_response_code(500);
+        }
+        echo json_encode([
+            'status' => 'error',
+            'message' => 'API内部エラーが発生しました: ' . $err['message']
+        ], JSON_UNESCAPED_UNICODE);
+    }
+});
+
 ob_start();
 header('Content-Type: application/json; charset=UTF-8');
 
 $cache_dir = __DIR__ . '/tmp/ecg_cache/';
 if (!file_exists($cache_dir)) {
     @mkdir($cache_dir, 0777, true);
+}
+
+if (!function_exists('atomic_write_file')) {
+    /**
+     * アトミック安全書き込み (一時ファイルに書いてからrename)
+     */
+    function atomic_write_file($path, $data) {
+        $temp = $path . '.' . uniqid('tmp_', true);
+        if (@file_put_contents($temp, $data) !== false) {
+            if (@rename($temp, $path)) {
+                return true;
+            }
+            @unlink($temp);
+        }
+        return false;
+    }
 }
 
 if (!function_exists('purge_expired_cache')) {
@@ -93,15 +130,27 @@ if (is_dir($file)) {
 $mtime = @filemtime($file) ?: time();
 $cache_file = $cache_dir . md5($file . '_' . $mtime) . '.json';
 
-if (file_exists($cache_file) && filesize($cache_file) > 100) {
-    ob_clean();
-    echo file_get_contents($cache_file);
-    exit;
+// キャッシュ検証 (破損または不正JSONは自動削除して再生成へフェイルオーバー)
+if (file_exists($cache_file)) {
+    $cached_raw = @file_get_contents($cache_file);
+    if ($cached_raw !== false && strlen($cached_raw) > 100) {
+        $test_json = @json_decode($cached_raw, true);
+        if ($test_json && isset($test_json['status']) && $test_json['status'] === 'success' && isset($test_json['data']['leads'])) {
+            while (ob_get_level() > 0) {
+                @ob_end_clean();
+            }
+            echo $cached_raw;
+            exit;
+        }
+    }
+    @unlink($cache_file);
 }
 
 $py_script = __DIR__ . '/ecg_render.py';
 if (!file_exists($py_script)) {
-    ob_clean();
+    while (ob_get_level() > 0) {
+        @ob_end_clean();
+    }
     echo json_encode(['status' => 'error', 'message' => 'ecg_render.py が見つかりません'], JSON_UNESCAPED_UNICODE);
     exit;
 }
@@ -112,7 +161,9 @@ $cmd = escapeshellarg($py_bin) . ' ' . escapeshellarg($py_script) . ' ' . escape
 exec($cmd, $output_lines, $ret);
 
 if ($ret !== 0 || empty($output_lines)) {
-    ob_clean();
+    while (ob_get_level() > 0) {
+        @ob_end_clean();
+    }
     $err_msg = '心電図バイナリの解析に失敗しました';
     if (!empty($output_lines)) {
         error_log("ecg_render.py error (ret=$ret): " . implode("\n", $output_lines));
@@ -122,10 +173,12 @@ if ($ret !== 0 || empty($output_lines)) {
 }
 
 $json_str = implode("\n", $output_lines);
-$parsed = json_decode($json_str, true);
+$parsed = @json_decode($json_str, true);
 
 if (!$parsed || !isset($parsed['leads'])) {
-    ob_clean();
+    while (ob_get_level() > 0) {
+        @ob_end_clean();
+    }
     echo json_encode(['status' => 'error', 'message' => '解析JSONのフォーマットが不正です'], JSON_UNESCAPED_UNICODE);
     exit;
 }
@@ -137,9 +190,11 @@ $response_data = [
 ];
 
 $final_json = json_encode($response_data, JSON_UNESCAPED_UNICODE);
-@file_put_contents($cache_file, $final_json);
+atomic_write_file($cache_file, $final_json);
 
-ob_clean();
+while (ob_get_level() > 0) {
+    @ob_end_clean();
+}
 echo $final_json;
 exit;
 
