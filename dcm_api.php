@@ -224,17 +224,46 @@ function get_dcm_jpeg_bytes($dcm_path, $is_thumb, $cache_dir) {
     // 3. 非圧縮DICOM (US, レントゲン等)：Python/Pillow フォールバック (約200ms)
     $py_script = __DIR__ . '/dcm_render.py';
     if (file_exists($py_script)) {
-        $py_bin = 'C:\\Users\\Owner\\AppData\\Local\\Programs\\Python\\Python313\\python.exe';
-        if (!file_exists($py_bin)) {
-            $py_bin = 'python';
-        }
+        $py_bin = find_python_bin();
         $thumb_arg = $is_thumb ? ' thumb' : '';
-        $cmd = escapeshellarg($py_bin) . ' ' . escapeshellarg($py_script) . ' ' . escapeshellarg($dcm_path) . ' ' . escapeshellarg($cache_file) . $thumb_arg;
+        $cmd = escapeshellarg($py_bin) . ' ' . escapeshellarg($py_script) . ' ' . escapeshellarg($dcm_path) . ' ' . escapeshellarg($cache_file) . $thumb_arg . ' 2>&1';
         exec($cmd, $out, $ret);
         if ($ret === 0 && file_exists($cache_file)) {
             return file_get_contents($cache_file);
         }
+        if ($ret !== 0) {
+            error_log("dcm_render.py error (ret=$ret): " . implode("\n", $out));
+        }
     }
 
     return null;
+}
+
+function find_python_bin() {
+    $candidates = [
+        'C:\\Users\\owner\\AppData\\Local\\Python\\bin\\python.exe',
+        'C:\\Users\\owner\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe',
+        'C:\\Users\\Owner\\AppData\\Local\\Programs\\Python\\Python313\\python.exe',
+        'C:\\Users\\owner\\AppData\\Local\\Programs\\Python\\Python313\\python.exe',
+        'C:\\Program Files\\Python314\\python.exe',
+        'C:\\Program Files\\Python313\\python.exe',
+        'C:\\Python314\\python.exe',
+        'C:\\Python313\\python.exe'
+    ];
+    foreach ($candidates as $cand) {
+        if (file_exists($cand)) {
+            return $cand;
+        }
+    }
+    $where = @shell_exec('where python 2>NUL');
+    if ($where) {
+        $lines = explode("\n", trim($where));
+        foreach ($lines as $line) {
+            $line = trim($line);
+            if (!empty($line) && stripos($line, 'WindowsApps') === false && file_exists($line)) {
+                return $line;
+            }
+        }
+    }
+    return 'python';
 }

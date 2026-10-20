@@ -1098,28 +1098,75 @@ $calendar_date = str_replace('/', '-', $target_date);
             box-shadow: 0 2px 6px rgba(5, 150, 105, 0.5) !important;
         }
 
-        /* 🏥 DICOMビューワモーダル (dicom_view.php iframe読込) */
+        /* 🏥 DICOM / 心電図ビューワ モーダル (すりガラス & フローティング角丸ウィンドウ) */
         .dcm-modal-overlay {
             position: fixed;
             inset: 0;
-            background: rgba(3, 7, 18, 0.92);
-            backdrop-filter: blur(8px);
+            background: rgba(15, 23, 42, 0.65);
+            backdrop-filter: blur(12px) saturate(140%);
+            -webkit-backdrop-filter: blur(12px) saturate(140%);
             z-index: 5000;
             display: none;
-            flex-direction: column;
-            overflow: hidden;
-            animation: dcmModalFadeIn 0.2s ease-out;
+            align-items: center;
+            justify-content: center;
+            padding: 2vh 2.5vw;
+            box-sizing: border-box;
+            animation: dcmModalFadeIn 0.22s ease-out;
+            cursor: pointer;
         }
         @keyframes dcmModalFadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
+            from { opacity: 0; transform: scale(0.985); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        .dcm-modal-dialog {
+            width: 95vw;
+            height: 94vh;
+            max-width: 1920px;
+            max-height: 1080px;
+            background: #090d16;
+            border: 1px solid rgba(255, 255, 255, 0.22);
+            border-radius: 12px;
+            box-shadow: 0 25px 65px -10px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.1);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            cursor: default;
         }
         .dcm-modal-iframe {
-            width: 100vw;
-            height: 100vh;
+            width: 100%;
+            height: 100%;
             border: none;
             background: #07090e;
             display: block;
+            flex: 1;
+        }
+        /* フローティング「✕ 閉じる (Esc)」ボタン */
+        .dcm-modal-close-btn {
+            position: absolute;
+            top: 10px;
+            right: 14px;
+            z-index: 5050;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(15, 23, 42, 0.85);
+            color: #f1f5f9;
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            border-radius: 20px;
+            padding: 5px 14px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            backdrop-filter: blur(8px);
+            transition: all 0.15s ease;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
+        }
+        .dcm-modal-close-btn:hover {
+            background: #ef4444;
+            color: #ffffff;
+            border-color: #ef4444;
+            transform: scale(1.04);
         }
 
         /* 👁️ 閲覧ボタン 長押し・右クリック コンテキストメニュー */
@@ -1492,9 +1539,14 @@ $calendar_date = str_replace('/', '-', $target_date);
         </div>
     </div>
 
-    <!-- 🏥 ブラウザ内蔵・高速DICOMビューワモーダル (dicom_view.php 共通呼出) -->
-    <div id="dicomViewerModal" class="dcm-modal-overlay">
-        <iframe id="dicomViewerIframe" class="dcm-modal-iframe" src="about:blank" allow="fullscreen"></iframe>
+    <!-- 🏥 ブラウザ内蔵・高速DICOM/心電図ビューワモーダル (すりガラス＆フローティング) -->
+    <div id="dicomViewerModal" class="dcm-modal-overlay" onclick="handleDcmOverlayClick(event)">
+        <div class="dcm-modal-dialog" id="dicomModalDialog" onclick="event.stopPropagation()">
+            <button type="button" class="dcm-modal-close-btn" onclick="closeViewerModal()" title="ビューワーを閉じる (Esc / 戻る)">
+                <span>✕ 閉じる</span> <span style="font-size:0.7rem; opacity:0.75; font-weight:normal;">(Esc)</span>
+            </button>
+            <iframe id="dicomViewerIframe" class="dcm-modal-iframe" src="about:blank" allow="fullscreen"></iframe>
+        </div>
     </div>
 
     <!-- 👁️ 閲覧ボタン 長押し / 右クリック コンテキストメニュー -->
@@ -2059,6 +2111,15 @@ $calendar_date = str_replace('/', '-', $target_date);
         openViewerFromButton(btn);
     }
 
+    let isModalOpen = false;
+
+    // オーバーレイ（すりガラス背景）クリックで閉じる
+    function handleDcmOverlayClick(e) {
+        if (e.target && e.target.id === 'dicomViewerModal') {
+            closeViewerModal();
+        }
+    }
+
     // モーダルを開く
     function openViewerModal(target) {
         const modal = document.getElementById('dicomViewerModal');
@@ -2067,6 +2128,14 @@ $calendar_date = str_replace('/', '-', $target_date);
 
         iframe.src = buildViewerUrl(target, 'modal');
         modal.style.display = 'flex';
+        isModalOpen = true;
+
+        // ブラウザバック抑制：履歴にモーダルステートを追加
+        try {
+            history.pushState({ modalOpen: 'viewer' }, '', '#viewer');
+        } catch (e) {
+            console.warn(e);
+        }
     }
 
     function openDicomModal(target) {
@@ -2074,16 +2143,41 @@ $calendar_date = str_replace('/', '-', $target_date);
     }
 
     // モーダルを閉じる
-    function closeViewerModal() {
+    function closeViewerModal(fromPopState = false) {
         const modal = document.getElementById('dicomViewerModal');
         const iframe = document.getElementById('dicomViewerIframe');
         if (modal) modal.style.display = 'none';
         if (iframe) iframe.src = 'about:blank';
+
+        if (isModalOpen) {
+            isModalOpen = false;
+            // ✕ボタンやEscで閉じた場合、追加されたハッシュ履歴を戻す
+            if (!fromPopState && window.location.hash === '#viewer') {
+                try {
+                    history.back();
+                } catch (e) {}
+            }
+        }
     }
 
     function closeDicomViewer() {
         closeViewerModal();
     }
+
+    // ブラウザの戻るボタン（またはマウス戻るボタン / Alt+←）押下時
+    window.addEventListener('popstate', (e) => {
+        if (isModalOpen) {
+            // 前のページに離脱せず、モーダルのみを閉じる
+            closeViewerModal(true);
+        }
+    });
+
+    // Escキー押下でモーダルを閉じる（親ウィンドウ側）
+    window.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && isModalOpen) {
+            closeViewerModal();
+        }
+    });
 
     // iframeからのメッセージ（Escキー押下や閉じるボタン）を受信
     window.addEventListener('message', e => {

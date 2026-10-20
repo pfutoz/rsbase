@@ -43,17 +43,18 @@ if (!file_exists($py_script)) {
     exit;
 }
 
-$py_bin = 'C:\\Users\\Owner\\AppData\\Local\\Programs\\Python\\Python313\\python.exe';
-if (!file_exists($py_bin)) {
-    $py_bin = 'python';
-}
+$py_bin = find_python_bin();
 
-$cmd = escapeshellarg($py_bin) . ' ' . escapeshellarg($py_script) . ' ' . escapeshellarg($file) . ' --json';
+$cmd = escapeshellarg($py_bin) . ' ' . escapeshellarg($py_script) . ' ' . escapeshellarg($file) . ' --json 2>&1';
 exec($cmd, $output_lines, $ret);
 
 if ($ret !== 0 || empty($output_lines)) {
     ob_clean();
-    echo json_encode(['status' => 'error', 'message' => '心電図バイナリの解析に失敗しました'], JSON_UNESCAPED_UNICODE);
+    $err_msg = '心電図バイナリの解析に失敗しました';
+    if (!empty($output_lines)) {
+        error_log("ecg_render.py error (ret=$ret): " . implode("\n", $output_lines));
+    }
+    echo json_encode(['status' => 'error', 'message' => $err_msg, 'debug' => $output_lines], JSON_UNESCAPED_UNICODE);
     exit;
 }
 
@@ -78,3 +79,32 @@ $final_json = json_encode($response_data, JSON_UNESCAPED_UNICODE);
 ob_clean();
 echo $final_json;
 exit;
+
+function find_python_bin() {
+    $candidates = [
+        'C:\\Users\\owner\\AppData\\Local\\Python\\bin\\python.exe',
+        'C:\\Users\\owner\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe',
+        'C:\\Users\\Owner\\AppData\\Local\\Programs\\Python\\Python313\\python.exe',
+        'C:\\Users\\owner\\AppData\\Local\\Programs\\Python\\Python313\\python.exe',
+        'C:\\Program Files\\Python314\\python.exe',
+        'C:\\Program Files\\Python313\\python.exe',
+        'C:\\Python314\\python.exe',
+        'C:\\Python313\\python.exe'
+    ];
+    foreach ($candidates as $cand) {
+        if (file_exists($cand)) {
+            return $cand;
+        }
+    }
+    $where = @shell_exec('where python 2>NUL');
+    if ($where) {
+        $lines = explode("\n", trim($where));
+        foreach ($lines as $line) {
+            $line = trim($line);
+            if (!empty($line) && stripos($line, 'WindowsApps') === false && file_exists($line)) {
+                return $line;
+            }
+        }
+    }
+    return 'python';
+}
