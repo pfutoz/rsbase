@@ -877,9 +877,9 @@
 
     <!-- ヘッダー -->
     <header class="header-section">
-        <span class="header-badge">Ver 2.0 Major Release (2026年最新運用版)</span>
-        <h1>🏥 RS-Base 検査一覧・患者検索・Webビューワ・検査キャンバス 総合操作マニュアル <span style="font-size:0.75rem; background:rgba(255,255,255,0.2); padding:2px 8px; border-radius:10px; border:1px solid rgba(255,255,255,0.3); vertical-align:middle;">v2.0</span></h1>
-        <p>日々の画像・心電図ビューワ直起動、患者別ゼブラグループ表示・独立閲覧列、患者横断検索、胃がん検診向け一括JPEG変換・保存、実時間カレンダー比例タイムライン（JSON Canvas v2.0）、そして新設されたブラウザ内完結の「高機能Web DICOMビューワー」および「12誘導心電図Webビューワー」の全機能を網羅した公式ガイドです。</p>
+        <span class="header-badge">Ver 2.2 Major Release (2026年最新運用版)</span>
+        <h1>🏥 RS-Base 検査一覧・患者検索・Webビューワ・検査キャンバス 総合操作マニュアル <span style="font-size:0.75rem; background:rgba(255,255,255,0.2); padding:2px 8px; border-radius:10px; border:1px solid rgba(255,255,255,0.3); vertical-align:middle;">v2.2</span></h1>
+        <p>日々の画像・心電図ビューワ直起動、患者別ゼブラグループ表示・独立閲覧列、患者横断検索、胃がん検診向け一括JPEG変換・保存、種別レーン＆実時間タイムライン（検査キャンバス Ver 2.1）、そして1面/2面/4面連番分割表示・内視鏡病巣強調(IEE)・オリンパス専用フィット対応の「高機能Web DICOMビューワー」、さらに較正パルス完全標準化の「12誘導心電図Webビューワー」の全機能を網羅した公式ガイドです。</p>
     </header>
 
     <!-- クイック目次ナビゲーション -->
@@ -894,9 +894,9 @@
             <a href="#sec3" class="toc-link">③ 胃がん検診データ作成</a>
             <a href="#sec4" class="toc-link">④ 環境構築・ツール配置</a>
             <a href="#sec5" class="toc-link">⑤ FAQ</a>
-            <a href="#sec6" class="toc-link" style="background:#eff6ff; color:#1d4ed8; border-color:#93c5fd;">⑥ 🗺️ 検査キャンバス (v2.0)</a>
-            <a href="#sec7" class="toc-link" style="background:#f0fdf4; color:#166534; border-color:#bbf7d0;">⑦ 👁️ Web DICOMビューワ</a>
-            <a href="#sec8" class="toc-link" style="background:#fdf2f8; color:#db2777; border-color:#fbcfe8;">⑧ 📈 12誘導心電図Webビューワ</a>
+            <a href="#sec6" class="toc-link" style="background:#eff6ff; color:#1d4ed8; border-color:#93c5fd;">⑥ 🗺️ 検査キャンバス (v2.1)</a>
+            <a href="#sec7" class="toc-link" style="background:#f0fdf4; color:#166534; border-color:#bbf7d0;">⑦ 👁️ Web DICOMビューワ (多画面/IEE/O社フィット)</a>
+            <a href="#sec8" class="toc-link" style="background:#fdf2f8; color:#db2777; border-color:#fbcfe8;">⑧ 📈 12誘導心電図Webビューワ (較正パルス/FEV直結)</a>
         </div>
     </nav>
 
@@ -1525,171 +1525,235 @@
     </section>
 
     <!-- ==========================================
-         第6章: 検査タイムライン・無限キャンバス (JSON Canvas)
-         ========================================== -->
-    <!-- ==========================================
-         第6章: 検査タイムライン・無限キャンバス (canvas_view.php Ver 2.0)
+         第6章: 検査タイムライン・無限キャンバス (canvas_view.php Ver 2.1)
          ========================================== -->
     <section class="card" id="sec6">
         <div class="card-title">
             <span>🗺️</span>
-            <span>第6章: 検査タイムライン・無限キャンバス（canvas_view.php Ver 2.0）</span>
-            <span class="badge" style="background:#dbeafe; color:#1d4ed8; font-size:0.75rem; margin-left:auto;">v2.0 大幅強化</span>
+            <span>第6章: 検査タイムライン・無限キャンバス（canvas_view.php Ver 2.1）</span>
+            <span class="badge" style="background:#dbeafe; color:#1d4ed8; font-size:0.75rem; margin-left:auto;">v2.1 臨床最適化</span>
         </div>
         <p style="font-size:0.86rem; color:#475569; margin-bottom:14px;">
-            患者の生涯にわたる全検査履歴（内視鏡、心電図、超音波、胸部XP等）を2次元の無限キャンバス上に可視化。オープン標準 <strong>JSON Canvas (v1.0 Spec)</strong> に完全準拠し、完全ローカル（院内オフライン）で動作します。<br>
-            Ver 2.0では、<strong>検査種別の動的絞り込みピル</strong>、<strong>正確なカレンダー時間軸比例タイムライン（年月ルーラー付き）</strong>、<strong>検査当時の年齢バッジ表示</strong>、<strong>ブラウザ内新タブWebビューワー直結（DICOM/心電図）</strong>を新たに搭載しました。
+            患者の生涯にわたる全検査履歴（内視鏡、心電図、超音波、胸部XP等）を2次元の無限キャンバス上に時系列で俯瞰・可視化する臨床支援ツールです。<br>
+            最新の Ver 2.1 では、<strong>標準表示を「種別レーン形式」へ刷新</strong>したほか、<strong>患者ヘッダーの整理（ID・漢字氏名＋ホバー詳細情報）</strong>、<strong>検査日時の横へのスマートな年齢表示</strong>、<strong>ビューワー呼び出しボタンの右寄せ整列</strong>、そして<strong>別タブ展開アイコン（🪟）</strong>を搭載し、診療効率と視認性を極限まで高めました。
         </p>
 
         <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:12px; margin-bottom:16px;">
             <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:14px;">
-                <div style="font-weight:700; color:#1e3a8a; font-size:0.88rem; margin-bottom:6px;">📅 実時間カレンダータイムライン（年月ルーラー）</div>
+                <div style="font-weight:700; color:#1e3a8a; font-size:0.88rem; margin-bottom:6px;">🔄 標準表示「種別レーン」＆ 3大レイアウト切替</div>
                 <ul style="font-size:0.8rem; color:#475569; padding-left:18px; line-height:1.6;">
-                    <li><strong>実時間スケール比例:</strong> 検査間隔（日数）に応じた正確な横軸位置にカードを配置（20年の長期フォローも一目瞭然）</li>
-                    <li><strong>年月ルーラー:</strong> キャンバス背景に破線と「📅 2005年」「📅 2010年」の目盛りガイドを自動描画</li>
-                    <li><strong>マルチトラック衝突回避:</strong> 同日または近接日の複数検査はY軸方向（縦）に自動スタック整列され重複を防止</li>
+                    <li><strong>種別レーン（デフォルト）:</strong> 「🔬 内視鏡」「❤️ 心電図」「📡 超音波」「🩻 胸部XP」が並行する横レーン上に整列。同一検査の経年変化や異種検査間の関連が直感的に把握可能</li>
+                    <li><strong>実時間（カレンダー比）:</strong> 検査間隔（日数）に正確に比例した横軸距離で配置し、年月ルーラー（「📅 2015年」「📅 2020年」等）を目盛り表示</li>
+                    <li><strong>順序フロー:</strong> 全検査を等間隔の日付順で一列表示</li>
                 </ul>
             </div>
 
             <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:14px;">
-                <div style="font-weight:700; color:#1e3a8a; font-size:0.88rem; margin-bottom:6px;">🔍 検査種別の動的絞り込みピル</div>
+                <div style="font-weight:700; color:#1e3a8a; font-size:0.88rem; margin-bottom:6px;">👤 スマート患者ヘッダー &amp; ホバー詳細情報</div>
                 <ul style="font-size:0.8rem; color:#475569; padding-left:18px; line-height:1.6;">
-                    <li><strong>ヘッダーピル群:</strong> 「全検査」「🔬 内視鏡」「❤️ 心電図」「📡 超音波」「🩻 胸部XP」を件数バッジ付きで表示</li>
-                    <li><strong>スマート非表示:</strong> 当該患者に受診歴のない種別は自動で除外され、すっきりとしたUIを維持</li>
-                    <li><strong>ワンクリック再配置:</strong> ピル選択と同時に非該当カードを除外し、キャンバスが最適な倍率へ自動フィット</li>
+                    <li><strong>視覚ノイズの排除:</strong> 常時表示は「患者ID」と「漢字氏名」に絞り込み、画面上部を極めてコンパクトに整理</li>
+                    <li><strong>ホバーポップオーバー:</strong> 患者名エリアにマウスを合わせるだけで、生年月日・現在年齢・性別・最終受診日・総検査件数がふわりと表示</li>
+                    <li><strong>別タブ展開アイコン（🪟）:</strong> ヘッダー右上に配置。不要なフローティング閉じるボタンを撤去し、ブラウザバックで快適に戻れる統一UI</li>
                 </ul>
             </div>
 
             <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:14px;">
-                <div style="font-weight:700; color:#1e3a8a; font-size:0.88rem; margin-bottom:6px;">👤 検査実施当時の年齢チップ表示</div>
+                <div style="font-weight:700; color:#1e3a8a; font-size:0.88rem; margin-bottom:6px;">🃏 洗練された検査カード &amp; 当時年齢</div>
                 <ul style="font-size:0.8rem; color:#475569; padding-left:18px; line-height:1.6;">
-                    <li><strong>正確な当時年齢:</strong> 生年月日と各検査実施日から「👤 当時 〇〇歳」を自動算出してカード内にバッジ表示</li>
-                    <li><strong>担当医情報:</strong> 記録がある場合は「👨‍⚕️ 担当医名」チップもカード内に併記</li>
-                    <li><strong>経年変化の直感理解:</strong> 10年・20年の加齢に伴う所見推移を視覚的にストレスなく把握可能</li>
+                    <li><strong>自然な年齢表示:</strong> 「2024/05/10 10:30 (68歳)」のように検査日時のすぐ横に年齢を表示（余分な文言を廃し直感化）</li>
+                    <li><strong>ビューワー直結（右寄せ）:</strong> カード内の冗長なJPEGパス等を排し、右下に「👁️ DICOM ↗」「📈 心電図 ↗」ボタンを配置</li>
+                    <li><strong>要約・所見表示:</strong> 診断名や特記所見をハイライトし、過去の受診カードを並べて閲覧可能</li>
                 </ul>
             </div>
 
             <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:14px;">
-                <div style="font-weight:700; color:#1e3a8a; font-size:0.88rem; margin-bottom:6px;">🚀 専用Webビューワー新タブ直接起動</div>
+                <div style="font-weight:700; color:#1e3a8a; font-size:0.88rem; margin-bottom:6px;">🔍 動的絞り込みピル &amp; 付箋メモ</div>
                 <ul style="font-size:0.8rem; color:#475569; padding-left:18px; line-height:1.6;">
-                    <li><strong>心電図検査:</strong> 「📈 心電図 ↗」ボタンで12誘導心電図Webビューワー（ecg_view.php）を別タブ展開</li>
-                    <li><strong>DICOM・画像検査:</strong> 「👁️ DICOM ↗」ボタンで高速Web DICOMビューワー（dicom_view.php）を別タブ展開</li>
-                    <li><strong>画面併用:</strong> キャンバスの全体俯瞰を維持したまま、隣のタブで高解像度画像や波形を自在に確認</li>
-                </ul>
-            </div>
-
-            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:14px;">
-                <div style="font-weight:700; color:#1e3a8a; font-size:0.88rem; margin-bottom:6px;">🔄 3大レイアウトワンクリック切替</div>
-                <ul style="font-size:0.8rem; color:#475569; padding-left:18px; line-height:1.6;">
-                    <li><strong>📅 実時間（デフォルト）:</strong> カレンダー時間軸比例＋年月ルーラー</li>
-                    <li><strong>🔄 種別レーン:</strong> 内視鏡・心電図・US・XPごとの並行スイムレーン形式</li>
-                    <li><strong>⏳ 順序フロー:</strong> 全検査を等間隔の日付順フローで一列表示</li>
-                </ul>
-            </div>
-
-            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:14px;">
-                <div style="font-weight:700; color:#1e3a8a; font-size:0.88rem; margin-bottom:6px;">💾 Obsidian連携 (.canvas) &amp; 付箋メモ</div>
-                <ul style="font-size:0.8rem; color:#475569; padding-left:18px; line-height:1.6;">
-                    <li><strong>.canvas 保存:</strong> Obsidian等にインポート可能な標準ファイルをワンクリック出力</li>
-                    <li><strong>付箋メモ:</strong> 「➕ 付箋」で次回フォロー予定や要確認部位などのフリーメモカードを追加可能</li>
-                    <li><strong>パン・ズーム:</strong> 背景ドラッグでパン、マウスホイールでズーム、HUDの「⛶」で全体フィット</li>
+                    <li><strong>件数バッジ付きピル:</strong> 「全検査」「内視鏡」「心電図」等をワンクリックで絞り込み。受診履歴のない検査は自動非表示</li>
+                    <li><strong>付箋メモ機能:</strong> 「➕ 付箋」で次回フォロー予定や要観察所見をキャンバス上に自由に配置可能</li>
+                    <li><strong>Obsidian連携:</strong> オープン標準 <strong>JSON Canvas (.canvas)</strong> ファイルとしてワンクリック保存・出力</li>
                 </ul>
             </div>
         </div>
 
-        <div class="alert-box alert-success" style="background:#eff6ff; border-left:4px solid #2563eb; color:#1e40af; padding:12px 14px; border-radius:6px; font-size:0.82rem;">
-            💡 <strong>起動方法:</strong> 画面上部ヘッダーの「🗺️ 検査キャンバス ↗」、または患者検索モーダル内・一覧テーブルの各患者名横にある「🗺️」アイコンをクリックすると開きます。
+        <div class="alert-box alert-info">
+            💡 <strong>起動方法:</strong> 検査一覧画面（index.php）のヘッダーにある「🗺️ 検査キャンバス ↗」、または患者横断検索モーダル内・各患者名横の「🗺️」アイコンから瞬時に展開します。
         </div>
     </section>
 
     <!-- ==========================================
-         第7章: 高機能Web DICOMビューワー (dicom_view.php)
+         第7章: 高機能Web DICOMビューワー (dicom_view.php Ver 2.0)
          ========================================== -->
     <section class="card" id="sec7">
         <div class="card-title">
             <span>👁️</span>
             <span>第7章: 高機能Web DICOMビューワー（dicom_view.php Ver 2.0）</span>
-            <span class="badge" style="background:#ecfdf5; color:#047857; font-size:0.75rem; margin-left:auto;">新機能</span>
+            <span class="badge" style="background:#ecfdf5; color:#047857; font-size:0.75rem; margin-left:auto;">大幅機能拡張</span>
         </div>
         <p style="font-size:0.86rem; color:#475569; margin-bottom:14px;">
-            外部ネイティブソフト（RSView等）のインストールや起動待ち時間を一切不要とし、院内のあらゆる端末のブラウザ上で約0.03秒で高速起動する内蔵DICOMビューワーです。<br>
-            内視鏡、胸部XP、CT、超音波（US）などのマルチフレーム・連番画像を忠実かつ軽快に表示・操作できます。
+            院内のあらゆる端末のWebブラウザ上で約0.03秒で高速起動する内蔵DICOMビューワーです。<br>
+            Ver 2.0では、<strong>1面・2面・4面（マルチビューポート）連番分割表示</strong>、<strong>オリンパス内視鏡専用フィット（⏹️Olympusフィット）</strong>、<strong>内視鏡病巣・微細血管強調モード（IEE: LCI / NBI / IHb / 構造強調 / 色素散布）</strong>、<strong>外部専用ビューワ直起動</strong>など、ハイエンド医用画像ワークステーション並みの先進機能を完全内蔵しました。
         </p>
 
         <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:12px; margin-bottom:16px;">
+            <!-- 機能①: 1面/2面/4面 マルチビューポート -->
             <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:14px;">
-                <div style="font-weight:700; color:#047857; font-size:0.88rem; margin-bottom:6px;">🖼️ 縦横比維持センタリング &amp; スクロール最適化</div>
+                <div style="font-weight:700; color:#047857; font-size:0.88rem; margin-bottom:6px;">🖥️ 1面・2面・4面 連番同期分割表示</div>
                 <ul style="font-size:0.8rem; color:#475569; padding-left:18px; line-height:1.6;">
-                    <li><strong>アスペクト比完全維持:</strong> 画像の歪み・潰れを防止し、ビューポート中央に美しくセンタリング描画</li>
-                    <li><strong>縦スクロールサムネイル:</strong> 画像枚数が80枚を超える胃カメラや大腸カメラでもサムネイルが縮小潰れせず、滑らかに縦スクロール一覧可能</li>
-                    <li><strong>キーボード操作:</strong> <kbd>←</kbd> / <kbd>→</kbd> キーでコマ送り・戻し、<kbd>+</kbd> / <kbd>-</kbd> で拡大縮小</li>
+                    <li><strong>レイアウトワンクリック切替:</strong> 画面上部の「1面」「2面 (左右)」「4面 (2x2)」ボタン、またはキーボードの <kbd>1</kbd> / <kbd>2</kbd> / <kbd>4</kbd> キーで瞬時に分割切り替え</li>
+                    <li><strong>連番スライス順次自動展開:</strong> 2面なら#1と#2、4面なら#1〜#4が隣接スロットに自動展開。各画面左下にスライス番号バッジを表示</li>
+                    <li><strong>全画面完全同期:</strong> ズーム・パン移動・WW/WL階調調整が全画面で完璧にシンクロ連動</li>
+                    <li><strong>スムーズなコマ送り:</strong> ホイール回転で全スロットが同期しながら連続コマ送り・比較読影</li>
                 </ul>
             </div>
 
+            <!-- 機能②: オリンパス内視鏡専用フィット -->
             <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:14px;">
-                <div style="font-weight:700; color:#047857; font-size:0.88rem; margin-bottom:6px;">🎛️ WW/WL階調調整 &amp; 画像ツール</div>
+                <div style="font-weight:700; color:#047857; font-size:0.88rem; margin-bottom:6px;">🎯 オリンパス内視鏡専用フィット（⏹️Olympusフィット）</div>
                 <ul style="font-size:0.8rem; color:#475569; padding-left:18px; line-height:1.6;">
-                    <li><strong>マウスドラッグWW/WL:</strong> 画面上でのドラッグ操作でウィンドウ幅（コントラスト）とウィンドウレベル（明るさ）を無段階調整</li>
-                    <li><strong>臨床プリセット:</strong> 軟部組織、肺野、骨条件などのワンタッチプリセット切り替え</li>
-                    <li><strong>白黒反転・等倍リセット:</strong> レントゲン等の反転観察やパン移動・ズームリセットがワンクリック</li>
+                    <li><strong>左側テキスト除外・画像最大化:</strong> オリンパス内視鏡画像特有の「左側文字情報領域（約35%）」を自動除外し、右側の円形観察視野（約65%）を中心に約1.5倍で画面いっぱいに拡大表示</li>
+                    <li><strong>富士フイルム・一般画像との共存:</strong> 富士フイルム内視鏡や胸部レントゲン等は通常の「⏹️フィット」で枠内全体表示</li>
+                    <li><strong>ダブルクリック＆ショートカット:</strong> 画面のダブルクリック、またはキーボード <kbd>O</kbd> キーで「全体フィット」と「Olympusフィット」を交互にトグル切替</li>
                 </ul>
             </div>
 
+            <!-- 機能③: 内視鏡病変強調モード (IEE) -->
             <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:14px;">
-                <div style="font-weight:700; color:#047857; font-size:0.88rem; margin-bottom:6px;">📥 胃がん検診 JPEG一括保存 &amp; 単コマ出力</div>
+                <div style="font-weight:700; color:#047857; font-size:0.88rem; margin-bottom:6px;">🔬 内視鏡 病巣・微細血管強調モード（IEE ドック）</div>
                 <ul style="font-size:0.8rem; color:#475569; padding-left:18px; line-height:1.6;">
-                    <li><strong>一括ZIPダウンロード:</strong> 胃がん検診提出に必要な全コマのJPEG変換アーカイブをブラウザ上で一発作成・保存</li>
-                    <li><strong>現在コマ保存:</strong> 気になる病変や特記所見コマを即座に高画質JPEGファイルとしてダウンロード</li>
+                    <li><strong>画面下部フローティングドック:</strong> GPUハードウェアアクセラレーションにより、高精細画像をリアルタイム処理</li>
+                    <li><strong>🔴 発赤(LCI):</strong> 赤色と白色の対比を最大化し、早期胃癌・ポリープ・ピロリ炎症を浮き彫りに</li>
+                    <li><strong>🟢 血管(NBI):</strong> 青緑光シミュレーション。微細血管・腺管ピットパターンを茶褐色に強調</li>
+                    <li><strong>📊 血流マップ(IHb):</strong> ヘモグロビン濃度サーモグラフィで充血・血管網を可視化</li>
+                    <li><strong>🏔️ 構造強調:</strong> 粘膜ひだ・微細境界の輪郭をシャープに強調</li>
+                    <li><strong>🔵 色素散布:</strong> インジゴカルミン散布風の凹凸段差強調</li>
+                    <li><strong>トグル解除 &amp; 通常復帰:</strong> 「🌈 通常」クリック、点灯中ボタンの再クリック、または <kbd>0</kbd> / <kbd>N</kbd> キーで瞬時に通常白色光へ復帰</li>
+                </ul>
+            </div>
+
+            <!-- 機能④: 外部ビューワ直起動 & ZIPダウンロード -->
+            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:14px;">
+                <div style="font-weight:700; color:#047857; font-size:0.88rem; margin-bottom:6px;">🚀 外部ビューワ直起動 &amp; 胃がん検診一括ZIP</div>
+                <ul style="font-size:0.8rem; color:#475569; padding-left:18px; line-height:1.6;">
+                    <li><strong>🚀 外部直起動:</strong> 画面上部のボタンでクライアントPCの外部DICOM専用ビューワ（RSView等）を即座に起動</li>
+                    <li><strong>🪟 別窓化（ポップアウト）:</strong> モーダル表示時にクリックすると、1600x900の独立した大画面ウィンドウで開く</li>
+                    <li><strong>📦 一括ZIP保存:</strong> 胃がん検診提出用の全スライスJPEG変換アーカイブをブラウザから一発生成・保存</li>
+                    <li><strong>縦型サムネイル一覧:</strong> 100枚を超えるシリーズでもアスペクト比を維持したまま快適に縦スクロールブラウジング</li>
                 </ul>
             </div>
         </div>
+
+        <!-- マウス操作 & ショートカットキー一覧表 -->
+        <h4 style="font-size:0.92rem; color:#1e3a8a; margin:16px 0 8px;">⌨️ マウス操作 &amp; キーボードショートカット一覧（PACS標準準拠）</h4>
+        <table class="info-table">
+            <thead>
+                <tr>
+                    <th style="width: 25%;">操作種別</th>
+                    <th style="width: 35%;">マウス操作</th>
+                    <th style="width: 40%;">キーボードショートカット</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>スライス送り（コマ送り/戻し）</strong></td>
+                    <td>ホイール回転（上: 前コマ / 下: 次コマ）</td>
+                    <td><kbd>→</kbd> / <kbd>↓</kbd> / <kbd>PageDown</kbd>（次コマ）<br><kbd>←</kbd> / <kbd>↑</kbd> / <kbd>PageUp</kbd>（前コマ）<br><kbd>Home</kbd>（先頭）/ <kbd>End</kbd>（末尾）</td>
+                </tr>
+                <tr>
+                    <td><strong>階調調整（WW / WL）</strong></td>
+                    <td>左ドラッグ（横: コントラスト / 縦: 明るさ）</td>
+                    <td>マウスモード「階調」選択中に左ドラッグ</td>
+                </tr>
+                <tr>
+                    <td><strong>平行移動（パン）</strong></td>
+                    <td><strong>中ボタン（ホイール押し込み）ドラッグ</strong></td>
+                    <td>マウスモード「移動」選択中に左ドラッグ</td>
+                </tr>
+                <tr>
+                    <td><strong>拡大・縮小（ズーム）</strong></td>
+                    <td><strong>右ドラッグ</strong>（上: 拡大 / 下: 縮小）</td>
+                    <td>マウスモード「ズーム」選択中に左ドラッグ</td>
+                </tr>
+                <tr>
+                    <td><strong>フィット（全体 / Olympus）</strong></td>
+                    <td><strong>ダブルクリック</strong>（全体 ⇔ Olympus トグル）</td>
+                    <td><kbd>F</kbd>: 全体フィット<br><kbd>O</kbd>: Olympus(オリンパス)フィット</td>
+                </tr>
+                <tr>
+                    <td><strong>分割画面レイアウト</strong></td>
+                    <td>上部「1面」「2面」「4面」ボタンクリック</td>
+                    <td><kbd>1</kbd>: 1画面 / <kbd>2</kbd>: 2画面 / <kbd>4</kbd>: 4画面</td>
+                </tr>
+                <tr>
+                    <td><strong>病巣強調モード（IEE）</strong></td>
+                    <td>下部ドックの各ボタンクリック（再クリックで解除）</td>
+                    <td><kbd>0</kbd> または <kbd>N</kbd>: 通常表示（白色光）へ復帰</td>
+                </tr>
+                <tr>
+                    <td><strong>反転 / リセット / 終了</strong></td>
+                    <td>「🌓 反転」「🔄 リセット」ボタンクリック</td>
+                    <td><kbd>I</kbd>: 白黒反転<br><kbd>R</kbd>: 初期位置・階調リセット<br><kbd>Esc</kbd>: ビューワーを閉じる</td>
+                </tr>
+            </tbody>
+        </table>
     </section>
 
     <!-- ==========================================
-         第8章: 12誘導心電図Webビューワー (ecg_view.php)
+         第8章: 12誘導心電図Webビューワー (ecg_view.php Ver 2.0)
          ========================================== -->
     <section class="card" id="sec8">
         <div class="card-title">
             <span>📈</span>
             <span>第8章: 12誘導心電図Webビューワー（ecg_view.php Ver 2.0）</span>
-            <span class="badge" style="background:#fdf2f8; color:#db2777; font-size:0.75rem; margin-left:auto;">新機能</span>
+            <span class="badge" style="background:#fdf2f8; color:#db2777; font-size:0.75rem; margin-left:auto;">波形最大化・較正基準化</span>
         </div>
         <p style="font-size:0.86rem; color:#475569; margin-bottom:14px;">
             院内のフクダ電子（Fukuda Denshi）心電計から送信されたバイナリ波形データを完全解析し、ブラウザ上で本物の心電図方眼紙にリアルタイム描画する新開発の専用Webビューワーです。<br>
-            専用端末や重厚なクライアントソフトを立ち上げることなく、診察机のWebブラウザから瞬時に12誘導波形と臨床計測値を精査できます。
+            最新版では、<strong>上部ヘッダーの整理（重複バー撤去・秒非表示）による波形描画領域の最大化</strong>、<strong>外部フクダ専用ビューワー（FEV）直起動ロケットボタン（🚀）</strong>、そして心電図の医学的精度を担保する<strong>国際標準「較正パルス（1mV = 10mm）」の精密描画</strong>を実装しました。
         </p>
 
         <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:12px; margin-bottom:16px;">
+            <!-- 機能①: 較正パルスと標準方眼紙 -->
             <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:14px;">
-                <div style="font-weight:700; color:#db2777; font-size:0.88rem; margin-bottom:6px;">📐 医療標準 心電図方眼紙グリッド</div>
+                <div style="font-weight:700; color:#db2777; font-size:0.88rem; margin-bottom:6px;">📐 較正パルス（標準電圧パルス）＆ 国際標準方眼紙</div>
                 <ul style="font-size:0.8rem; color:#475569; padding-left:18px; line-height:1.6;">
-                    <li><strong>国際標準仕様:</strong> 送り速度 <code>25mm/sec</code>、感度 <code>10mm/mV</code> に完全準拠したピンク/オレンジ方眼紙</li>
-                    <li><strong>精密目盛り:</strong> 1mm細線（0.04秒 / 0.1mV）および 5mm太線（0.20秒 / 0.5mV）を忠実に再現</li>
-                    <li><strong>校正パルス:</strong> 各誘導の先頭に1.0mVのキャリブレーション方形波を自動描画</li>
+                    <li><strong>較正パルス（1mV基準信号）:</strong> 各誘導波形の最左端に描画される矩形の山は、心電計の感度と時間軸が正しく設定・出力されているかを証明する基準信号。高さ 1.0mV（方眼紙で縦10mm = 太マス2つ分）、幅 0.20秒（横5mm = 太マス1つ分）を忠実に再現</li>
+                    <li><strong>国際標準方眼紙仕様:</strong> 送り速度 <code>25mm/sec</code>、電圧感度 <code>10mm/mV</code> に完全準拠した鮮明なピンク方眼紙</li>
+                    <li><strong>精密グリッド:</strong> 1mm細線（0.04秒 / 0.1mV）および 5mm太線（0.20秒 / 0.5mV）を正確に描画</li>
                 </ul>
             </div>
 
+            <!-- 機能②: 波形描画領域の最大化とクリーンヘッダー -->
             <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:14px;">
-                <div style="font-weight:700; color:#db2777; font-size:0.88rem; margin-bottom:6px;">🩺 自動計測パラメータ・オーバーレイ</div>
+                <div style="font-weight:700; color:#db2777; font-size:0.88rem; margin-bottom:6px;">✨ 波形描画領域の最大化 &amp; クリーンヘッダー</div>
                 <ul style="font-size:0.8rem; color:#475569; padding-left:18px; line-height:1.6;">
-                    <li><strong>心拍数 (HR):</strong> 心電計が解析した正確な心拍数（例: <code>68 bpm</code>）</li>
-                    <li><strong>PR間隔 / QRS幅:</strong> 房室伝導時間および心室脱分極時間（例: <code>PR: 156ms</code>, <code>QRS: 92ms</code>）</li>
-                    <li><strong>QT / QTc間隔:</strong> Bazett補正式によるQTc（例: <code>QT: 402ms / QTc: 428ms</code>）</li>
-                    <li><strong>電気軸 (Axis):</strong> 前頭面QRS電気軸角度（例: <code>Axis: +54°</code>）</li>
+                    <li><strong>見切れ解消 &amp; 描画領域拡大:</strong> 心電図波形側（画像側）に詳細な計測値（心拍数・PR・QRS・QT・軸等）が記録されているため、ヘッダーの重複していた計測バーを撤去し、波形を画面上部まで目一杯拡大表示</li>
+                    <li><strong>日時のスマート表示:</strong> 検査日時の「秒」を非表示にし「2026/10/20 14:25」のようにすっきりと視認性を向上</li>
+                    <li><strong>直感的操作感:</strong> 不要な印刷ボタンや閉じるボタンを排し、ブラウザバックで快適に戻れる統一仕様</li>
                 </ul>
             </div>
 
+            <!-- 機能③: 外部FEVビューワー直結 -->
             <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:14px;">
-                <div style="font-weight:700; color:#db2777; font-size:0.88rem; margin-bottom:6px;">🔬 誘導切り替え &amp; ズーム拡大</div>
+                <div style="font-weight:700; color:#db2777; font-size:0.88rem; margin-bottom:6px;">🚀 外部フクダ専用ビューワー（FEV）直結ボタン</div>
                 <ul style="font-size:0.8rem; color:#475569; padding-left:18px; line-height:1.6;">
-                    <li><strong>12誘導一括モード:</strong> 標準肢誘導（I, II, III, aVR, aVL, aVF）＋胸部誘導（V1〜V6）を一画面で一覧比較</li>
-                    <li><strong>単一誘導フォーカス:</strong> 特定誘導（II誘導やV1誘導など）を画面全体に拡大して細かな不整脈やST変化を精査</li>
-                    <li><strong>計測用十字クロスヘア:</strong> マウスカーソル位置の時間（ms）と電圧（mV）をリアルタイムに数値表示</li>
+                    <li><strong>ロケットマーク（🚀）:</strong> ヘッダー右端のコンパクトな「🚀」ボタンをクリックするだけで、クライアント端末の常駐スクリプトを介してフクダ電子専用ビューワー（FEV）を即座に直接呼び出し</li>
+                    <li><strong>メーカーネイティブ詳細解析:</strong> より深い波形比較やメーカー独自解析が必要な場合も、画面を閉じることなくワンクリックで連携</li>
+                </ul>
+            </div>
+
+            <!-- 機能④: 基線動揺補正と12誘導一括表示 -->
+            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:14px;">
+                <div style="font-weight:700; color:#db2777; font-size:0.88rem; margin-bottom:6px;">🩺 基線動揺補正フィルター &amp; 12誘導比較</div>
+                <ul style="font-size:0.8rem; color:#475569; padding-left:18px; line-height:1.6;">
+                    <li><strong>基線動揺（ベースラインドリフト）除去:</strong> 患者の体動や呼吸性変動による波形の上下ブレを独自フィルターで補正し、方眼紙中心に安定描画</li>
+                    <li><strong>12誘導一画面俯瞰:</strong> 標準肢誘導（I, II, III, aVR, aVL, aVF）＋胸部誘導（V1〜V6）を一画面で美しく配置</li>
+                    <li><strong>マルチデバイス対応:</strong> 電子カルテ端末だけでなく、iPadなどのタブレットブラウザでもそのまま滑らかに閲覧可能</li>
                 </ul>
             </div>
         </div>
 
-        <div class="alert-box alert-success" style="background:#eff6ff; border-left:4px solid #2563eb; color:#1e40af; padding:12px 14px; border-radius:6px; font-size:0.82rem;">
+        <div class="alert-box alert-tip">
             💡 <strong>心電図ビューワーの起動:</strong> 一覧画面（index.php）の閲覧列「📈 心電図」ボタン、または検査キャンバス（canvas_view.php）の心電図カード下にある「📈 心電図 ↗」ボタンをクリックすると即座に立ち上がります。
         </div>
     </section>
