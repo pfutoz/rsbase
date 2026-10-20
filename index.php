@@ -29,6 +29,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         // IPアドレス別のトリガーファイルパス
         $client_trigger_file = $tmp_dir . 'trigger_' . $client_ip . '.txt';
 
+        // 放置された古いトリガーファイル (24時間以上経過) の自動削除 (約50回に1回の低頻度実行)
+        if (mt_rand(1, 50) === 1) {
+            $now = time();
+            $old_triggers = glob($tmp_dir . 'trigger_*.txt');
+            if ($old_triggers) {
+                foreach ($old_triggers as $ot) {
+                    if (($now - @filemtime($ot)) > 86400) {
+                        @unlink($ot);
+                    }
+                }
+            }
+        }
+
         // モードとパスをパイプ区切りで書き込む
         $data_to_write = $mode . '|' . $folder;
 
