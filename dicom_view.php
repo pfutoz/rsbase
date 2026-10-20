@@ -9,6 +9,7 @@ $pat_id    = $_GET['id'] ?? '';
 $pat_name  = $_GET['name'] ?? '';
 $exam_name = $_GET['kensa'] ?? '';
 $exam_date = $_GET['date'] ?? '';
+$display_date = preg_replace('/^(\d{4}[\/\-]\d{1,2}[\/\-]\d{1,2}\s+\d{1,2}:\d{2})(?::\d{2})?.*$/', '$1', trim($exam_date));
 $sindan    = $_GET['sindan'] ?? '';
 $mode      = $_GET['mode'] ?? 'standalone'; // 'modal' or 'standalone'
 ?>
@@ -151,6 +152,45 @@ $mode      = $_GET['mode'] ?? 'standalone'; // 'modal' or 'standalone'
             white-space: nowrap;
         }
 
+        /* 画面分割レイアウト切替ボタングループ */
+        .layout-group {
+            display: flex;
+            align-items: center;
+            background: #111827;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            overflow: hidden;
+            padding: 2px;
+            gap: 2px;
+        }
+
+        .layout-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            padding: 4px 10px;
+            font-size: 0.8rem;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            transition: all 0.15s;
+            font-weight: 500;
+        }
+
+        .layout-btn:hover {
+            color: var(--text-main);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .layout-btn.active {
+            background: #2563eb;
+            color: #ffffff;
+            font-weight: 700;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+        }
+
         /* マウスモード切替ボタングループ */
         .tool-group {
             display: flex;
@@ -246,17 +286,55 @@ $mode      = $_GET['mode'] ?? 'standalone'; // 'modal' or 'standalone'
             overflow: hidden;
         }
 
-        /* メイン画像ステージ */
+        /* メイン画像ステージ (CSS Grid による分割表示) */
         .dcm-stage {
             flex: 1;
             height: 100%;
             position: relative;
-            background: radial-gradient(circle at center, #0f172a 0%, #05070c 100%);
+            background: #030712;
             overflow: hidden;
             cursor: crosshair;
+            display: grid;
+            gap: 2px;
         }
 
-        .dcm-img-wrapper {
+        /* 1面: 1x1 */
+        .dcm-stage.layout-1 {
+            grid-template-columns: 1fr;
+            grid-template-rows: 1fr;
+        }
+        .dcm-stage.layout-1 .dcm-viewport[data-slot="1"],
+        .dcm-stage.layout-1 .dcm-viewport[data-slot="2"],
+        .dcm-stage.layout-1 .dcm-viewport[data-slot="3"] {
+            display: none;
+        }
+
+        /* 2面: 1行2列 (1x2 左右並び) */
+        .dcm-stage.layout-2 {
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 1fr;
+        }
+        .dcm-stage.layout-2 .dcm-viewport[data-slot="2"],
+        .dcm-stage.layout-2 .dcm-viewport[data-slot="3"] {
+            display: none;
+        }
+
+        /* 4面: 2行2列 (2x2 田の字並び) */
+        .dcm-stage.layout-4 {
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
+        }
+
+        .dcm-viewport {
+            position: relative;
+            overflow: hidden;
+            background: radial-gradient(circle at center, #0f172a 0%, #05070c 100%);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            width: 100%;
+            height: 100%;
+        }
+
+        .dcm-viewport .dcm-img-wrapper {
             position: absolute;
             left: 0;
             top: 0;
@@ -265,15 +343,49 @@ $mode      = $_GET['mode'] ?? 'standalone'; // 'modal' or 'standalone'
             pointer-events: none;
         }
 
-        #dcmMainImage {
+        .dcm-viewport .dcm-slot-img {
             display: block;
             max-width: none;
             pointer-events: none;
             transition: filter 0.05s ease-out;
         }
 
-        #dcmMainImage.inverted {
-            filter: invert(100%);
+        .slot-badge {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(15, 23, 42, 0.85);
+            border: 1px solid rgba(56, 189, 248, 0.4);
+            color: #38bdf8;
+            font-family: monospace;
+            font-weight: 700;
+            font-size: 0.8rem;
+            padding: 2px 8px;
+            border-radius: 4px;
+            z-index: 10;
+            pointer-events: none;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+        }
+
+        .slot-empty-msg {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #64748b;
+            font-size: 0.9rem;
+            display: none;
+            pointer-events: none;
+            font-family: sans-serif;
+        }
+        .dcm-viewport.is-empty .slot-empty-msg {
+            display: block;
+        }
+        .dcm-viewport.is-empty .slot-badge {
+            display: none;
+        }
+        .dcm-viewport.is-empty .dcm-slot-img {
+            display: none;
         }
 
         /* 浮遊ナビゲーション大型矢印 (左右) */
@@ -576,7 +688,7 @@ $mode      = $_GET['mode'] ?? 'standalone'; // 'modal' or 'standalone'
             <?php if ($exam_name): ?>
                 <span class="exam-badge"><?= htmlspecialchars($exam_name, ENT_QUOTES, 'UTF-8') ?></span>
             <?php endif; ?>
-            <span class="exam-date"><?= htmlspecialchars($exam_date, ENT_QUOTES, 'UTF-8') ?></span>
+            <span class="exam-date"><?= htmlspecialchars($display_date, ENT_QUOTES, 'UTF-8') ?></span>
             <?php if ($sindan): ?>
                 <span class="exam-sindan" title="<?= htmlspecialchars($sindan, ENT_QUOTES, 'UTF-8') ?>">
                     [<?= htmlspecialchars(mb_strimwidth($sindan, 0, 20, '...'), ENT_QUOTES, 'UTF-8') ?>]
@@ -589,6 +701,19 @@ $mode      = $_GET['mode'] ?? 'standalone'; // 'modal' or 'standalone'
             <button type="button" class="nav-btn" id="navPrevBtn" title="前コマ [←キー / ホイール上]">◀</button>
             <span class="slice-label" id="sliceNavLabel">0 / 0</span>
             <button type="button" class="nav-btn" id="navNextBtn" title="次コマ [→キー / ホイール下]">▶</button>
+        </div>
+
+        <!-- 画面分割レイアウト切替 -->
+        <div class="layout-group" id="layoutGroup">
+            <button type="button" class="layout-btn active" data-layout="1" title="1画面表示 [1キー]">
+                1面
+            </button>
+            <button type="button" class="layout-btn" data-layout="2" title="2画面横並び表示 [2キー]">
+                2面
+            </button>
+            <button type="button" class="layout-btn" data-layout="4" title="4画面田の字表示 [4キー]">
+                4面
+            </button>
         </div>
 
         <!-- マウス操作モード切替 (左ドラッグの動作) -->
@@ -640,9 +765,41 @@ $mode      = $_GET['mode'] ?? 'standalone'; // 'modal' or 'standalone'
     ----------------------------------------------------------------------- -->
     <main class="dcm-workspace">
         <!-- 画像ステージ -->
-        <div class="dcm-stage" id="dcmImageStage">
-            <div class="dcm-img-wrapper" id="dcmImgWrapper">
-                <img id="dcmMainImage" src="" alt="DICOM Main" draggable="false">
+        <div class="dcm-stage layout-1" id="dcmImageStage">
+            <!-- スロット 0 (主画面 / 1面時) -->
+            <div class="dcm-viewport" data-slot="0">
+                <div class="dcm-img-wrapper" id="dcmImgWrapper">
+                    <img class="dcm-slot-img" id="dcmMainImage" src="" alt="DICOM Main" draggable="false">
+                </div>
+                <div class="slot-badge" id="badgeSlot0">#1</div>
+                <div class="slot-empty-msg">(画像なし)</div>
+            </div>
+
+            <!-- スロット 1 (2面・4面時) -->
+            <div class="dcm-viewport" data-slot="1">
+                <div class="dcm-img-wrapper">
+                    <img class="dcm-slot-img" src="" alt="" draggable="false">
+                </div>
+                <div class="slot-badge" id="badgeSlot1">#2</div>
+                <div class="slot-empty-msg">(画像なし)</div>
+            </div>
+
+            <!-- スロット 2 (4面時) -->
+            <div class="dcm-viewport" data-slot="2">
+                <div class="dcm-img-wrapper">
+                    <img class="dcm-slot-img" src="" alt="" draggable="false">
+                </div>
+                <div class="slot-badge" id="badgeSlot2">#3</div>
+                <div class="slot-empty-msg">(画像なし)</div>
+            </div>
+
+            <!-- スロット 3 (4面時) -->
+            <div class="dcm-viewport" data-slot="3">
+                <div class="dcm-img-wrapper">
+                    <img class="dcm-slot-img" src="" alt="" draggable="false">
+                </div>
+                <div class="slot-badge" id="badgeSlot3">#4</div>
+                <div class="slot-empty-msg">(画像なし)</div>
             </div>
 
             <!-- 左右大型フローティング矢印 -->
@@ -706,8 +863,7 @@ $mode      = $_GET['mode'] ?? 'standalone'; // 'modal' or 'standalone'
 
         // DOM要素
         const stage = document.getElementById('dcmImageStage');
-        const imgWrapper = document.getElementById('dcmImgWrapper');
-        const mainImg = document.getElementById('dcmMainImage');
+        const viewports = Array.from(stage.querySelectorAll('.dcm-viewport'));
         const loader = document.getElementById('dcmLoader');
         const filmstrip = document.getElementById('dcmFilmstripList');
         const sliceNavLabel = document.getElementById('sliceNavLabel');
@@ -743,6 +899,7 @@ $mode      = $_GET['mode'] ?? 'standalone'; // 'modal' or 'standalone'
         // ビューワ内部ステート
         let dcmFiles = [];
         let currentIndex = 0;
+        let currentLayout = 1; // 1, 2, or 4
         let zoom = 1.0;
         let panX = 0;
         let panY = 0;
@@ -832,88 +989,162 @@ $mode      = $_GET['mode'] ?? 'standalone'; // 'modal' or 'standalone'
         }
 
         // 指定スライスの画像読込
+        // ナビラベル & ボタン状態更新
+        function updateNavUI() {
+            if (currentLayout === 1) {
+                sliceNavLabel.textContent = `${currentIndex + 1} / ${dcmFiles.length}`;
+            } else {
+                const endIdx = Math.min(currentIndex + currentLayout, dcmFiles.length);
+                sliceNavLabel.textContent = `${currentIndex + 1}-${endIdx} / ${dcmFiles.length}`;
+            }
+            navPrevBtn.disabled = (currentIndex === 0);
+            navNextBtn.disabled = (currentIndex >= dcmFiles.length - 1);
+            floatPrevBtn.disabled = (currentIndex === 0);
+            floatNextBtn.disabled = (currentIndex >= dcmFiles.length - 1);
+        }
+
+        // サムネイルハイライト更新
+        function updateFilmstripHighlight() {
+            const cards = filmstrip.querySelectorAll('.thumb-card');
+            cards.forEach((c, idx) => {
+                const isVisible = (idx >= currentIndex && idx < currentIndex + currentLayout);
+                c.classList.toggle('active', isVisible);
+                if (idx === currentIndex) {
+                    c.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }
+            });
+        }
+
+        // 画面レイアウト切替 (1面, 2面, 4面)
+        function setLayout(layout) {
+            currentLayout = layout;
+            stage.className = `dcm-stage layout-${layout}`;
+            document.querySelectorAll('.layout-btn').forEach(btn => {
+                btn.classList.toggle('active', parseInt(btn.dataset.layout, 10) === layout);
+            });
+            updateNavUI();
+            updateFilmstripHighlight();
+            loadSlice(currentIndex, true);
+            showToast(`🖥️ ${layout}画面表示に切り替えました`);
+        }
+
+        // 指定スライスの画像読込 (連番分割表示対応)
         function loadSlice(index, autoFit = false) {
             if (index < 0 || index >= dcmFiles.length) return;
             currentIndex = index;
 
-            // ラベル・ボタン状態更新
-            sliceNavLabel.textContent = `${currentIndex + 1} / ${dcmFiles.length}`;
-            navPrevBtn.disabled = (currentIndex === 0);
-            navNextBtn.disabled = (currentIndex === dcmFiles.length - 1);
-            floatPrevBtn.disabled = (currentIndex === 0);
-            floatNextBtn.disabled = (currentIndex === dcmFiles.length - 1);
+            updateNavUI();
+            updateFilmstripHighlight();
 
-            // サムネイルアクティブ枠更新 & スクロール
-            const cards = filmstrip.querySelectorAll('.thumb-card');
-            cards.forEach((c, idx) => {
-                if (idx === currentIndex) {
-                    c.classList.add('active');
-                    c.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-                } else {
-                    c.classList.remove('active');
-                }
-            });
-
-            const file = dcmFiles[currentIndex];
-            hudFilename.textContent = file.filename;
+            const file0 = dcmFiles[currentIndex];
+            hudFilename.textContent = file0.filename;
 
             loader.style.display = 'flex';
 
-            const imgUrl = `dcm_api.php?action=image&folder=${encodeURIComponent(FOLDER_PATH)}&file=${encodeURIComponent(file.filename)}`;
-            const tempImg = new Image();
-            tempImg.onload = () => {
-                mainImg.src = imgUrl;
-                hudResolution.textContent = `${tempImg.naturalWidth} x ${tempImg.naturalHeight}`;
-                loader.style.display = 'none';
-
-                if (autoFit) {
-                    fitToWindow();
-                } else {
-                    updateTransform();
+            let pendingCount = 0;
+            for (let s = 0; s < 4; s++) {
+                const vp = viewports[s];
+                if (!vp) continue;
+                if (s >= currentLayout) {
+                    continue;
                 }
-            };
-            tempImg.onerror = () => {
-                loader.style.display = 'none';
-                showToast("⚠️ 画像の読み込みに失敗しました");
-            };
-            tempImg.src = imgUrl;
+                const fileIdx = currentIndex + s;
+                const img = vp.querySelector('.dcm-slot-img');
+                const badge = vp.querySelector('.slot-badge');
+
+                if (fileIdx < dcmFiles.length) {
+                    vp.classList.remove('is-empty');
+                    if (badge) badge.textContent = '#' + (fileIdx + 1);
+                    const fileObj = dcmFiles[fileIdx];
+                    const imgUrl = `dcm_api.php?action=image&folder=${encodeURIComponent(FOLDER_PATH)}&file=${encodeURIComponent(fileObj.filename)}`;
+
+                    if (s === 0) {
+                        pendingCount++;
+                        const tempImg = new Image();
+                        tempImg.onload = () => {
+                            img.src = imgUrl;
+                            hudResolution.textContent = `${tempImg.naturalWidth} x ${tempImg.naturalHeight}`;
+                            pendingCount--;
+                            if (pendingCount <= 0) loader.style.display = 'none';
+
+                            if (autoFit) {
+                                fitToWindow();
+                            } else {
+                                updateTransform();
+                            }
+                        };
+                        tempImg.onerror = () => {
+                            pendingCount--;
+                            if (pendingCount <= 0) loader.style.display = 'none';
+                            showToast("⚠️ 画像の読み込みに失敗しました");
+                        };
+                        tempImg.src = imgUrl;
+                    } else {
+                        pendingCount++;
+                        img.onload = () => {
+                            pendingCount--;
+                            if (pendingCount <= 0) loader.style.display = 'none';
+                        };
+                        img.onerror = () => {
+                            pendingCount--;
+                            if (pendingCount <= 0) loader.style.display = 'none';
+                        };
+                        img.src = imgUrl;
+                    }
+                } else {
+                    vp.classList.add('is-empty');
+                    img.src = '';
+                }
+            }
+            if (pendingCount === 0) loader.style.display = 'none';
         }
 
-        // --------------------------------------------------------------------------
-        // 変形 (ズーム・パン) & 階調 (WW/WL) 反映
-        // --------------------------------------------------------------------------
+        // 変形 (ズーム・パン) 反映 (全スロット完全同期)
         function updateTransform() {
-            imgWrapper.style.transform = `translate(${panX}px, ${panY}px) scale(${zoom})`;
+            viewports.forEach(vp => {
+                const wrapper = vp.querySelector('.dcm-img-wrapper');
+                if (wrapper) {
+                    wrapper.style.transform = `translate(${panX}px, ${panY}px) scale(${zoom})`;
+                }
+            });
             hudZoom.textContent = Math.round(zoom * 100) + '%';
         }
 
+        // 階調 (WW/WL) 反映 (全スロット完全同期)
         function updateFilters() {
             let filterStr = `contrast(${contrast}%) brightness(${brightness}%)`;
             if (isInverted) {
                 filterStr += ' invert(100%)';
             }
-            mainImg.style.filter = filterStr;
+            viewports.forEach(vp => {
+                const img = vp.querySelector('.dcm-slot-img');
+                if (img) {
+                    img.style.filter = filterStr;
+                }
+            });
             hudWwWl.textContent = `C:${Math.round(contrast)}% B:${Math.round(brightness)}%`;
         }
 
         // 画面にフィット
         function fitToWindow() {
-            if (!mainImg.naturalWidth || !mainImg.naturalHeight) return;
+            const vp0 = viewports[0];
+            const img0 = vp0.querySelector('.dcm-slot-img');
+            if (!img0 || !img0.naturalWidth || !img0.naturalHeight) return;
 
-            const stageW = stage.clientWidth;
-            const stageH = stage.clientHeight;
-            const imgW = mainImg.naturalWidth;
-            const imgH = mainImg.naturalHeight;
+            const slotW = vp0.clientWidth || (stage.clientWidth / (currentLayout === 1 ? 1 : 2));
+            const slotH = vp0.clientHeight || (stage.clientHeight / (currentLayout === 4 ? 2 : 1));
+            const imgW = img0.naturalWidth;
+            const imgH = img0.naturalHeight;
 
             // 余白を持たせたフィット倍率を算出
-            const padding = 20;
-            const scaleX = (stageW - padding * 2) / imgW;
-            const scaleY = (stageH - padding * 2) / imgH;
-            zoom = Math.min(scaleX, scaleY, 1.0); // 原寸より大きくなりすぎないように調整
+            const padding = 12;
+            const scaleX = (slotW - padding * 2) / imgW;
+            const scaleY = (slotH - padding * 2) / imgH;
+            zoom = Math.min(scaleX, scaleY, 1.0);
 
             // 中央寄せ
-            panX = (stageW - imgW * zoom) / 2;
-            panY = (stageH - imgH * zoom) / 2;
+            panX = (slotW - imgW * zoom) / 2;
+            panY = (slotH - imgH * zoom) / 2;
 
             updateTransform();
             showToast("⏹️ 画面にフィット");
@@ -921,12 +1152,17 @@ $mode      = $_GET['mode'] ?? 'standalone'; // 'modal' or 'standalone'
 
         // 原寸 (1:1)
         function oneToOne() {
-            if (!mainImg.naturalWidth || !mainImg.naturalHeight) return;
+            const vp0 = viewports[0];
+            const img0 = vp0.querySelector('.dcm-slot-img');
+            if (!img0 || !img0.naturalWidth || !img0.naturalHeight) return;
+
             zoom = 1.0;
-            const stageW = stage.clientWidth;
-            const stageH = stage.clientHeight;
-            panX = (stageW - mainImg.naturalWidth) / 2;
-            panY = (stageH - mainImg.naturalHeight) / 2;
+            const slotW = vp0.clientWidth || (stage.clientWidth / (currentLayout === 1 ? 1 : 2));
+            const slotH = vp0.clientHeight || (stage.clientHeight / (currentLayout === 4 ? 2 : 1));
+
+            panX = (slotW - img0.naturalWidth) / 2;
+            panY = (slotH - img0.naturalHeight) / 2;
+
             updateTransform();
             showToast("1:1 原寸表示");
         }
@@ -985,15 +1221,17 @@ $mode      = $_GET['mode'] ?? 'standalone'; // 'modal' or 'standalone'
             if (dragButton === 2 || (dragButton === 0 && activeMouseTool === 'zoom')) {
                 // 上へドラッグで拡大、下へドラッグで縮小
                 const zoomFactor = Math.exp(-dy * 0.008);
-                const newZoom = Math.min(Math.max(startZoom * zoomFactor, 0.1), 10.0);
+                const newZoom = Math.min(Math.max(startZoom * zoomFactor, 0.05), 10.0);
 
-                // マウス中心ズーム
-                const stageRect = stage.getBoundingClientRect();
-                const mouseStageX = startMouseX - stageRect.left;
-                const mouseStageY = startMouseY - stageRect.top;
+                // スロット中央基準ズーム
+                const vp0 = viewports[0];
+                const slotW = vp0.clientWidth || 400;
+                const slotH = vp0.clientHeight || 400;
+                const centerX = slotW / 2;
+                const centerY = slotH / 2;
 
-                panX = mouseStageX - (mouseStageX - startPanX) * (newZoom / startZoom);
-                panY = mouseStageY - (mouseStageY - startPanY) * (newZoom / startZoom);
+                panX = centerX - (centerX - startPanX) * (newZoom / startZoom);
+                panY = centerY - (centerY - startPanY) * (newZoom / startZoom);
                 zoom = newZoom;
 
                 updateTransform();
@@ -1053,6 +1291,12 @@ $mode      = $_GET['mode'] ?? 'standalone'; // 'modal' or 'standalone'
             } else if (e.key === 'f' || e.key === 'F') {
                 fitToWindow();
             } else if (e.key === '1') {
+                setLayout(1);
+            } else if (e.key === '2') {
+                setLayout(2);
+            } else if (e.key === '4') {
+                setLayout(4);
+            } else if (e.key === 'o' || e.key === 'O') {
                 oneToOne();
             } else if (e.key === 'r' || e.key === 'R') {
                 resetView();
@@ -1066,6 +1310,12 @@ $mode      = $_GET['mode'] ?? 'standalone'; // 'modal' or 'standalone'
         // --------------------------------------------------------------------------
         // UIボタンイベントリスナー
         // --------------------------------------------------------------------------
+        document.querySelectorAll('.layout-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const l = parseInt(btn.dataset.layout, 10);
+                setLayout(l);
+            });
+        });
         navPrevBtn.addEventListener('click', () => { if (currentIndex > 0) loadSlice(currentIndex - 1); });
         navNextBtn.addEventListener('click', () => { if (currentIndex < dcmFiles.length - 1) loadSlice(currentIndex + 1); });
         floatPrevBtn.addEventListener('click', () => { if (currentIndex > 0) loadSlice(currentIndex - 1); });
