@@ -642,6 +642,42 @@ if (preg_match('/エコー|超音波|US|XP|CR|CT|MR|RF|透視|レントゲン|�
             font-weight: 600;
         }
 
+        /* 🖨️ 印刷トレイボタン (サムネイル上) */
+        .thumb-tray-btn {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            background: rgba(15, 23, 42, 0.85);
+            border: 1px solid #10b981;
+            color: #34d399;
+            font-size: 0.72rem;
+            font-weight: 700;
+            padding: 2px 6px;
+            border-radius: 4px;
+            cursor: pointer;
+            z-index: 10;
+            transition: all 0.15s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+        }
+        .thumb-tray-btn:hover {
+            background: #059669;
+            color: #ffffff;
+            transform: scale(1.08);
+        }
+        .thumb-tray-btn.in-tray {
+            background: #10b981;
+            color: #ffffff;
+            border-color: #34d399;
+            box-shadow: 0 0 8px rgba(16, 185, 129, 0.7);
+        }
+        .thumb-card.in-tray {
+            border-color: #10b981 !important;
+            box-shadow: 0 0 8px rgba(16, 185, 129, 0.4);
+        }
+
         /* サイドバートグル復帰ボタン (ステージ右端) */
         .sidebar-reopen-btn {
             position: absolute;
@@ -1008,6 +1044,12 @@ if (preg_match('/エコー|超音波|US|XP|CR|CT|MR|RF|透視|レントゲン|�
             <button type="button" class="action-btn" id="btnCopy" title="クリップボードにコピー (画面全体または範囲指定ドラッグ) [Cキー / Ctrl+C]">
                 📋 コピー
             </button>
+            <button type="button" class="action-btn" id="btnAddToTray" title="現在表示中の画像を2×4印刷トレイに追加 [Pキー]" style="background: rgba(16, 185, 129, 0.15); border-color: #10b981; color: #6ee7b7; font-weight: 600;">
+                ➕ トレイ追加
+            </button>
+            <button type="button" class="action-btn" id="btnOpenPrintTray" title="2×4画像印刷画面を開く" style="background: #065f46; border-color: #34d399; color: #ffffff; font-weight: 700;">
+                🖨️ 2×4印刷 (<span id="trayCountBadge">0</span>/8)
+            </button>
             <button type="button" class="action-btn" id="btnDownloadZip" title="JPEG一括ZIPダウンロード">
                 📦
             </button>
@@ -1314,6 +1356,9 @@ if (preg_match('/エコー|超音波|US|XP|CR|CT|MR|RF|透視|レントゲン|�
         const btnInvert = document.getElementById('btnInvert');
         const btnReset = document.getElementById('btnReset');
         const btnCopy = document.getElementById('btnCopy');
+        const btnAddToTray = document.getElementById('btnAddToTray');
+        const btnOpenPrintTray = document.getElementById('btnOpenPrintTray');
+        const trayCountBadge = document.getElementById('trayCountBadge');
         const btnDownloadZip = document.getElementById('btnDownloadZip');
         const btnDirectLaunch = document.getElementById('btnDirectLaunch');
         const btnPopout = document.getElementById('btnPopout');
@@ -1465,9 +1510,11 @@ if (preg_match('/エコー|超音波|US|XP|CR|CT|MR|RF|透視|レントゲン|�
         function renderFilmstrip() {
             filmstrip.innerHTML = '';
             dcmFiles.forEach((file, index) => {
+                const inTray = isFileInTray(file.filename);
                 const card = document.createElement('div');
-                card.className = 'thumb-card' + (index === currentIndex ? ' active' : '');
+                card.className = 'thumb-card' + (index === currentIndex ? ' active' : '') + (inTray ? ' in-tray' : '');
                 card.dataset.index = index;
+                card.dataset.filename = file.filename;
 
                 const img = document.createElement('img');
                 img.loading = 'lazy';
@@ -1478,8 +1525,20 @@ if (preg_match('/エコー|超音波|US|XP|CR|CT|MR|RF|透視|レントゲン|�
                 badge.className = 'thumb-badge';
                 badge.textContent = '#' + (index + 1);
 
+                // 🖨️ 印刷トレイ追加・解除ボタン
+                const trayBtn = document.createElement('button');
+                trayBtn.type = 'button';
+                trayBtn.className = 'thumb-tray-btn' + (inTray ? ' in-tray' : '');
+                trayBtn.title = inTray ? '印刷トレイから除外' : '印刷トレイに追加 (2×4印刷用)';
+                trayBtn.textContent = inTray ? '✓' : '＋';
+                trayBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    toggleTrayItem(file.filename, index);
+                });
+
                 card.appendChild(img);
                 card.appendChild(badge);
+                card.appendChild(trayBtn);
 
                 card.addEventListener('click', () => {
                     loadSlice(index, false);
@@ -1487,6 +1546,7 @@ if (preg_match('/エコー|超音波|US|XP|CR|CT|MR|RF|透視|レントゲン|�
 
                 filmstrip.appendChild(card);
             });
+            updateTrayUI();
         }
 
         // 指定スライスの画像読込
@@ -1538,6 +1598,7 @@ if (preg_match('/エコー|超音波|US|XP|CR|CT|MR|RF|透視|レントゲン|�
 
             updateNavUI();
             updateFilmstripHighlight();
+            updateTrayUI();
 
             const file0 = dcmFiles[currentIndex];
             if (hudFilename) hudFilename.textContent = file0.filename;
@@ -1921,6 +1982,10 @@ if (preg_match('/エコー|超音波|US|XP|CR|CT|MR|RF|透視|レントゲン|�
                 setLayout(4);
             } else if (e.key === 'r' || e.key === 'R') {
                 resetView();
+            } else if (e.key === 'p' || e.key === 'P') {
+                if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) return;
+                e.preventDefault();
+                toggleCurrentSliceTray();
             } else if ((e.ctrlKey || e.metaKey) && (e.key === 'c' || e.key === 'C')) {
                 e.preventDefault();
                 copyEntireImage();
@@ -1991,6 +2056,8 @@ if (preg_match('/エコー|超音波|US|XP|CR|CT|MR|RF|透視|レントゲン|�
         if (btnOlympusFit) btnOlympusFit.addEventListener('click', olympusFit);
         btnOneToOne.addEventListener('click', oneToOne);
         btnReset.addEventListener('click', resetView);
+        if (btnAddToTray) btnAddToTray.addEventListener('click', toggleCurrentSliceTray);
+        if (btnOpenPrintTray) btnOpenPrintTray.addEventListener('click', openPrintView);
 
         // --------------------------------------------------------------------------
         // 画像クリップボードコピー & 範囲切り出しロジック
@@ -2557,6 +2624,242 @@ if (preg_match('/エコー|超音波|US|XP|CR|CT|MR|RF|透視|レントゲン|�
         // リサイズ時の自動追従
         window.addEventListener('resize', () => {
             applyActiveFit();
+        });
+
+        // --------------------------------------------------------------------------
+        // 🖨️ 2×4 印刷トレイ管理 (LocalStorage連携 & 患者ガード)
+        // --------------------------------------------------------------------------
+        const PRINT_TRAY_KEY = 'rsbase_print_tray';
+
+        function getPrintTray() {
+            try {
+                const raw = localStorage.getItem(PRINT_TRAY_KEY);
+                if (raw) {
+                    const parsed = JSON.parse(raw);
+                    if (parsed && Array.isArray(parsed.items)) return parsed;
+                }
+            } catch (err) {
+                console.warn("Print tray parse error:", err);
+            }
+            return {
+                patientId: PAT_ID || '',
+                patientName: PAT_NAME || '',
+                items: []
+            };
+        }
+
+        function savePrintTray(tray) {
+            try {
+                tray.updatedAt = Date.now();
+                localStorage.setItem(PRINT_TRAY_KEY, JSON.stringify(tray));
+                updateTrayUI();
+            } catch (err) {
+                console.error("Print tray save error:", err);
+            }
+        }
+
+        function isFileInTray(filename) {
+            if (!filename) return false;
+            const tray = getPrintTray();
+            if (!tray || !tray.items || tray.items.length === 0) return false;
+            return tray.items.some(item => item.file === filename && (item.folder === FOLDER_PATH || !item.folder));
+        }
+
+        function toggleTrayItem(filename, index) {
+            toggleThumbnailTray(filename, index);
+        }
+
+        function toggleThumbnailTray(filename, index) {
+            if (!filename) return;
+            let tray = getPrintTray();
+
+            // 他患者の画像が入っている場合の安全ガード
+            if (tray.patientId && PAT_ID && String(tray.patientId) !== String(PAT_ID) && tray.items && tray.items.length > 0) {
+                const ok = confirm(`印刷トレイには別の患者（${tray.patientName || tray.patientId} 様）の画像が ${tray.items.length} 枚登録されています。\nトレイをリセットして、現在の患者（${PAT_NAME || PAT_ID} 様）の画像を追加しますか？`);
+                if (!ok) return;
+                tray = {
+                    patientId: PAT_ID,
+                    patientName: PAT_NAME,
+                    items: []
+                };
+            }
+
+            tray.patientId = PAT_ID || tray.patientId;
+            tray.patientName = PAT_NAME || tray.patientName;
+            if (!Array.isArray(tray.items)) tray.items = [];
+
+            const existingIdx = tray.items.findIndex(it => it.file === filename && (it.folder === FOLDER_PATH || !it.folder));
+
+            if (existingIdx >= 0) {
+                tray.items.splice(existingIdx, 1);
+                savePrintTray(tray);
+                showToast(`🗑️ #${index + 1} (${filename}) を印刷トレイから除外しました (${tray.items.length}/8)`);
+            } else {
+                if (tray.items.length >= 8) {
+                    alert("印刷トレイの上限（最大8枚）に達しています。\n2×4印刷画面で枠を整理するか、不要な画像を削除してください。");
+                    return;
+                }
+
+                const cleanDate = (EXAM_DATE || '').split(' ')[0] || '';
+                const cap = `[${EXAM_NAME || '検査'}] ${cleanDate} (${filename})`;
+
+                tray.items.push({
+                    id: `${FOLDER_PATH}_${filename}_${Date.now()}`,
+                    patientId: PAT_ID,
+                    patientName: PAT_NAME,
+                    folder: FOLDER_PATH,
+                    file: filename,
+                    examName: EXAM_NAME,
+                    examDate: EXAM_DATE,
+                    caption: cap,
+                    panX: 0,
+                    panY: 0,
+                    zoom: 1.0,
+                    ieeMode: 'normal',
+                    contrast: 100,
+                    brightness: 100,
+                    invert: false
+                });
+                savePrintTray(tray);
+                showToast(`🖨️ #${index + 1} (${filename}) を印刷トレイに追加しました (${tray.items.length}/8)`);
+            }
+        }
+
+        // 表示中スライスを「現在の病巣強調モード・拡大ズーム・パン位置」を保持した状態でトレイに追加
+        function toggleCurrentSliceTray() {
+            if (!dcmFiles || !dcmFiles[currentIndex]) return;
+            const filename = dcmFiles[currentIndex].filename;
+            let tray = getPrintTray();
+
+            // 他患者の画像が入っている場合の安全ガード
+            if (tray.patientId && PAT_ID && String(tray.patientId) !== String(PAT_ID) && tray.items && tray.items.length > 0) {
+                const ok = confirm(`印刷トレイには別の患者（${tray.patientName || tray.patientId} 様）の画像が ${tray.items.length} 枚登録されています。\nトレイをリセットして、現在の患者（${PAT_NAME || PAT_ID} 様）の画像を追加しますか？`);
+                if (!ok) return;
+                tray = {
+                    patientId: PAT_ID,
+                    patientName: PAT_NAME,
+                    items: []
+                };
+            }
+
+            tray.patientId = PAT_ID || tray.patientId;
+            tray.patientName = PAT_NAME || tray.patientName;
+            if (!Array.isArray(tray.items)) tray.items = [];
+
+            const existingInstances = tray.items.filter(it => it.file === filename && (it.folder === FOLDER_PATH || !it.folder));
+
+            const cleanDate = (EXAM_DATE || '').split(' ')[0] || '';
+            let modeTag = '';
+            if (activeIeeMode === 'lci') modeTag = ' 【LCI発赤強調】';
+            else if (activeIeeMode === 'nbi') modeTag = ' 【NBI血管強調】';
+            else if (activeIeeMode === 'txi') modeTag = ' 【TXI自然強調】';
+            else if (activeIeeMode === 'pale') modeTag = ' 【褪色強調】';
+            else if (activeIeeMode === 'ihb') modeTag = ' 【血流マップ】';
+            else if (activeIeeMode === 'texture') modeTag = ' 【構造強調】';
+            else if (activeIeeMode === 'indigo') modeTag = ' 【色素散布】';
+            else if (isInverted) modeTag = ' 【白黒反転】';
+
+            let zoomTag = (zoom >= 1.25) ? ' [拡大]' : '';
+            const cap = `[${EXAM_NAME || '検査'}] ${cleanDate} (${filename})${modeTag}${zoomTag}`;
+
+            // すでに同一画像がトレイにある場合
+            if (existingInstances.length > 0) {
+                // 強調モードまたはズームが異なる場合は、比較枠として自動追加
+                const isDiffState = existingInstances.every(it => (it.ieeMode || 'normal') !== activeIeeMode || Math.abs((it.zoom || 1.0) - zoom) > 0.25 || !!it.invert !== isInverted);
+
+                if (!isDiffState) {
+                    // 同一設定の場合、別枠として追加するか削除するか確認
+                    const addMore = confirm(`この画像（${filename}）は既にトレイに登録されています。\n同一画像の別枠（一部拡大・強調比較用）としてもう1枚追加しますか？\n\n・[OK]: 別枠として追加\n・[キャンセル]: トレイから削除`);
+                    if (!addMore) {
+                        tray.items = tray.items.filter(it => !(it.file === filename && (it.folder === FOLDER_PATH || !it.folder)));
+                        savePrintTray(tray);
+                        showToast(`🗑️ #${currentIndex + 1} (${filename}) を印刷トレイから除外しました (${tray.items.length}/8)`);
+                        return;
+                    }
+                }
+            }
+
+            if (tray.items.length >= 8) {
+                alert("印刷トレイの上限（最大8枚）に達しています。\n2×4印刷画面で枠を整理するか、不要な画像を削除してください。");
+                return;
+            }
+
+            tray.items.push({
+                id: `${FOLDER_PATH}_${filename}_${Date.now()}`,
+                patientId: PAT_ID,
+                patientName: PAT_NAME,
+                folder: FOLDER_PATH,
+                file: filename,
+                examName: EXAM_NAME,
+                examDate: EXAM_DATE,
+                caption: cap,
+                panX: panX || 0,
+                panY: panY || 0,
+                zoom: zoom || 1.0,
+                ieeMode: activeIeeMode || 'normal',
+                contrast: contrast || 100,
+                brightness: brightness || 100,
+                invert: isInverted
+            });
+
+            savePrintTray(tray);
+            const countStr = existingInstances.length > 0 ? ` (同一画像 ${existingInstances.length + 1}枚目)` : '';
+            showToast(`🖨️ #${currentIndex + 1} (${filename}${modeTag}${zoomTag}) をトレイに追加しました${countStr} (${tray.items.length}/8)`);
+        }
+
+        function updateTrayUI() {
+            const tray = getPrintTray();
+            const count = (tray && tray.items) ? tray.items.length : 0;
+
+            if (trayCountBadge) {
+                trayCountBadge.textContent = count;
+            }
+
+            if (btnAddToTray && dcmFiles && dcmFiles[currentIndex]) {
+                const currentFile = dcmFiles[currentIndex].filename;
+                const matches = (tray && tray.items) ? tray.items.filter(it => it.file === currentFile && (it.folder === FOLDER_PATH || !it.folder)) : [];
+                if (matches.length > 0) {
+                    btnAddToTray.textContent = `➕ 別枠追加 (${matches.length}枚中)`;
+                    btnAddToTray.style.background = "#059669";
+                    btnAddToTray.style.borderColor = "#34d399";
+                    btnAddToTray.style.color = "#ffffff";
+                    btnAddToTray.title = `現在表示中の画像（${activeIeeMode.toUpperCase()}強調・拡大率${Math.round(zoom*100)}%）を同一画像の比較別枠として印刷トレイに追加 [Pキー]`;
+                } else {
+                    btnAddToTray.textContent = "➕ トレイ追加";
+                    btnAddToTray.style.background = "rgba(16, 185, 129, 0.15)";
+                    btnAddToTray.style.borderColor = "#10b981";
+                    btnAddToTray.style.color = "#6ee7b7";
+                    btnAddToTray.title = `現在表示中の画像を2×4印刷トレイに追加 [Pキー]`;
+                }
+            }
+
+            document.querySelectorAll('.thumb-card').forEach(card => {
+                const fname = card.dataset.filename;
+                if (!fname) return;
+                const matches = (tray && tray.items) ? tray.items.filter(it => it.file === fname && (it.folder === FOLDER_PATH || !it.folder)) : [];
+                const inTray = matches.length > 0;
+                card.classList.toggle('in-tray', inTray);
+                const btn = card.querySelector('.thumb-tray-btn');
+                if (btn) {
+                    btn.classList.toggle('in-tray', inTray);
+                    btn.textContent = inTray ? (matches.length > 1 ? `✓${matches.length}` : '✓') : '＋';
+                    btn.title = inTray ? `印刷トレイから除外 (現在${matches.length}枚登録)` : '印刷トレイに追加 (2×4印刷用)';
+                }
+            });
+        }
+
+        function openPrintView() {
+            const pId = PAT_ID || '';
+            const pName = PAT_NAME || '';
+            const url = `print_view.php?patient_id=${encodeURIComponent(pId)}&name=${encodeURIComponent(pName)}`;
+            window.open(url, '_blank', 'width=1400,height=950,menubar=no,toolbar=no,scrollbars=yes,resizable=yes');
+        }
+
+        // 別タブや別ウィンドウでのトレイ変更を自動同期
+        window.addEventListener('storage', e => {
+            if (e.key === PRINT_TRAY_KEY) {
+                updateTrayUI();
+            }
         });
 
         // 起動開始

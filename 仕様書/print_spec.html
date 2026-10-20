@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2×4 検査横断画像配置・病巣強調印刷システム 仕様書 - RS-Base 高速画像ファイリングシステム</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #1e40af;
+            --primary-light: #3b82f6;
+            --primary-bg: #eff6ff;
+            --accent: #0d9488;
+            --accent-bg: #f0fdfa;
+            --warning: #b45309;
+            --warning-bg: #fef3c7;
+            --warning-border: #fde68a;
+            --danger: #b91c1c;
+            --danger-bg: #fef2f2;
+            --danger-border: #fecaca;
+            --success: #15803d;
+            --success-bg: #f0fdf4;
+            --success-border: #bbf7d0;
+            --bg-body: #f8fafc;
+            --bg-card: #ffffff;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --border-light: #f1f5f9;
+            --code-bg: #0f172a;
+            --code-text: #e2e8f0;
+            --radius-sm: 6px;
+            --radius-md: 10px;
+            --radius-lg: 16px;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.04);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Inter', 'Noto Sans JP', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            line-height: 1.7;
+            padding: 24px 16px;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .container { max-width: 1120px; margin: 0 auto; }
+
+        .nav-breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 16px;
+            font-size: 0.88rem;
+            color: var(--text-muted);
+        }
+        .nav-breadcrumb a {
+            color: var(--primary-light);
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .nav-breadcrumb a:hover { text-decoration: underline; }
+
+        .header {
+            background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 50%, #0369a1 100%);
+            color: white;
+            padding: 32px 30px;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-lg);
+            margin-bottom: 24px;
+            position: relative;
+            overflow: hidden;
+        }
+        .header-badge {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.18);
+            backdrop-filter: blur(8px);
+            padding: 4px 12px;
+            border-radius: 9999px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            margin-bottom: 12px;
+        }
+        .header h1 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            letter-spacing: -0.02em;
+        }
+        .header p {
+            color: #e0f2fe;
+            font-size: 0.95rem;
+            max-width: 860px;
+        }
+        .meta-info {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            margin-top: 16px;
+            font-size: 0.84rem;
+            color: #bfdbfe;
+        }
+
+        .card {
+            background: var(--bg-card);
+            border-radius: var(--radius-md);
+            padding: 26px 28px;
+            margin-bottom: 22px;
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--border);
+        }
+        .card-title {
+            font-size: 1.22rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 2px solid var(--border-light);
+            padding-bottom: 10px;
+        }
+        .card-title .icon { font-size: 1.35rem; }
+
+        h3 {
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: var(--text-main);
+            margin: 20px 0 10px 0;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        h4 {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #334155;
+            margin: 14px 0 6px 0;
+        }
+        p { margin-bottom: 12px; font-size: 0.93rem; }
+        ul, ol { margin-left: 22px; margin-bottom: 14px; font-size: 0.93rem; }
+        li { margin-bottom: 6px; }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 14px 0;
+            font-size: 0.88rem;
+        }
+        th, td {
+            padding: 10px 12px;
+            border: 1px solid var(--border);
+            text-align: left;
+            vertical-align: top;
+        }
+        th {
+            background-color: #f1f5f9;
+            color: #334155;
+            font-weight: 600;
+        }
+        tr:nth-child(even) td { background-color: #f8fafc; }
+
+        .badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.76rem;
+            font-weight: 600;
+        }
+        .badge-primary { background: #dbeafe; color: #1e40af; }
+        .badge-success { background: #dcfce7; color: #166534; }
+        .badge-warning { background: #fef3c7; color: #92400e; }
+        .badge-danger { background: #fee2e2; color: #991b1b; }
+        .badge-teal { background: #ccfbf1; color: #0f766e; }
+
+        .alert {
+            display: flex;
+            gap: 12px;
+            padding: 14px 16px;
+            border-radius: var(--radius-md);
+            margin: 16px 0;
+            font-size: 0.91rem;
+            line-height: 1.6;
+        }
+        .alert-info { background: var(--primary-bg); border-left: 4px solid var(--primary-light); color: #1e3a8a; }
+        .alert-warning { background: var(--warning-bg); border-left: 4px solid var(--warning); color: #78350f; }
+        .alert-danger { background: var(--danger-bg); border-left: 4px solid var(--danger); color: #7f1d1d; }
+        .alert-success { background: var(--success-bg); border-left: 4px solid var(--success); color: #14532d; }
+
+        code {
+            font-family: 'JetBrains Mono', Consolas, monospace;
+            background: #f1f5f9;
+            color: #0f172a;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+        pre {
+            background: var(--code-bg);
+            color: var(--code-text);
+            padding: 14px 16px;
+            border-radius: var(--radius-md);
+            overflow-x: auto;
+            margin: 12px 0;
+            font-family: 'JetBrains Mono', Consolas, monospace;
+            font-size: 0.84rem;
+            line-height: 1.55;
+        }
+        pre code { background: transparent; color: inherit; padding: 0; }
+
+        .flow-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 14px;
+            margin: 18px 0;
+        }
+        .flow-step {
+            background: #f8fafc;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 16px;
+            position: relative;
+        }
+        .flow-step-num {
+            display: inline-block;
+            width: 24px;
+            height: 24px;
+            background: var(--primary);
+            color: white;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 24px;
+            font-weight: 700;
+            font-size: 0.75rem;
+            margin-bottom: 8px;
+        }
+        .flow-step-title {
+            font-weight: 700;
+            font-size: 0.88rem;
+            color: var(--text-main);
+            margin-bottom: 6px;
+        }
+        .flow-step-desc {
+            font-size: 0.82rem;
+            color: var(--text-muted);
+            line-height: 1.5;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 36px;
+            color: var(--text-muted);
+            font-size: 0.84rem;
+            border-top: 1px solid var(--border);
+            padding-top: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <!-- パンくずリスト -->
+    <nav class="nav-breadcrumb">
+        <a href="index.html">統合仕様書ポータル</a>
+        <span>&gt;</span>
+        <span>2×4 検査横断画像配置・病巣強調印刷仕様書</span>
+    </nav>
+
+    <!-- ヘッダー -->
+    <header class="header">
+        <div class="header-badge">Medical Print Layout &amp; IEE Enhancement Module</div>
+        <h1>🖨️ 2×4 検査横断画像配置・病巣強調印刷システム 仕様書</h1>
+        <p>同一患者の複数検査（内視鏡・超音波・単純X線）から画像を横断選択し、A4用紙1枚に隙間なく最大サイズで2列×4行配置して出力する専用印刷システム（print_view.php）のアーキテクチャ・画像トリミング・IEE病巣強調・トレイ連携の詳細仕様です。</p>
+        <div class="meta-info">
+            <span>📅 最新改定: 2026年10月20日 (Ver 2.3)</span>
+            <span>📂 格納ファイル: print_view.php, dicom_view.php, index.php</span>
+            <span>🎯 目的: 同一患者の検査横断画像比較・病巣強調印刷・診療情報提供用出力</span>
+        </div>
+    </header>
+
+    <!-- 1. システム全体概要 & 開発背景 -->
+    <section class="card">
+        <div class="card-title"><span class="icon">🚀</span>1. システム全体概要 &amp; 開発背景</div>
+        <p>日常の臨床現場において、患者への病状説明、カンファレンス、および他医療機関への紹介状（診療情報提供書）添付用として、<strong>「同一患者の複数検査から注目画像をピックアップしてA4用紙1枚に印刷したい」</strong>という強いニーズが存在します。</p>
+        <p>従来のRS-Base標準印刷機能では以下の課題がありました：</p>
+        <ul>
+            <li>同一の検査シリーズ内の画像しか選択できず、過去の内視鏡と最新の内視鏡、または内視鏡と腹部エコー・胸部XPを並べて印刷できない。</li>
+            <li>用紙余白が広く、画像表示領域が小さいため、細かな微小病変や血管パターンの視認性が損なわれる。</li>
+            <li>画像内の関心領域（ROI）を中心にするトリミングや拡大表示ができず、画面全体が縮小配置される。</li>
+            <li>内視鏡の病巣強調（IEE: NBI, LCI, TXI等）や白黒反転を適用した状態での印刷ができない。</li>
+            <li>「通常光の全体像」と「同一画像の病巣ズーム＋NBI強調像」を並べて対比印刷する手段がない。</li>
+        </ul>
+        <p>これらの課題を完全に解決するため、<strong>2×4（8スロット）A4縦配置、マージン最小化（4.5mm）、マウス直感トリミング（ドラッグ・ホイールズーム）、同一画像複製（📋）、SVGフィルターによる病巣強調（IEE）、およびLocalStorage経由の検査横断トレイ共有</strong>を備えた独立印刷システム <code>print_view.php</code> を開発しました。</p>
+
+        <div class="alert alert-info">
+            <div>
+                <strong>💡 ゼロDB書込み・安全アーキテクチャ:</strong><br>
+                印刷トレイの選択状態や各スロットの拡大率・パン位置・IEEフィルター種別は、各クライアントブラウザの <code>LocalStorage</code> に患者ID単位で保存されます。サーバー上の <code>gazouDB</code> に対しては完全な <code>SELECT</code>（画像パス取得のみ）で動作し、データベース変更禁止規定（Read-Only）に100%適合しています。
+            </div>
+        </div>
+    </section>
+
+    <!-- 2. 印刷画面構成 & A4最大化レイアウト仕様 -->
+    <section class="card">
+        <div class="card-title"><span class="icon">📐</span>2. 印刷画面構成 &amp; A4最大化レイアウト仕様</div>
+        <p>日本の標準的な医療レポート・診断書フォーマットである <strong>A4縦（210mm × 297mm）</strong> をターゲットとし、インクジェットおよびレーザープリンタの物理的な余白限界ギリギリまで画像を拡大配置します。</p>
+
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 25%;">パラメータ</th>
+                    <th style="width: 35%;">設定値・仕様</th>
+                    <th style="width: 40%;">設計意図・臨床的意義</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>用紙サイズ・向き</strong></td>
+                    <td>A4 縦向き（<code>portrait</code>）</td>
+                    <td>カルテファイル・紹介状にそのまま綴じられる標準規格。</td>
+                </tr>
+                <tr>
+                    <td><strong>スロット構成</strong></td>
+                    <td><strong>2列 × 4行 = 計8スロット</strong></td>
+                    <td>視線移動の負荷が少なく、十分な解像度を確保できる黄金配置。</td>
+                </tr>
+                <tr>
+                    <td><strong>ページマージン</strong></td>
+                    <td>上下左右 <strong>4.5mm</strong>（印刷時）</td>
+                    <td>多くのオフィスプリンタのクリッピング限界を回避しつつ用紙利用率を最大化。</td>
+                </tr>
+                <tr>
+                    <td><strong>スロット間ギャップ</strong></td>
+                    <td><code>gap: 2.5mm</code></td>
+                    <td>画像の境界を明確にしつつ、隙間を極限まで低減。</td>
+                </tr>
+                <tr>
+                    <td><strong>単一スロット有効寸法</strong></td>
+                    <td>幅 約 98.5mm × 高さ 約 66.5mm</td>
+                    <td>標準的な4:3 / 16:9 内視鏡画像が横幅いっぱいに高解像度描画される。</td>
+                </tr>
+                <tr>
+                    <td><strong>ヘッダー情報帯</strong></td>
+                    <td>高さ 約 8mm（患者ID, 氏名, 性別, 年齢, 印刷日時）</td>
+                    <td>用紙上部に必須の医療情報をコンパクトに集約。</td>
+                </tr>
+                <tr>
+                    <td><strong>各画像キャプション</strong></td>
+                    <td>上部: 検査日・モダリティ / 下部: 所見コメント</td>
+                    <td>クリックによるインライン直接編集に対応（印刷時に境界線消失）。</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h4>印刷時CSS（@media print）制御</h4>
+        <pre><code>@page {
+    size: A4 portrait;
+    margin: 4.5mm;
+}
+@media print {
+    body { background: #fff !important; }
+    .screen-only { display: none !important; } /* 操作バー・ドロワー・モーダル非表示 */
+    .print-sheet {
+        box-shadow: none !important;
+        margin: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+        page-break-after: avoid;
+        page-break-inside: avoid;
+    }
+    .slot-caption-input {
+        border: none !important;
+        background: transparent !important;
+        padding: 0 !important;
+    }
+    * {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+}</code></pre>
+    </section>
+
+    <!-- 3. トレイ管理アーキテクチャ & 検査横断連携 -->
+    <section class="card">
+        <div class="card-title"><span class="icon">🔄</span>3. トレイ管理アーキテクチャ &amp; 検査横断連携</div>
+        <p>本システムでは、患者一覧（<code>index.php</code>）、Web DICOMビューワ（<code>dicom_view.php</code>）、および印刷画面（<code>print_view.php</code>）の間で、シームレスな画像連携を実現しています。</p>
+
+        <div class="flow-container">
+            <div class="flow-step">
+                <span class="flow-step-num">1</span>
+                <div class="flow-step-title">一覧・キャンバスから選択</div>
+                <div class="flow-step-desc">患者一覧の閲覧列「🖨️ 2×4印刷」リンク、またはDICOMビューワから目的の検査を開く。</div>
+            </div>
+            <div class="flow-step">
+                <span class="flow-step-num">2</span>
+                <div class="flow-step-title">DICOMビューワでトレイ追加</div>
+                <div class="flow-step-desc">サムネイル上の「＋」ボタン、上部「➕ トレイ追加」、またはキーボードショートカット <kbd>P</kbd> で即時登録。</div>
+            </div>
+            <div class="flow-step">
+                <span class="flow-step-num">3</span>
+                <div class="flow-step-title">検査ドロワーから追加</div>
+                <div class="flow-step-desc">印刷画面右側の「📂 検査から追加」ドロワーから、過去の別日検査・他モダリティ画像を直接ピックアップ。</div>
+            </div>
+            <div class="flow-step">
+                <span class="flow-step-num">4</span>
+                <div class="flow-step-title">レイアウト・強調・印刷</div>
+                <div class="flow-step-desc">ドラッグ移動・ズーム・IEE強調・キャプション編集を行い、<kbd>Ctrl</kbd>+<kbd>P</kbd> で即時出力。</div>
+            </div>
+        </div>
+
+        <h3>LocalStorage スキーマ仕様</h3>
+        <p>トレイデータは、ブラウザの <code>localStorage</code> 内にキー名 <code>rsbase_print_tray_{patientId}</code> として JSON 配列形式で永続化されます。</p>
+        <pre><code>// キー名: rsbase_print_tray_00012345
+[
+  {
+    "id": 10842,                      // gazouDB.filing_sub id (主キー)
+    "file": "20261020_001.dcm",        // ファイル名
+    "series_date": "20261020",        // 検査日 (YYYYMMDD)
+    "modality": "ES",                 // モダリティ (ES: 内視鏡, US: エコー, CR: レントゲン等)
+    "name": "胃体中部大弯 早期胃癌疑い", // 検査名 / 画像ラベル
+    "date": "2026/10/20",             // 表示用検査日
+    "comment": "0-IIc病変 褪色調・境界明瞭", // 臨床所見コメント（編集可）
+    "scale": 1.8,                     // ズーム倍率 (1.0 〜 5.0)
+    "panX": -32.5,                    // 水平移動量 (px)
+    "panY": 18.0,                     // 垂直移動量 (px)
+    "filter": "nbi",                  // IEE病巣強調モード ('normal'|'nbi'|'lci'|'txi'|'indigo'|'invert'等)
+    "fitMode": "cover"                // フィット方式
+  }
+]</code></pre>
+    </section>
+
+    <!-- 4. 同一画像複製 & 病巣ズーム対比印刷機能 -->
+    <section class="card">
+        <div class="card-title"><span class="icon">📋</span>4. 同一画像複製 &amp; 病巣ズーム対比印刷機能</div>
+        <p>臨床現場において最も実用性が高いのが、<strong>「同一画像を複数スロットに配置し、片方を病変部の全体像（白色光）、もう片方を病巣部のみズーム拡大したIEE強調像（NBI/LCI等）として横に並べて印刷する」</strong>というユースケースです。</p>
+
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 25%;">機能名</th>
+                    <th style="width: 35%;">UI / 操作方法</th>
+                    <th style="width: 40%;">動作仕様 &amp; 臨床効果</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>スロット複製（📋 複製）</strong></td>
+                    <td>各スロット上部のツールバーにある「📋」ボタンをクリック</td>
+                    <td>対象スロットの画像・検査情報・キャプションを保持したまま、空いている次のスロットへ瞬時にクローンを生成。</td>
+                </tr>
+                <tr>
+                    <td><strong>DICOMビューワからの複数追加</strong></td>
+                    <td>同一画像を表示したまま、上部「➕ トレイ追加」または <kbd>P</kbd> キーを複数回押下</td>
+                    <td>「既に追加済みです」という制限を解除し、現在のズーム倍率・パン位置・IEE強調モードをそのまま独立スロットとして追加。</td>
+                </tr>
+                <tr>
+                    <td><strong>独立トリミング</strong></td>
+                    <td>各スロット内で個別にドラッグ＆ホイール回転</td>
+                    <td>スロット1は全体像（倍率1.0x）、スロット2は病変部中心（倍率2.5x、panX/panY調整）のように独立して位置決めが可能。</td>
+                </tr>
+                <tr>
+                    <td><strong>独立IEEフィルター</strong></td>
+                    <td>各スロット下部の「✨ 強調」ボタンから選択</td>
+                    <td>スロット1は通常光（白色光）、スロット2はNBI（微細血管強調）またはTXI（色調・構造強調）を個別に適用。</td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+
+    <!-- 5. SVG / CSS 病巣強調（IEE）画像処理フィルター仕様 -->
+    <section class="card">
+        <div class="card-title"><span class="icon">✨</span>5. SVG / CSS 病巣強調（IEE）画像処理フィルター仕様</div>
+        <p>内視鏡専門医が日常的に活用している特殊光内視鏡（Image-Enhanced Endoscopy: IEE）の特性を、Web標準の <code>&lt;svg&gt;</code> フィルターマトリックスおよび CSS フィルターによりリアルタイム再現しています。</p>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>フィルター名</th>
+                    <th>対象・臨床用途</th>
+                    <th>フィルター実装方式</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>通常光（Normal）</strong></td>
+                    <td>白色光観察（WLI: White Light Imaging）の標準表示</td>
+                    <td><code>filter: none;</code></td>
+                </tr>
+                <tr>
+                    <td><strong>NBI (Narrow Band Imaging)</strong></td>
+                    <td>粘膜表層の微細血管網（IPCL）および腺管構造の強調。食道・胃・大腸の腫瘍境界診断</td>
+                    <td>SVG <code>feColorMatrix</code> (Green/Blueチャンネル増幅、Redチャンネル抑制)</td>
+                </tr>
+                <tr>
+                    <td><strong>LCI (Linked Color Imaging)</strong></td>
+                    <td>微小な赤み（充血・炎症）と白さ（褪色）のコントラスト強調。Helicobacter pylori胃炎・腸上皮化生・早期胃癌</td>
+                    <td>SVG <code>feColorMatrix</code> + <code>feComponentTransfer</code> (赤味と白みの彩度分離)</td>
+                </tr>
+                <tr>
+                    <td><strong>TXI (Texture &amp; Color Enhancement)</strong></td>
+                    <td>表面テクスチャ・微細凹凸・色調コントラストの強調。見逃し防止・スクリーニング</td>
+                    <td>SVG <code>feConvolveMatrix</code> (エッジ鮮鋭化) + コントラスト強調マトリックス</td>
+                </tr>
+                <tr>
+                    <td><strong>褪色強調 (Pale Lesion)</strong></td>
+                    <td>未分化型胃癌や印環細胞癌に特有の蒼白調・褪色粘膜の視認性向上</td>
+                    <td>SVG <code>feColorMatrix</code> (赤成分抑制・青白成分選択的強調)</td>
+                </tr>
+                <tr>
+                    <td><strong>IHb (ヘモグロビン指数)</strong></td>
+                    <td>粘膜血流・炎症範囲・粘膜下腫瘍の血行評価</td>
+                    <td>赤成分輝度強調カラーマップ</td>
+                </tr>
+                <tr>
+                    <td><strong>インジゴカルミン (Indigo)</strong></td>
+                    <td>色素撒布内視鏡のシミュレーション。病変境界・表面微細不整の明瞭化</td>
+                    <td>青色染料シミュレーションSVGマトリックス</td>
+                </tr>
+                <tr>
+                    <td><strong>白黒反転 (Invert)</strong></td>
+                    <td>微細病変境界や単純X線・超音波画像の輪郭評価</td>
+                    <td>CSS <code>filter: invert(1);</code></td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+
+    <!-- 6. インタラクティブ操作仕様 -->
+    <section class="card">
+        <div class="card-title"><span class="icon">🖱️</span>6. インタラクティブ操作 &amp; ショートカット仕様</div>
+        <p>診察室やカンファレンスで直感的にトリミング・画像調整を行えるよう、PACSビューワ標準の直感的操作体系を採用しています。</p>
+
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 25%;">機能種別</th>
+                    <th style="width: 35%;">マウス操作</th>
+                    <th style="width: 40%;">キーボード / ショートカット</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>平行移動（パン / 移動）</strong></td>
+                    <td>スロット内を<strong>左ドラッグ</strong>（手のひらカーソル）</td>
+                    <td>画像の関心領域を用紙中央にスムーズに移動</td>
+                </tr>
+                <tr>
+                    <td><strong>拡大・縮小（ズーム）</strong></td>
+                    <td>スロット上で<strong>マウスホイール回転</strong>（上: 拡大 / 下: 縮小）</td>
+                    <td>1.0倍 〜 5.0倍（0.1刻み）で無段階スケーリング</td>
+                </tr>
+                <tr>
+                    <td><strong>位置・倍率リセット</strong></td>
+                    <td>スロット内で<strong>ダブルクリック</strong>、または「🔄」ボタン</td>
+                    <td>初期倍率（1.0x）および中央位置へ即座に復帰</td>
+                </tr>
+                <tr>
+                    <td><strong>スロット複製</strong></td>
+                    <td>スロット上部「📋」ボタンをクリック</td>
+                    <td>同一画像の別スロット展開（ズーム・強調対比用）</td>
+                </tr>
+                <tr>
+                    <td><strong>スロット削除</strong></td>
+                    <td>スロット上部「✕」ボタンをクリック</td>
+                    <td>対象スロットを空き状態にし、他画像を割り当て可能に</td>
+                </tr>
+                <tr>
+                    <td><strong>全体クリア</strong></td>
+                    <td>画面上部バー「🗑️ 全クリア」ボタン</td>
+                    <td>全8スロットを一括クリア</td>
+                </tr>
+                <tr>
+                    <td><strong>印刷ダイアログ呼出</strong></td>
+                    <td>画面上部「🖨️ 印刷する」ボタン</td>
+                    <td><kbd>Ctrl</kbd> + <kbd>P</kbd>（OS標準印刷ダイアログ直起動）</td>
+                </tr>
+                <tr>
+                    <td><strong>トレイ追加（DICOM側）</strong></td>
+                    <td>DICOMビューワで「➕ トレイ追加」またはサムネイル「＋」</td>
+                    <td><kbd>P</kbd> キー（現在表示画像をトレイへ即時投入）</td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+
+    <!-- 7. 運用保守 & セキュリティ規定 -->
+    <section class="card">
+        <div class="card-title"><span class="icon">🛡️</span>7. 運用保守 &amp; セキュリティ規定</div>
+        <ul>
+            <li><strong>患者取り違え防止（フェイルセーフ）:</strong> 印刷トレイは患者IDに厳密にバインドされています。別患者の検査を開いた場合は、前患者のトレイが混ざらないよう患者IDの一致判定を実施し、警告表示または自動分離を行います。</li>
+            <li><strong>個人情報保護:</strong> 印刷用紙上部のヘッダー情報帯には、医療安全上必須となる最小限の識別情報（ID・氏名・生年月日・年齢・印刷日）のみが印字され、院外持ち出し時の取扱いに配慮しています。</li>
+            <li><strong>完全Read-Only運用:</strong> 本システムはデータベースに対して一切の書込み・更新を行いません。クライアント設定はブラウザのLocalStorageで完結するため、RS-Base本体の安定稼働に一切影響を与えません。</li>
+        </ul>
+    </section>
+
+    <div class="footer">
+        RS-Base 高速画像ファイリングシステム 仕様書 &copy; 2026 当院システム管理部
+    </div>
+
+</div>
+
+</body>
+</html>

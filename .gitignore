@@ -1,6 +1,7 @@
 # Temporary files
 /tmp/*
 !/tmp/.gitkeep
+/scratch/*
 
 # Backup files
 *.bak

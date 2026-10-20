@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RS-Base 検査一覧・患者検索・Webビューワ・検査キャンバス 総合操作マニュアル Ver 2.0</title>
+    <title>RS-Base 検査一覧・患者検索・Webビューワ・検査キャンバス・2×4印刷 総合操作マニュアル Ver 2.3</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -877,9 +877,9 @@
 
     <!-- ヘッダー -->
     <header class="header-section">
-        <span class="header-badge">Ver 2.2 Major Release (2026年最新運用版)</span>
-        <h1>🏥 RS-Base 検査一覧・患者検索・Webビューワ・検査キャンバス 総合操作マニュアル <span style="font-size:0.75rem; background:rgba(255,255,255,0.2); padding:2px 8px; border-radius:10px; border:1px solid rgba(255,255,255,0.3); vertical-align:middle;">v2.2</span></h1>
-        <p>日々の画像・心電図ビューワ直起動、患者別ゼブラグループ表示・独立閲覧列、患者横断検索、胃がん検診向け一括JPEG変換・保存、種別レーン＆実時間タイムライン（検査キャンバス Ver 2.1）、そして1面/2面/4面連番分割表示・内視鏡病巣強調(IEE)・オリンパス専用フィット対応の「高機能Web DICOMビューワー」、さらに較正パルス完全標準化の「12誘導心電図Webビューワー」の全機能を網羅した公式ガイドです。</p>
+        <span class="header-badge">Ver 2.3 Major Release (2026年最新運用版)</span>
+        <h1>🏥 RS-Base 検査一覧・患者検索・Webビューワ・検査キャンバス・2×4印刷 総合操作マニュアル <span style="font-size:0.75rem; background:rgba(255,255,255,0.2); padding:2px 8px; border-radius:10px; border:1px solid rgba(255,255,255,0.3); vertical-align:middle;">v2.3</span></h1>
+        <p>日々の画像・心電図ビューワ直起動、患者別ゼブラグループ表示・独立閲覧列、患者横断検索、胃がん検診向け一括JPEG変換・保存、種別レーン＆実時間タイムライン（検査キャンバス Ver 2.1）、1面/2面/4面連番分割表示・内視鏡病巣強調(IEE)・オリンパス専用フィット対応の「高機能Web DICOMビューワー」、較正パルス完全標準化の「12誘導心電図Webビューワー」、そして検査横断トレイ・病巣拡大対比・IEE画像処理対応の「2×4 A4用紙最大化印刷システム」の全機能を網羅した公式ガイドです。</p>
     </header>
 
     <!-- クイック目次ナビゲーション -->
@@ -897,6 +897,7 @@
             <a href="#sec6" class="toc-link" style="background:#eff6ff; color:#1d4ed8; border-color:#93c5fd;">⑥ 🗺️ 検査キャンバス (v2.1)</a>
             <a href="#sec7" class="toc-link" style="background:#f0fdf4; color:#166534; border-color:#bbf7d0;">⑦ 👁️ Web DICOMビューワ (多画面/IEE/O社フィット)</a>
             <a href="#sec8" class="toc-link" style="background:#fdf2f8; color:#db2777; border-color:#fbcfe8;">⑧ 📈 12誘導心電図Webビューワ (較正パルス/FEV直結)</a>
+            <a href="#sec9" class="toc-link" style="background:#fef3c7; color:#b45309; border-color:#fde68a;">⑨ 🖨️ 2×4画像印刷 (検査横断/病巣強調)</a>
         </div>
     </nav>
 
@@ -1775,6 +1776,135 @@
 
         <div class="alert-box alert-tip">
             💡 <strong>心電図ビューワーの起動:</strong> 一覧画面（index.php）の閲覧列「📈 心電図」ボタン、または検査キャンバス（canvas_view.php）の心電図カード下にある「📈 心電図 ↗」ボタンをクリックすると即座に立ち上がります。
+        </div>
+    </section>
+
+    <!-- ==========================================
+         第9章: 2×4 検査横断画像配置・病巣強調印刷システム (print_view.php Ver 2.3)
+         ========================================== -->
+    <section class="card" id="sec9">
+        <div class="card-title">
+            <span>🖨️</span>
+            <span>第9章: 2×4 検査横断画像配置・病巣強調印刷システム（print_view.php Ver 2.3）</span>
+            <span class="badge" style="background:#fef3c7; color:#b45309; font-size:0.75rem; margin-left:auto;">A4最大化・病巣強調</span>
+        </div>
+        <p style="font-size:0.86rem; color:#475569; margin-bottom:14px;">
+            患者への病状説明、院内カンファレンス、および他医療機関への紹介状（診療情報提供書）添付用として、<strong>同一患者の複数検査（内視鏡、腹部エコー、単純X線等）から注目画像を横断選択し、A4用紙1枚（縦向き）に余白なく最大限大きく2列×4行（計8スロット）配置して出力する専用印刷システム</strong>です。<br>
+            最新版では、<strong>マウスドラッグ移動＆ホイールズームによる直感トリミング</strong>、<strong>内視鏡特殊光（IEE: NBI, LCI, TXI等）病巣強調処理</strong>、そして<strong>同一画像の複製（📋）による「全体像 ⇔ 病巣ズーム強調像」の対比レイアウト印刷</strong>に対応しました。
+        </p>
+
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:12px; margin-bottom:16px;">
+            <!-- 機能①: A4用紙1枚最大化レイアウト -->
+            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:14px;">
+                <div style="font-weight:700; color:#b45309; font-size:0.88rem; margin-bottom:6px;">📐 A4用紙1枚最大化・極小マージン（4.5mm）</div>
+                <ul style="font-size:0.8rem; color:#475569; padding-left:18px; line-height:1.6;">
+                    <li><strong>余白最小化:</strong> 一般的なプリンタの印刷可能領域ギリギリまで画像を拡大する上下左右 <code>4.5mm</code> の極小マージン設計</li>
+                    <li><strong>2列×4行（計8スロット）:</strong> 視線移動がスムーズで解像度を最大限維持できる医療標準の黄金レイアウト</li>
+                    <li><strong>コンパクトヘッダー帯:</strong> 用紙最上部に患者ID、氏名、生年月日、年齢、印刷日時を自動印字</li>
+                    <li><strong>インラインキャプション:</strong> 画像上下の日付・検査名・所見コメント欄は直接クリックして自由に編集可能（印刷時は枠線が透過）</li>
+                </ul>
+            </div>
+
+            <!-- 機能②: 検査横断トレイ & ドロワー連携 -->
+            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:14px;">
+                <div style="font-weight:700; color:#b45309; font-size:0.88rem; margin-bottom:6px;">🔄 検査横断トレイ &amp; 検査選択ドロワー</div>
+                <ul style="font-size:0.8rem; color:#475569; padding-left:18px; line-height:1.6;">
+                    <li><strong>ワンクリックトレイ投入:</strong> DICOMビューワ画面上部の「➕ トレイ追加」ボタン、ショートカット <kbd>P</kbd>、またはサムネイルカードの「＋」ボタンからトレイへ即時蓄積</li>
+                    <li><strong>右側検査ドロワー（📂）:</strong> 印刷画面を離れることなく、当該患者の過去の内視鏡・超音波・XP画像を一覧して空きスロットへ直接配置</li>
+                    <li><strong>患者バインド保護:</strong> トレイは患者ID単位でブラウザに自動保存され、別患者の画像が混ざらないよう厳密に保護</li>
+                </ul>
+            </div>
+
+            <!-- 機能③: 同一画像複製 & 病巣ズーム対比印刷 -->
+            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:14px;">
+                <div style="font-weight:700; color:#b45309; font-size:0.88rem; margin-bottom:6px;">📋 同一画像複製 &amp; 病巣ズーム対比印刷</div>
+                <ul style="font-size:0.8rem; color:#475569; padding-left:18px; line-height:1.6;">
+                    <li><strong>スロット複製（📋）:</strong> 各スロット上部の「📋」ボタンで、現在画像を隣接する空きスロットへ瞬時にクローン複製</li>
+                    <li><strong>全体像 ⇔ 強調像の対比:</strong> スロット1は通常光の全体像、スロット2は病変部を中心としたズーム＋NBI強調像のように並べて比較印刷</li>
+                    <li><strong>複数回追加対応:</strong> DICOMビューワ側からも同一画像を制限なく何枚でもトレイへ投入可能</li>
+                </ul>
+            </div>
+
+            <!-- 機能④: 直感トリミング & IEE病巣強調 -->
+            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:14px;">
+                <div style="font-weight:700; color:#b45309; font-size:0.88rem; margin-bottom:6px;">✨ 直感トリミング &amp; IEE病巣強調フィルター</div>
+                <ul style="font-size:0.8rem; color:#475569; padding-left:18px; line-height:1.6;">
+                    <li><strong>ドラッグ平行移動（パン）:</strong> スロット内をマウスで掴んでドラッグするだけで、注目部位を用紙中央にスムーズ移動</li>
+                    <li><strong>ホイールズーム:</strong> マウスホイール回転で <code>1.0x 〜 5.0x</code> まで無段階拡大・縮小</li>
+                    <li><strong>病巣強調（IEE）:</strong> スロットごとに独立して <strong>NBI</strong>（微細血管強調）、<strong>LCI</strong>（粘膜発赤強調）、<strong>TXI</strong>（構造テクスチャ強調）、<strong>褪色強調</strong>、<strong>インジゴカルミン</strong>、<strong>反転</strong> を適用可能</li>
+                    <li><strong>ダブルクリックリセット:</strong> 位置・倍率を瞬時に初期状態に戻す直感操作</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- 操作 & ショートカット対応表 -->
+        <h4 style="font-size:0.92rem; color:#1e3a8a; margin:16px 0 8px;">⌨️ 2×4印刷画面 操作・ショートカット一覧</h4>
+        <table class="info-table">
+            <thead>
+                <tr>
+                    <th style="width: 25%;">機能種別</th>
+                    <th style="width: 35%;">マウス操作</th>
+                    <th style="width: 40%;">キーボード / ボタン操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>平行移動（パン / 移動）</strong></td>
+                    <td>スロット内を<strong>左ドラッグ</strong>（手のひらカーソル）</td>
+                    <td>画像の関心領域を用紙中央にスムーズに移動</td>
+                </tr>
+                <tr>
+                    <td><strong>拡大・縮小（ズーム）</strong></td>
+                    <td>スロット上で<strong>マウスホイール回転</strong>（上: 拡大 / 下: 縮小）</td>
+                    <td>1.0倍 〜 5.0倍（0.1刻み）で無段階スケーリング</td>
+                </tr>
+                <tr>
+                    <td><strong>位置・倍率リセット</strong></td>
+                    <td>スロット内で<strong>ダブルクリック</strong></td>
+                    <td>スロット上部「🔄」ボタンをクリック</td>
+                </tr>
+                <tr>
+                    <td><strong>スロット複製（クローン）</strong></td>
+                    <td>スロット上部「📋」ボタンをクリック</td>
+                    <td>空きスロットへ即時複製（ズーム・強調対比用）</td>
+                </tr>
+                <tr>
+                    <td><strong>スロット削除</strong></td>
+                    <td>スロット上部「✕」ボタンをクリック</td>
+                    <td>対象スロットをクリア（空き枠化）</td>
+                </tr>
+                <tr>
+                    <td><strong>病巣強調（IEE）切り替え</strong></td>
+                    <td>スロット下部「✨ 強調」ボタンをクリックしてメニュー選択</td>
+                    <td>通常 / NBI / LCI / TXI / 褪色 / IHb / インジゴ / 反転</td>
+                </tr>
+                <tr>
+                    <td><strong>検査ドロワー開閉</strong></td>
+                    <td>画面上部「📂 検査から追加」ボタンをクリック</td>
+                    <td>同一患者の過去検査サムネイルを一覧・追加</td>
+                </tr>
+                <tr>
+                    <td><strong>全スロットクリア</strong></td>
+                    <td>画面上部「🗑️ 全クリア」ボタンをクリック</td>
+                    <td>確認ダイアログ後に全スロットを一括リセット</td>
+                </tr>
+                <tr>
+                    <td><strong>印刷実行</strong></td>
+                    <td>画面上部「🖨️ 印刷する」ボタンをクリック</td>
+                    <td><kbd>Ctrl</kbd> + <kbd>P</kbd>（OS標準印刷プレビュー直起動）</td>
+                </tr>
+                <tr>
+                    <td><strong>DICOMからのトレイ追加</strong></td>
+                    <td>DICOMビューワで「➕ トレイ追加」またはサムネイル「＋」</td>
+                    <td><kbd>P</kbd> キー（現在表示画像をトレイへ即時投入）</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="alert-box alert-tip">
+            💡 <strong>印刷画面の呼び出し方法:</strong><br>
+            ・一覧画面（<code>index.php</code>）の各行右端にある閲覧列「<strong>🖨️ 2×4印刷</strong>」リンクをクリック<br>
+            ・または Web DICOMビューワ（<code>dicom_view.php</code>）の上部ヘッダーにある「<strong>🖨️ 2×4印刷 (X/8)</strong>」ボタンをクリック
         </div>
     </section>
 

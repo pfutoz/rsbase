@@ -360,7 +360,7 @@
         <h1>🏥 RS-Base 高速画像ファイリングシステム 統合仕様書</h1>
         <p>当院で稼働中のRS-Base高速化PHPシステム、クライアント常駐監視ソフト、RS-Base PostgreSQLデータベース直接参照アーキテクチャ、および胃がん検診DICOM→JPEG一括変換連携の統合ドキュメントです。</p>
         <div class="meta-info">
-            <span>📅 最新改定: 2026年9月30日</span>
+            <span>📅 最新改定: 2026年10月20日 (Ver 2.3)</span>
             <span>📂 格納場所: \\192.168.1.16\htdocs\rsbase\仕様書\</span>
             <span>🔒 index.php: <strong>ロールバック固定（変更不可）</strong></span>
             <span>⛔ DB運用規定: <strong>テーブル構成絶対変更NG（Read-Only）</strong></span>
@@ -406,6 +406,12 @@
             <div class="summary-card-desc">年齢クリックからトリガー生成、Pythonツール（DicomTool）起動、DICOM一括JPEG変換・ベリファイ処理。</div>
             <span class="summary-card-link">タブを開く ➔</span>
         </div>
+        <div class="summary-card" onclick="switchTab('tab-print')">
+            <div class="summary-card-icon">🖨️</div>
+            <div class="summary-card-title">⑤ 2×4 印刷システム仕様書</div>
+            <div class="summary-card-desc">A4縦1枚最大化2×4配置、検査横断トレイ、直感ドラッグトリミング、IEE病巣強調、同一画像複製対比印刷。</div>
+            <span class="summary-card-link">タブを開く ➔</span>
+        </div>
     </div>
 
     <!-- タブ切り替えボタン -->
@@ -414,6 +420,7 @@
         <button class="tab-btn" onclick="switchTab('tab-watcher')">⚡ 常駐ソフト (watcher.vbs)</button>
         <button class="tab-btn" onclick="switchTab('tab-db')">🗄️ DB直接参照仕様 (変更厳禁)</button>
         <button class="tab-btn" onclick="switchTab('tab-jpeg')">📷 胃がん検診 JPEG変換連携</button>
+        <button class="tab-btn" onclick="switchTab('tab-print')">🖨️ 2×4 印刷システム仕様</button>
     </div>
 
     <!-- タブ1: index.php 全体機能仕様書 -->
@@ -700,6 +707,31 @@
         </section>
     </div>
 
+    <!-- タブ5: 2×4 印刷システム仕様 -->
+    <div id="tab-print" class="tab-content">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+            <h2 style="font-size:1.3rem; color:var(--primary);">🖨️ 2×4 検査横断画像配置・病巣強調印刷システム仕様書</h2>
+            <a href="print_spec.html" target="_blank" style="font-size:0.85rem; color:var(--primary-light); text-decoration:none; font-weight:600;">🔗 単体ページで開く ↗</a>
+        </div>
+
+        <section class="card">
+            <div class="card-title"><span class="icon">🖨️</span>1. 2×4 印刷システム概要</div>
+            <p>同一患者の複数検査（内視鏡・超音波・単純X線など）から画像を検査横断でトレイに集約し、<strong>A4縦用紙1枚に隙間なく最大サイズ（2列×4行＝計8スロット）で美しく配置</strong>して印刷・出力する専用画面（<code>print_view.php</code>）です。</p>
+            <ul>
+                <li><strong>マージン極小化（4.5mm）</strong>: 用紙の余白限界ギリギリまで画像を最大表示し、細かな微小病変の視認性を最大化。</li>
+                <li><strong>マウス直感トリミング</strong>: スロット内をドラッグで平行移動（パン）、ホイール回転で拡大・縮小（1.0x〜5.0x）、ダブルクリックでリセット。</li>
+                <li><strong>同一画像の複製＆対比印刷（📋 複製）</strong>: 同一画像を別スロットに複製し、片方は全体像、もう片方は病変部ズーム＋IEE病巣強調で並べて印刷可能。</li>
+                <li><strong>病巣強調（IEE）リアルタイム再現</strong>: NBI、LCI、TXI、褪色強調、インジゴカルミン、白黒反転など内視鏡専門医が日常使用する特殊光をSVG/CSSフィルターで適用。</li>
+                <li><strong>完全Read-Only運用</strong>: トレイ状態やズーム・パン・フィルター設定はブラウザの <code>LocalStorage</code> で完結。サーバーDBへの書込みは一切行いません。</li>
+            </ul>
+            <div class="alert alert-info">
+                <div>
+                    <strong>呼び出し方法:</strong> 患者一覧（<code>index.php</code>）の閲覧列「🖨️ 2×4印刷」、またはDICOMビューワ（<code>dicom_view.php</code>）の上部「🖨️ 2×4印刷」ボタンからワンクリックで遷移できます。
+                </div>
+            </div>
+        </section>
+    </div>
+
     <div class="footer">
         RS-Base 高速画像ファイリングシステム 統合仕様書ポータル &copy; 2026 当院システム管理部
     </div>
@@ -721,6 +753,7 @@ function switchTab(tabId) {
     else if (tabId === 'tab-watcher') btns[1].classList.add('active');
     else if (tabId === 'tab-db') btns[2].classList.add('active');
     else if (tabId === 'tab-jpeg') btns[3].classList.add('active');
+    else if (tabId === 'tab-print') btns[4].classList.add('active');
 
     window.scrollTo({ top: 380, behavior: 'smooth' });
 }

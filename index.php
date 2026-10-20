@@ -1249,6 +1249,9 @@ $calendar_date = str_replace('/', '-', $target_date);
                 <a href="canvas_view.php<?= !empty($filter_id) ? '?patient_id=' . urlencode($filter_id) : '' ?>" onclick="event.preventDefault(); openCanvasModal('<?= htmlspecialchars($filter_id ?? '', ENT_QUOTES, 'UTF-8') ?>');" class="sub-help-link" style="background:rgba(59, 130, 246, 0.25); border-color:#60a5fa; color:#bae6fd;" title="JSON Canvas準拠の患者検査タイムライン・無限キャンバスをモーダルで開く">
                     🗺️ 検査キャンバス ↗
                 </a>
+                <a href="print_view.php<?= !empty($filter_id) ? '?patient_id=' . urlencode($filter_id) : '' ?>" target="_blank" class="sub-help-link" style="background:rgba(16, 185, 129, 0.25); border-color:#34d399; color:#a7f3d0;" title="同一患者・検査横断の2×4画像印刷画面を開く">
+                    🖨️ 2×4印刷 ↗
+                </a>
             </div>
 
             <div class="controls">
@@ -1467,6 +1470,9 @@ $calendar_date = str_replace('/', '-', $target_date);
                                         </div>
                                         <a href="canvas_view.php?patient_id=<?= urlencode($row['id']) ?>" onclick="event.preventDefault(); openCanvasModal('<?= htmlspecialchars($row['id'], ENT_QUOTES, 'UTF-8') ?>');" class="badge" style="background:#1e3a8a; color:#93c5fd; padding:1px 5px; font-size:0.68rem; text-decoration:none;" title="この患者の検査タイムラインを無限キャンバスで開く">
                                             🗺️
+                                        </a>
+                                        <a href="print_view.php?patient_id=<?= urlencode($row['id']) ?>" target="_blank" class="badge" style="background:#065f46; color:#a7f3d0; padding:1px 5px; font-size:0.68rem; text-decoration:none;" title="この患者の2×4画像印刷画面を開く">
+                                            🖨️
                                         </a>
                                     </div>
                                     <div class="cell-sub-yomi"><?= htmlspecialchars($row['kanja_yomi'], ENT_QUOTES, 'UTF-8') ?></div>
@@ -2012,6 +2018,7 @@ $calendar_date = str_replace('/', '-', $target_date);
                         ${latestDisplay ? `<span class="patient-date">${latestDisplay}</span>` : ''}
                         <span class="patient-count-badge">${p.exam_count} 件の検査</span>
                         <a href="canvas_view.php?patient_id=${encodeURIComponent(p.id)}" class="badge" onclick="event.stopPropagation(); event.preventDefault(); openCanvasModal('${escapeJs(p.id)}');" style="background:#1e3a8a; color:#93c5fd; padding:3px 8px; border-radius:4px; text-decoration:none; font-size:0.75rem;" title="この患者の検査キャンバスを開く">🗺️ キャンバス</a>
+                        <a href="print_view.php?patient_id=${encodeURIComponent(p.id)}" target="_blank" class="badge" onclick="event.stopPropagation();" style="background:#065f46; color:#a7f3d0; padding:3px 8px; border-radius:4px; text-decoration:none; font-size:0.75rem;" title="この患者の2×4画像印刷画面を開く">🖨️ 2×4印刷</a>
                         <span class="patient-select-arrow">→</span>
                     </div>
                 </div>
