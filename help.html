@@ -1592,7 +1592,7 @@
         </div>
         <p style="font-size:0.86rem; color:#475569; margin-bottom:14px;">
             院内のあらゆる端末のWebブラウザ上で約0.03秒で高速起動する内蔵DICOMビューワーです。<br>
-            Ver 2.0では、<strong>1面・2面・4面（マルチビューポート）連番分割表示</strong>、<strong>オリンパス内視鏡専用フィット（⏹️Olympusフィット）</strong>、<strong>内視鏡病巣・微細血管強調モード（IEE: LCI / NBI / IHb / 構造強調 / 色素散布）</strong>、<strong>外部専用ビューワ直起動</strong>など、ハイエンド医用画像ワークステーション並みの先進機能を完全内蔵しました。
+            Ver 2.3では、<strong>1面・2面・4面（マルチビューポート）連番分割表示</strong>、<strong>オリンパス内視鏡専用フィット（⏹️Olympusフィット）</strong>、<strong>内視鏡病巣・微細血管強調モード（IEE）</strong>、<strong>画像のクリップボードコピー＆任意範囲切り出し（強調状態・原寸解像度完全保持）</strong>、<strong>外部専用ビューワ直起動</strong>など、ハイエンド医用画像ワークステーション並みの先進機能を完全内蔵しました。
         </p>
 
         <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:12px; margin-bottom:16px;">
@@ -1631,7 +1631,20 @@
                 </ul>
             </div>
 
-            <!-- 機能④: 外部ビューワ直起動 & ZIPダウンロード -->
+            <!-- 機能④: 画像クリップボードコピー & 範囲切り出し -->
+            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:14px;">
+                <div style="font-weight:700; color:#047857; font-size:0.88rem; margin-bottom:6px;">📋 画像クリップボードコピー &amp; 範囲切り出し</div>
+                <ul style="font-size:0.8rem; color:#475569; padding-left:18px; line-height:1.6;">
+                    <li><strong>ワンクリック＆ドラッグ選択:</strong> 「📋 コピー」ボタンまたは <kbd>C</kbd> キーで範囲指定モード起動。ドラッグで任意範囲を切り出し、クリックのみで全体コピー</li>
+                    <li><strong>一発全画面コピー:</strong> <kbd>Ctrl</kbd> + <kbd>C</kbd> で現在表示中の画像を即座にクリップボードへコピー</li>
+                    <li><strong>原寸解像度保持:</strong> 1面表示時は画面のズーム率に関わらず、DICOM画像のネイティブ解像度からピクセル単位で高品位に切り出し</li>
+                    <li><strong>強調状態（IEE）完全保持:</strong> LCI/NBI/IHb/構造強調/色素散布、WW/WLコントラスト、白黒反転の状態をピクセル演算で忠実に再現してコピー</li>
+                    <li><strong>複数画面比較キャプチャ:</strong> 2面・4面時はスロット番号（#1, #2...）入りの比較画像をそのままキャプチャ</li>
+                    <li><strong>院内LANセキュリティ対応:</strong> 非HTTPS環境での直接コピー制限時は、自動PNG保存およびプレビューモーダル（右クリックでコピー可能）へ安全にフォールバック</li>
+                </ul>
+            </div>
+
+            <!-- 機能⑤: 外部ビューワ直起動 & ZIPダウンロード -->
             <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:14px;">
                 <div style="font-weight:700; color:#047857; font-size:0.88rem; margin-bottom:6px;">🚀 外部ビューワ直起動 &amp; 胃がん検診一括ZIP</div>
                 <ul style="font-size:0.8rem; color:#475569; padding-left:18px; line-height:1.6;">
@@ -1690,9 +1703,14 @@
                     <td><kbd>0</kbd> または <kbd>N</kbd>: 通常表示（白色光）へ復帰</td>
                 </tr>
                 <tr>
+                    <td><strong>画像コピー / 範囲切り出し</strong></td>
+                    <td>「📋 コピー」クリック後、対象領域をドラッグ（クリックのみで全体）</td>
+                    <td><kbd>C</kbd>: 範囲指定コピーモード開始・解除<br><kbd>Ctrl</kbd> + <kbd>C</kbd>: 表示中の画像全体を一発コピー</td>
+                </tr>
+                <tr>
                     <td><strong>反転 / リセット / 終了</strong></td>
                     <td>「🌓 反転」「🔄 リセット」ボタンクリック</td>
-                    <td><kbd>I</kbd>: 白黒反転<br><kbd>R</kbd>: 初期位置・階調リセット<br><kbd>Esc</kbd>: ビューワーを閉じる</td>
+                    <td><kbd>I</kbd>: 白黒反転<br><kbd>R</kbd>: 初期位置・階調リセット<br><kbd>Esc</kbd>: 範囲選択解除 / ビューワー終了</td>
                 </tr>
             </tbody>
         </table>

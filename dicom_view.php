@@ -731,6 +731,179 @@ $mode      = $_GET['mode'] ?? 'standalone'; // 'modal' or 'standalone'
             }
         }
 
+        /* 範囲指定・クリップボードコピー用 オーバーレイ */
+        .crop-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.4);
+            z-index: 70;
+            cursor: crosshair;
+            user-select: none;
+        }
+
+        .crop-guide-pill {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(15, 23, 42, 0.95);
+            border: 1px solid var(--accent-blue);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.7);
+            color: #ffffff;
+            padding: 8px 18px;
+            border-radius: 30px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            pointer-events: auto;
+            z-index: 75;
+        }
+
+        .crop-cancel-btn {
+            background: rgba(239, 68, 68, 0.85);
+            border: none;
+            color: #ffffff;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+        .crop-cancel-btn:hover {
+            background: #dc2626;
+        }
+
+        .crop-box {
+            position: absolute;
+            border: 2px dashed #38bdf8;
+            background: rgba(56, 189, 248, 0.15);
+            box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.45);
+            pointer-events: none;
+            z-index: 72;
+        }
+
+        .crop-dim-badge {
+            position: absolute;
+            bottom: -26px;
+            right: 0;
+            background: rgba(15, 23, 42, 0.95);
+            border: 1px solid var(--accent-blue);
+            color: #7dd3fc;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-family: monospace;
+            white-space: nowrap;
+        }
+
+        /* キャプチャ画像プレビュー / フォールバックモーダル */
+        .copy-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.78);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .copy-modal-card {
+            background: #0f172a;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            max-width: 90vw;
+            max-height: 90vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
+            overflow: hidden;
+        }
+
+        .copy-modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 16px;
+            background: #1e293b;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .copy-modal-title {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: #e2e8f0;
+        }
+
+        .copy-modal-close {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-size: 1.1rem;
+            cursor: pointer;
+        }
+        .copy-modal-close:hover {
+            color: #ffffff;
+        }
+
+        .copy-modal-body {
+            padding: 14px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .copy-modal-msg {
+            font-size: 0.85rem;
+            color: #94a3b8;
+            margin: 0;
+            text-align: center;
+            line-height: 1.5;
+        }
+
+        .copy-preview-wrap {
+            max-width: 80vw;
+            max-height: 60vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #000000;
+            border: 1px solid #334155;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .copy-preview-img {
+            max-width: 100%;
+            max-height: 60vh;
+            object-fit: contain;
+            display: block;
+        }
+
+        .copy-modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+            padding: 10px 16px;
+            background: #1e293b;
+            border-top: 1px solid var(--border-color);
+        }
+
         /* トースト通知 (ドック上部に浮遊表示) */
         #dcmToast {
             position: fixed;
@@ -825,6 +998,9 @@ $mode      = $_GET['mode'] ?? 'standalone'; // 'modal' or 'standalone'
             </button>
             <button type="button" class="action-btn" id="btnReset" title="位置・ズーム・階調をリセット [Rキー]">
                 🔄 リセット
+            </button>
+            <button type="button" class="action-btn" id="btnCopy" title="クリップボードにコピー (画面全体または範囲指定ドラッグ) [Cキー / Ctrl+C]">
+                📋 コピー
             </button>
             <button type="button" class="action-btn" id="btnDownloadZip" title="JPEG一括ZIPダウンロード">
                 📦 ZIP
@@ -937,6 +1113,17 @@ $mode      = $_GET['mode'] ?? 'standalone'; // 'modal' or 'standalone'
 
             <!-- サイドバー再オープンボタン -->
             <button type="button" class="sidebar-reopen-btn" id="sidebarReopenBtn" title="サムネイル一覧を開く">◀</button>
+
+            <!-- 範囲指定・クリップボードコピー用 オーバーレイ -->
+            <div class="crop-overlay" id="dcmCropOverlay" style="display: none;">
+                <div class="crop-guide-pill" id="cropGuidePill">
+                    <span>✂️ コピーしたい領域をドラッグ (クリックのみで全体コピー)</span>
+                    <button type="button" class="crop-cancel-btn" id="cropCancelBtn" title="キャンセル [Esc]">✕</button>
+                </div>
+                <div class="crop-box" id="dcmCropBox" style="display: none;">
+                    <span class="crop-dim-badge" id="cropDimBadge">0 × 0</span>
+                </div>
+            </div>
         </div>
 
         <!-- 右側・縦型サムネイルパネル -->
@@ -1018,6 +1205,26 @@ $mode      = $_GET['mode'] ?? 'standalone'; // 'modal' or 'standalone'
     <!-- トースト通知 -->
     <div id="dcmToast">メッセージ</div>
 
+    <!-- コピーフォールバック / プレビューモーダル -->
+    <div class="copy-modal" id="copyFallbackModal" style="display: none;">
+        <div class="copy-modal-card">
+            <div class="copy-modal-header">
+                <span class="copy-modal-title" id="copyModalTitle">📋 画像キャプチャ完了</span>
+                <button type="button" class="copy-modal-close" id="copyModalCloseBtn">✕</button>
+            </div>
+            <div class="copy-modal-body">
+                <p id="copyModalMsg" class="copy-modal-msg"></p>
+                <div class="copy-preview-wrap">
+                    <img id="copyPreviewImg" class="copy-preview-img" alt="Capture Preview">
+                </div>
+            </div>
+            <div class="copy-modal-footer">
+                <button type="button" class="action-btn" id="copyModalDownloadBtn">💾 PNG再保存</button>
+                <button type="button" class="action-btn" id="copyModalOkBtn" style="background:#0284c7; border-color:#38bdf8; font-weight:700;">OK (閉じる)</button>
+            </div>
+        </div>
+    </div>
+
     <!-- ----------------------------------------------------------------------
          JavaScript制御ロジック
     ----------------------------------------------------------------------- -->
@@ -1058,10 +1265,24 @@ $mode      = $_GET['mode'] ?? 'standalone'; // 'modal' or 'standalone'
         const btnOneToOne = document.getElementById('btnOneToOne');
         const btnInvert = document.getElementById('btnInvert');
         const btnReset = document.getElementById('btnReset');
+        const btnCopy = document.getElementById('btnCopy');
         const btnDownloadZip = document.getElementById('btnDownloadZip');
         const btnDirectLaunch = document.getElementById('btnDirectLaunch');
         const btnPopout = document.getElementById('btnPopout');
         const btnCloseModal = document.getElementById('btnCloseModal');
+
+        const dcmCropOverlay = document.getElementById('dcmCropOverlay');
+        const dcmCropBox = document.getElementById('dcmCropBox');
+        const cropDimBadge = document.getElementById('cropDimBadge');
+        const cropCancelBtn = document.getElementById('cropCancelBtn');
+
+        const copyFallbackModal = document.getElementById('copyFallbackModal');
+        const copyModalTitle = document.getElementById('copyModalTitle');
+        const copyModalMsg = document.getElementById('copyModalMsg');
+        const copyPreviewImg = document.getElementById('copyPreviewImg');
+        const copyModalCloseBtn = document.getElementById('copyModalCloseBtn');
+        const copyModalDownloadBtn = document.getElementById('copyModalDownloadBtn');
+        const copyModalOkBtn = document.getElementById('copyModalOkBtn');
 
         const sidebar = document.getElementById('dcmSidebar');
         const btnToggleSidebar = document.getElementById('btnToggleSidebar');
@@ -1082,6 +1303,12 @@ $mode      = $_GET['mode'] ?? 'standalone'; // 'modal' or 'standalone'
         let activeMouseTool = 'ww_wl'; // 'ww_wl', 'pan', 'zoom'
         let activeIeeMode = 'normal';  // 'normal', 'lci', 'nbi', 'ihb', 'texture', 'indigo'
         let isOlympusFitMode = false;  // O社内視鏡フィットモードフラグ
+        let isCropMode = false;        // 範囲指定コピーモードフラグ
+        let isCropDragging = false;
+        let cropStartX = 0;
+        let cropStartY = 0;
+        let lastCaptureBlob = null;
+        let lastCaptureFilename = '';
 
         // ドラッグ制御用
         let isDragging = false;
@@ -1587,11 +1814,26 @@ $mode      = $_GET['mode'] ?? 'standalone'; // 'modal' or 'standalone'
                 setLayout(4);
             } else if (e.key === 'r' || e.key === 'R') {
                 resetView();
+            } else if ((e.ctrlKey || e.metaKey) && (e.key === 'c' || e.key === 'C')) {
+                e.preventDefault();
+                copyEntireImage();
+            } else if (!e.ctrlKey && !e.metaKey && (e.key === 'c' || e.key === 'C')) {
+                if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) return;
+                e.preventDefault();
+                toggleCropMode();
             } else if (e.key === '0' || e.key === 'n' || e.key === 'N') {
                 setIeeMode('normal');
             } else if (e.key === 'i' || e.key === 'I') {
                 btnInvert.click();
             } else if (e.key === 'Escape') {
+                if (isCropMode) {
+                    cancelCropMode();
+                    return;
+                }
+                if (copyFallbackModal && copyFallbackModal.style.display !== 'none') {
+                    closeCopyFallbackModal();
+                    return;
+                }
                 closeViewer();
             }
         });
@@ -1642,6 +1884,493 @@ $mode      = $_GET['mode'] ?? 'standalone'; // 'modal' or 'standalone'
         if (btnOlympusFit) btnOlympusFit.addEventListener('click', olympusFit);
         btnOneToOne.addEventListener('click', oneToOne);
         btnReset.addEventListener('click', resetView);
+
+        // --------------------------------------------------------------------------
+        // 画像クリップボードコピー & 範囲切り出しロジック
+        // --------------------------------------------------------------------------
+        const MAT_LCI = [
+            1.45, -0.30, -0.15, 0,  0.02,
+           -0.20,  1.25, -0.05, 0, -0.02,
+           -0.10, -0.20,  1.30, 0,  0.00,
+            0,     0,     0,    1,  0
+        ];
+        const MAT_NBI = [
+            0.35,  0.15,  0.05, 0, -0.05,
+            0.10,  1.25,  0.15, 0,  0.00,
+           -0.10,  0.10,  1.60, 0,  0.05,
+            0,     0,     0,    1,  0
+        ];
+        const MAT_IHB = [
+            1.80, -0.60, -0.20, 0,  0.05,
+           -0.40,  1.40, -0.10, 0, -0.05,
+           -0.80, -0.20,  1.80, 0, -0.10,
+            0,     0,     0,    1,  0
+        ];
+        const KERNEL_TEXTURE = [
+            -0.3, -0.6, -0.3,
+            -0.6,  4.6, -0.6,
+            -0.3, -0.6, -0.3
+        ];
+        const MAT_INDIGO = [
+            0.85,  0.00,  0.00, 0, -0.05,
+            0.00,  0.90,  0.00, 0, -0.02,
+            0.10,  0.20,  1.30, 0,  0.10,
+            0,     0,     0,    1,  0
+        ];
+        const KERNEL_INDIGO = [
+            -0.2, -0.3, -0.2,
+            -0.3,  3.0, -0.3,
+            -0.2, -0.3, -0.2
+        ];
+
+        function applyColorMatrix(imageData, m) {
+            const data = imageData.data;
+            const len = data.length;
+            const m0 = m[0], m1 = m[1], m2 = m[2], m4 = m[4] * 255;
+            const m5 = m[5], m6 = m[6], m7 = m[7], m9 = m[9] * 255;
+            const m10 = m[10], m11 = m[11], m12 = m[12], m14 = m[14] * 255;
+
+            for (let i = 0; i < len; i += 4) {
+                const r = data[i];
+                const g = data[i + 1];
+                const b = data[i + 2];
+
+                const nr = m0 * r + m1 * g + m2 * b + m4;
+                const ng = m5 * r + m6 * g + m7 * b + m9;
+                const nb = m10 * r + m11 * g + m12 * b + m14;
+
+                data[i]     = nr < 0 ? 0 : (nr > 255 ? 255 : nr);
+                data[i + 1] = ng < 0 ? 0 : (ng > 255 ? 255 : ng);
+                data[i + 2] = nb < 0 ? 0 : (nb > 255 ? 255 : nb);
+            }
+        }
+
+        function applyKernel3x3(imageData, kernel) {
+            const w = imageData.width;
+            const h = imageData.height;
+            const src = new Uint8ClampedArray(imageData.data);
+            const dst = imageData.data;
+            const [k0, k1, k2, k3, k4, k5, k6, k7, k8] = kernel;
+
+            for (let y = 0; y < h; y++) {
+                const ym1 = y > 0 ? y - 1 : 0;
+                const yp1 = y < h - 1 ? y + 1 : h - 1;
+                const rowSrcY   = y * w * 4;
+                const rowSrcYm1 = ym1 * w * 4;
+                const rowSrcYp1 = yp1 * w * 4;
+
+                for (let x = 0; x < w; x++) {
+                    const xm1 = x > 0 ? x - 1 : 0;
+                    const xp1 = x < w - 1 ? x + 1 : w - 1;
+                    const idx = (y * w + x) * 4;
+
+                    const idx0 = rowSrcYm1 + xm1 * 4;
+                    const idx1 = rowSrcYm1 + x * 4;
+                    const idx2 = rowSrcYm1 + xp1 * 4;
+                    const idx3 = rowSrcY + xm1 * 4;
+                    const idx4 = rowSrcY + x * 4;
+                    const idx5 = rowSrcY + xp1 * 4;
+                    const idx6 = rowSrcYp1 + xm1 * 4;
+                    const idx7 = rowSrcYp1 + x * 4;
+                    const idx8 = rowSrcYp1 + xp1 * 4;
+
+                    for (let c = 0; c < 3; c++) {
+                        const val = (
+                            k0 * src[idx0 + c] + k1 * src[idx1 + c] + k2 * src[idx2 + c] +
+                            k3 * src[idx3 + c] + k4 * src[idx4 + c] + k5 * src[idx5 + c] +
+                            k6 * src[idx6 + c] + k7 * src[idx7 + c] + k8 * src[idx8 + c]
+                        );
+                        dst[idx + c] = val < 0 ? 0 : (val > 255 ? 255 : val);
+                    }
+                }
+            }
+        }
+
+        function applyIeeFilterToImageData(imageData, mode) {
+            if (mode === 'lci') {
+                applyColorMatrix(imageData, MAT_LCI);
+            } else if (mode === 'nbi') {
+                applyColorMatrix(imageData, MAT_NBI);
+            } else if (mode === 'ihb') {
+                applyColorMatrix(imageData, MAT_IHB);
+            } else if (mode === 'texture') {
+                applyKernel3x3(imageData, KERNEL_TEXTURE);
+            } else if (mode === 'indigo') {
+                applyColorMatrix(imageData, MAT_INDIGO);
+                applyKernel3x3(imageData, KERNEL_INDIGO);
+            }
+        }
+
+        function toggleCropMode() {
+            if (isCropMode) {
+                cancelCropMode();
+            } else {
+                startCropMode();
+            }
+        }
+
+        function startCropMode() {
+            isCropMode = true;
+            btnCopy.classList.add('active');
+            dcmCropOverlay.style.display = 'block';
+            dcmCropBox.style.display = 'none';
+            showToast("✂️ コピー領域をドラッグ、またはクリックで全体コピー");
+        }
+
+        function cancelCropMode() {
+            isCropMode = false;
+            isCropDragging = false;
+            if (btnCopy) btnCopy.classList.remove('active');
+            if (dcmCropOverlay) dcmCropOverlay.style.display = 'none';
+            if (dcmCropBox) dcmCropBox.style.display = 'none';
+        }
+
+        function copyEntireImage() {
+            executeCopy(null);
+        }
+
+        // 単一画像キャプチャ (原寸解像度 & フィルタ完全反映)
+        function captureSingleImage(img, cropRect) {
+            if (!img || !img.naturalWidth || !img.naturalHeight) return null;
+            const nw = img.naturalWidth;
+            const nh = img.naturalHeight;
+
+            let sx = 0, sy = 0, sw = nw, sh = nh;
+            if (cropRect && cropRect.width >= 10 && cropRect.height >= 10) {
+                // ステージ座標から画像原寸座標への逆写像
+                const rawX = (cropRect.x - panX) / zoom;
+                const rawY = (cropRect.y - panY) / zoom;
+                const rawW = cropRect.width / zoom;
+                const rawH = cropRect.height / zoom;
+
+                // 画像領域との交差クリッピング
+                const clampLeft = Math.max(0, rawX);
+                const clampTop = Math.max(0, rawY);
+                const clampRight = Math.min(nw, rawX + rawW);
+                const clampBottom = Math.min(nh, rawY + rawH);
+
+                if (clampRight <= clampLeft || clampBottom <= clampTop) {
+                    // 画像外ドラッグ時は全体コピー
+                    showToast("⚠️ 選択範囲が画像外だったため画像全体をコピーします");
+                    sx = 0; sy = 0; sw = nw; sh = nh;
+                } else {
+                    sx = Math.round(clampLeft);
+                    sy = Math.round(clampTop);
+                    sw = Math.round(clampRight - clampLeft);
+                    sh = Math.round(clampBottom - clampTop);
+                }
+            }
+
+            const canvas = document.createElement('canvas');
+            canvas.width = sw;
+            canvas.height = sh;
+            const ctx = canvas.getContext('2d');
+
+            // 階調 (WW/WL) および白黒反転フィルタ
+            let filterParts = [];
+            if (contrast !== 100) filterParts.push(`contrast(${contrast}%)`);
+            if (brightness !== 100) filterParts.push(`brightness(${brightness}%)`);
+            if (isInverted) filterParts.push('invert(100%)');
+            if (activeIeeMode === 'lci') filterParts.push('saturate(135%)');
+            if (activeIeeMode === 'nbi') filterParts.push('saturate(125%)');
+
+            ctx.filter = filterParts.length > 0 ? filterParts.join(' ') : 'none';
+            ctx.drawImage(img, sx, sy, sw, sh, 0, 0, sw, sh);
+
+            // 内視鏡病変強調モード (IEE) のピクセル演算
+            if (activeIeeMode !== 'normal') {
+                const imgData = ctx.getImageData(0, 0, sw, sh);
+                applyIeeFilterToImageData(imgData, activeIeeMode);
+                ctx.putImageData(imgData, 0, 0);
+            }
+
+            return canvas;
+        }
+
+        // 複数画面レイアウトキャプチャ (2画面・4画面比較画像)
+        function captureMultiLayoutImage(cropRect) {
+            const stageW = stage.clientWidth;
+            const stageH = stage.clientHeight;
+            if (stageW <= 0 || stageH <= 0) return null;
+
+            const compCanvas = document.createElement('canvas');
+            compCanvas.width = stageW;
+            compCanvas.height = stageH;
+            const ctx = compCanvas.getContext('2d');
+
+            ctx.fillStyle = '#05070c';
+            ctx.fillRect(0, 0, stageW, stageH);
+
+            const stRect = stage.getBoundingClientRect();
+
+            for (let s = 0; s < currentLayout; s++) {
+                const vp = viewports[s];
+                if (!vp) continue;
+                const vpRect = vp.getBoundingClientRect();
+                const vx = vpRect.left - stRect.left;
+                const vy = vpRect.top - stRect.top;
+                const vw = vpRect.width;
+                const vh = vpRect.height;
+
+                ctx.save();
+                ctx.beginPath();
+                ctx.rect(vx, vy, vw, vh);
+                ctx.clip();
+
+                ctx.fillStyle = '#0b0f19';
+                ctx.fillRect(vx, vy, vw, vh);
+
+                const img = vp.querySelector('.dcm-slot-img');
+                const fileIdx = currentIndex + s;
+
+                if (img && img.naturalWidth && !vp.classList.contains('is-empty')) {
+                    const singleCanvas = captureSingleImage(img, null);
+                    if (singleCanvas) {
+                        const destX = vx + panX;
+                        const destY = vy + panY;
+                        const destW = img.naturalWidth * zoom;
+                        const destH = img.naturalHeight * zoom;
+                        ctx.drawImage(singleCanvas, destX, destY, destW, destH);
+                    }
+
+                    // スロット番号バッジ (#1, #2...)
+                    const badgeText = '#' + (fileIdx + 1);
+                    const bx = vx + 10;
+                    const by = vy + 10;
+                    const bw = 36;
+                    const bh = 22;
+
+                    ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+                    ctx.strokeStyle = 'rgba(56, 189, 248, 0.4)';
+                    ctx.lineWidth = 1;
+                    ctx.beginPath();
+                    if (ctx.roundRect) {
+                        ctx.roundRect(bx, by, bw, bh, 4);
+                    } else {
+                        ctx.rect(bx, by, bw, bh);
+                    }
+                    ctx.fill();
+                    ctx.stroke();
+
+                    ctx.fillStyle = '#38bdf8';
+                    ctx.font = 'bold 12px monospace';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(badgeText, bx + bw / 2, by + bh / 2);
+                } else {
+                    ctx.fillStyle = '#64748b';
+                    ctx.font = '14px sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText('(画像なし)', vx + vw / 2, vy + vh / 2);
+                }
+
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
+                ctx.lineWidth = 1;
+                ctx.strokeRect(vx, vy, vw, vh);
+
+                ctx.restore();
+            }
+
+            if (cropRect && cropRect.width >= 10 && cropRect.height >= 10) {
+                const cropCanvas = document.createElement('canvas');
+                cropCanvas.width = cropRect.width;
+                cropCanvas.height = cropRect.height;
+                const cropCtx = cropCanvas.getContext('2d');
+                cropCtx.drawImage(compCanvas, cropRect.x, cropRect.y, cropRect.width, cropRect.height, 0, 0, cropRect.width, cropRect.height);
+                return cropCanvas;
+            }
+
+            return compCanvas;
+        }
+
+        function executeCopy(cropRect) {
+            let canvas = null;
+            const isFull = !cropRect;
+            if (currentLayout === 1) {
+                const vp0 = viewports[0];
+                const img0 = vp0 ? vp0.querySelector('.dcm-slot-img') : null;
+                if (!img0 || !img0.naturalWidth) {
+                    showToast("⚠️ コピー対象の画像がありません");
+                    return;
+                }
+                canvas = captureSingleImage(img0, cropRect);
+            } else {
+                canvas = captureMultiLayoutImage(cropRect);
+            }
+
+            if (canvas) {
+                copyCanvasToClipboard(canvas, isFull);
+            }
+        }
+
+        function getCaptureFilename(isFullImage) {
+            const pad = (n) => String(n).padStart(2, '0');
+            const now = new Date();
+            const ts = `${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
+            const idPart = PAT_ID ? `_${PAT_ID}` : '';
+            const slicePart = `_${currentIndex + 1}`;
+            const ieePart = (activeIeeMode !== 'normal') ? `_${activeIeeMode}` : '';
+            const cropPart = isFullImage ? '' : '_crop';
+            return `dicom_capture${idPart}${slicePart}${ieePart}${cropPart}_${ts}.png`;
+        }
+
+        function copyCanvasToClipboard(canvas, isFullImage) {
+            if (!canvas) {
+                showToast("⚠️ コピー対象画像が生成できませんでした");
+                return;
+            }
+
+            const filename = getCaptureFilename(isFullImage);
+            const dataUrl = canvas.toDataURL('image/png');
+
+            canvas.toBlob(async blob => {
+                if (!blob) {
+                    showToast("⚠️ Blob生成に失敗しました");
+                    return;
+                }
+
+                lastCaptureBlob = blob;
+                lastCaptureFilename = filename;
+
+                let writeOk = false;
+                if (navigator.clipboard && typeof navigator.clipboard.write === 'function' && window.ClipboardItem) {
+                    try {
+                        const item = new ClipboardItem({ 'image/png': blob });
+                        await navigator.clipboard.write([item]);
+                        writeOk = true;
+                    } catch (err) {
+                        console.warn("Clipboard API blocked (HTTP LAN / security restrictions):", err);
+                        writeOk = false;
+                    }
+                }
+
+                if (writeOk) {
+                    showToast("📋 クリップボードに画像をコピーしました！");
+                } else {
+                    // LAN環境・非HTTPSでのフォールバック (自動ダウンロード + プレビューモーダル)
+                    triggerBlobDownload(blob, filename);
+                    openCopyFallbackModal(dataUrl, filename);
+                    showToast("💾 画像を保存しました (右クリックでコピーも可能)");
+                }
+            }, 'image/png');
+        }
+
+        function triggerBlobDownload(blob, filename) {
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            setTimeout(() => URL.revokeObjectURL(url), 5000);
+        }
+
+        function openCopyFallbackModal(dataUrl, filename) {
+            copyModalTitle.textContent = "📋 画像キャプチャ完了";
+            copyModalMsg.innerHTML = "セキュリティ制限 (非HTTPS環境) のため、クリップボードへの直接書き込みが制限されました。<br><strong>画像を自動保存 (ダウンロード)</strong> しました。<br>または下の画像を右クリックして<strong>「画像をコピー」</strong>してください。";
+            copyPreviewImg.src = dataUrl;
+            copyFallbackModal.style.display = 'flex';
+        }
+
+        function closeCopyFallbackModal() {
+            copyFallbackModal.style.display = 'none';
+        }
+
+        // 範囲指定オーバーレイのドラッグイベント
+        dcmCropOverlay.addEventListener('mousedown', e => {
+            if (e.target.closest('#cropCancelBtn')) return;
+            e.preventDefault();
+            e.stopPropagation();
+
+            const stRect = stage.getBoundingClientRect();
+            isCropDragging = true;
+            cropStartX = e.clientX - stRect.left;
+            cropStartY = e.clientY - stRect.top;
+
+            dcmCropBox.style.left = cropStartX + 'px';
+            dcmCropBox.style.top = cropStartY + 'px';
+            dcmCropBox.style.width = '0px';
+            dcmCropBox.style.height = '0px';
+            dcmCropBox.style.display = 'block';
+            cropDimBadge.textContent = '0 × 0';
+        });
+
+        dcmCropOverlay.addEventListener('mousemove', e => {
+            if (!isCropDragging) return;
+            e.preventDefault();
+            e.stopPropagation();
+
+            const stRect = stage.getBoundingClientRect();
+            const curX = Math.max(0, Math.min(stRect.width, e.clientX - stRect.left));
+            const curY = Math.max(0, Math.min(stRect.height, e.clientY - stRect.top));
+
+            const x = Math.min(cropStartX, curX);
+            const y = Math.min(cropStartY, curY);
+            const w = Math.abs(curX - cropStartX);
+            const h = Math.abs(curY - cropStartY);
+
+            dcmCropBox.style.left = x + 'px';
+            dcmCropBox.style.top = y + 'px';
+            dcmCropBox.style.width = w + 'px';
+            dcmCropBox.style.height = h + 'px';
+
+            if (currentLayout === 1) {
+                const natW = Math.round(w / zoom);
+                const natH = Math.round(h / zoom);
+                cropDimBadge.textContent = `${w} × ${h} px (原寸: ${natW} × ${natH})`;
+            } else {
+                cropDimBadge.textContent = `${w} × ${h} px`;
+            }
+        });
+
+        dcmCropOverlay.addEventListener('mouseup', e => {
+            if (!isCropDragging) return;
+            e.preventDefault();
+            e.stopPropagation();
+            isCropDragging = false;
+
+            const stRect = stage.getBoundingClientRect();
+            const curX = Math.max(0, Math.min(stRect.width, e.clientX - stRect.left));
+            const curY = Math.max(0, Math.min(stRect.height, e.clientY - stRect.top));
+
+            const x = Math.min(cropStartX, curX);
+            const y = Math.min(cropStartY, curY);
+            const w = Math.abs(curX - cropStartX);
+            const h = Math.abs(curY - cropStartY);
+
+            cancelCropMode();
+
+            if (w < 10 || h < 10) {
+                // ドラッグ距離が小さい場合は画面全体コピー
+                executeCopy(null);
+            } else {
+                // 範囲指定コピー
+                executeCopy({ x, y, width: w, height: h });
+            }
+        });
+
+        cropCancelBtn.addEventListener('click', e => {
+            e.stopPropagation();
+            cancelCropMode();
+            showToast("コピーをキャンセルしました");
+        });
+
+        btnCopy.addEventListener('click', () => {
+            toggleCropMode();
+        });
+
+        copyModalCloseBtn.addEventListener('click', closeCopyFallbackModal);
+        copyModalOkBtn.addEventListener('click', closeCopyFallbackModal);
+        copyModalDownloadBtn.addEventListener('click', () => {
+            if (lastCaptureBlob) {
+                triggerBlobDownload(lastCaptureBlob, lastCaptureFilename || 'dicom_capture.png');
+            }
+        });
+        copyFallbackModal.addEventListener('click', e => {
+            if (e.target === copyFallbackModal) closeCopyFallbackModal();
+        });
 
         // 白黒反転
         btnInvert.addEventListener('click', () => {
