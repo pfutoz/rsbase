@@ -1609,11 +1609,11 @@
 
             <!-- 機能②: オリンパス内視鏡専用フィット -->
             <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:14px;">
-                <div style="font-weight:700; color:#047857; font-size:0.88rem; margin-bottom:6px;">🎯 オリンパス内視鏡専用フィット（⏹️Olympusフィット）</div>
+                <div style="font-weight:700; color:#047857; font-size:0.88rem; margin-bottom:6px;">🎯 オリンパス内視鏡専用フィット（⏹️O社）</div>
                 <ul style="font-size:0.8rem; color:#475569; padding-left:18px; line-height:1.6;">
                     <li><strong>左側テキスト除外・画像最大化:</strong> オリンパス内視鏡画像特有の「左側文字情報領域（約35%）」を自動除外し、右側の円形観察視野（約65%）を中心に約1.5倍で画面いっぱいに拡大表示</li>
-                    <li><strong>富士フイルム・一般画像との共存:</strong> 富士フイルム内視鏡や胸部レントゲン等は通常の「⏹️フィット」で枠内全体表示</li>
-                    <li><strong>ダブルクリック＆ショートカット:</strong> 画面のダブルクリック、またはキーボード <kbd>O</kbd> キーで「全体フィット」と「Olympusフィット」を交互にトグル切替</li>
+                    <li><strong>富士フイルム・一般画像との共存:</strong> 富士フイルム内視鏡や胸部レントゲン等は通常の「⏹️全体」で枠内最大表示</li>
+                    <li><strong>ダブルクリック＆ショートカット:</strong> 画面のダブルクリック、またはキーボード <kbd>O</kbd> キーで「全体フィット」と「O社フィット」を交互にトグル切替</li>
                 </ul>
             </div>
 
@@ -1621,7 +1621,7 @@
             <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:14px;">
                 <div style="font-weight:700; color:#047857; font-size:0.88rem; margin-bottom:6px;">🔬 内視鏡 病巣・微細血管強調モード（IEE ドック）</div>
                 <ul style="font-size:0.8rem; color:#475569; padding-left:18px; line-height:1.6;">
-                    <li><strong>画面下部フローティングドック:</strong> GPUハードウェアアクセラレーションにより、高精細画像をリアルタイム処理</li>
+                    <li><strong>画面下部フローティングドック:</strong> GPUハードウェアアクセラレーションにより、高精細画像をリアルタイム処理。底面密着・超薄型（約24px厚）で観察視野を圧迫しません</li>
                     <li><strong>🔴 発赤(LCI):</strong> 赤色と白色の対比を最大化し、早期胃癌・ポリープ・ピロリ炎症を浮き彫りに</li>
                     <li><strong>🟢 血管(NBI):</strong> 青緑光シミュレーション。微細血管・腺管ピットパターンを茶褐色に強調</li>
                     <li><strong>📊 血流マップ(IHb):</strong> ヘモグロビン濃度サーモグラフィで充血・血管網を可視化</li>
@@ -1639,7 +1639,7 @@
                     <li><strong>一発全画面コピー:</strong> <kbd>Ctrl</kbd> + <kbd>C</kbd> で現在表示中の画像を即座にクリップボードへコピー</li>
                     <li><strong>原寸解像度保持:</strong> 1面表示時は画面のズーム率に関わらず、DICOM画像のネイティブ解像度からピクセル単位で高品位に切り出し</li>
                     <li><strong>強調状態（IEE）完全保持:</strong> LCI/NBI/IHb/構造強調/色素散布、WW/WLコントラスト、白黒反転の状態をピクセル演算で忠実に再現してコピー</li>
-                    <li><strong>複数画面比較キャプチャ:</strong> 2面・4面時はスロット番号（#1, #2...）入りの比較画像をそのままキャプチャ</li>
+                    <li><strong>複数画面比較キャプチャ:</strong> 2面・4面時は比較画像をそのままキャプチャ</li>
                     <li><strong>院内LANセキュリティ対応:</strong> 非HTTPS環境での直接コピー制限時は、自動PNG保存およびプレビューモーダル（右クリックでコピー可能）へ安全にフォールバック</li>
                 </ul>
             </div>
@@ -1648,9 +1648,9 @@
             <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:14px;">
                 <div style="font-weight:700; color:#047857; font-size:0.88rem; margin-bottom:6px;">🚀 外部ビューワ直起動 &amp; 胃がん検診一括ZIP</div>
                 <ul style="font-size:0.8rem; color:#475569; padding-left:18px; line-height:1.6;">
-                    <li><strong>🚀 外部直起動:</strong> 画面上部のボタンでクライアントPCの外部DICOM専用ビューワ（RSView等）を即座に起動</li>
-                    <li><strong>🪟 別窓化（ポップアウト）:</strong> モーダル表示時にクリックすると、1600x900の独立した大画面ウィンドウで開く</li>
-                    <li><strong>📦 一括ZIP保存:</strong> 胃がん検診提出用の全スライスJPEG変換アーカイブをブラウザから一発生成・保存</li>
+                    <li><strong>🚀 外部直起動:</strong> 画面上部の「🚀」ボタンでクライアントPCの外部DICOM専用ビューワ（RSView等）を即座に起動</li>
+                    <li><strong>🪟 別窓化（ポップアウト）:</strong> モーダル表示時に「🪟」ボタンをクリックすると、独立した大画面ウィンドウで開く</li>
+                    <li><strong>📦 一括ZIP保存:</strong> 胃がん検診提出用の全スライスJPEG変換アーカイブを「📦」ボタンから一発生成・保存</li>
                     <li><strong>縦型サムネイル一覧:</strong> 100枚を超えるシリーズでもアスペクト比を維持したまま快適に縦スクロールブラウジング</li>
                 </ul>
             </div>
@@ -1689,8 +1689,8 @@
                 </tr>
                 <tr>
                     <td><strong>フィット（全体 / Olympus）</strong></td>
-                    <td><strong>ダブルクリック</strong>（全体 ⇔ Olympus トグル）</td>
-                    <td><kbd>F</kbd>: 全体フィット<br><kbd>O</kbd>: Olympus(オリンパス)フィット</td>
+                    <td><strong>ダブルクリック</strong>（全体 ⇔ O社 トグル）</td>
+                    <td><kbd>F</kbd>: 全体フィット（⏹️全体）<br><kbd>O</kbd>: Olympusフィット（⏹️O社）</td>
                 </tr>
                 <tr>
                     <td><strong>分割画面レイアウト</strong></td>

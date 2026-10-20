@@ -55,58 +55,64 @@ $mode      = $_GET['mode'] ?? 'standalone'; // 'modal' or 'standalone'
            上部ヘッダーツールバー
         -------------------------------------------------------------------------- */
         .dcm-header {
-            height: 48px;
+            height: 38px;
             background: linear-gradient(180deg, #111827 0%, #0b0f19 100%);
             border-bottom: 1px solid var(--border-color);
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 0 12px;
+            padding: 0 8px;
             z-index: 100;
             flex-shrink: 0;
-            gap: 12px;
+            gap: 6px;
         }
 
         .dcm-meta {
             display: flex;
             align-items: center;
-            gap: 8px;
-            font-size: 0.85rem;
+            gap: 6px;
+            font-size: 0.8rem;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+            flex-shrink: 1;
+            min-width: 0;
         }
 
         .badge-id {
             background: #1e3a8a;
             color: #bfdbfe;
-            padding: 2px 7px;
+            padding: 1px 6px;
             border-radius: 4px;
             font-weight: 700;
             font-family: monospace;
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             border: 1px solid #3b82f6;
+            white-space: nowrap;
         }
 
         .patient-name {
             font-weight: 700;
             color: #ffffff;
-            font-size: 0.95rem;
+            font-size: 0.88rem;
+            white-space: nowrap;
         }
 
         .exam-badge {
             background: #065f46;
             color: #a7f3d0;
-            padding: 2px 6px;
+            padding: 1px 5px;
             border-radius: 4px;
-            font-size: 0.75rem;
+            font-size: 0.72rem;
             font-weight: 600;
             border: 1px solid #10b981;
+            white-space: nowrap;
         }
 
         .exam-date, .exam-sindan {
             color: var(--text-muted);
-            font-size: 0.8rem;
+            font-size: 0.75rem;
+            white-space: nowrap;
         }
 
         /* コマ送り・ナビゲーション */
@@ -115,22 +121,24 @@ $mode      = $_GET['mode'] ?? 'standalone'; // 'modal' or 'standalone'
             align-items: center;
             background: #1e293b;
             border: 1px solid #475569;
-            border-radius: 6px;
+            border-radius: 5px;
             overflow: hidden;
-            height: 32px;
+            height: 28px;
+            flex-shrink: 0;
         }
 
         .nav-btn {
             background: transparent;
             border: none;
             color: var(--text-main);
-            padding: 0 10px;
+            padding: 0 7px;
             height: 100%;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
             transition: background 0.15s;
+            font-size: 0.75rem;
         }
 
         .nav-btn:hover:not(:disabled) {
@@ -144,9 +152,9 @@ $mode      = $_GET['mode'] ?? 'standalone'; // 'modal' or 'standalone'
         }
 
         .slice-label {
-            padding: 0 10px;
+            padding: 0 6px;
             font-family: monospace;
-            font-size: 0.85rem;
+            font-size: 0.78rem;
             font-weight: 600;
             color: #e2e8f0;
             white-space: nowrap;
@@ -158,25 +166,27 @@ $mode      = $_GET['mode'] ?? 'standalone'; // 'modal' or 'standalone'
             align-items: center;
             background: #111827;
             border: 1px solid var(--border-color);
-            border-radius: 6px;
+            border-radius: 5px;
             overflow: hidden;
-            padding: 2px;
-            gap: 2px;
+            padding: 1px;
+            gap: 1px;
+            flex-shrink: 0;
         }
 
         .layout-btn {
             background: transparent;
             border: none;
             color: var(--text-muted);
-            padding: 4px 10px;
-            font-size: 0.8rem;
-            border-radius: 4px;
+            padding: 3px 6px;
+            font-size: 0.75rem;
+            border-radius: 3px;
             cursor: pointer;
             display: flex;
             align-items: center;
-            gap: 4px;
+            gap: 2px;
             transition: all 0.15s;
             font-weight: 500;
+            white-space: nowrap;
         }
 
         .layout-btn:hover {
@@ -197,25 +207,27 @@ $mode      = $_GET['mode'] ?? 'standalone'; // 'modal' or 'standalone'
             align-items: center;
             background: #111827;
             border: 1px solid var(--border-color);
-            border-radius: 6px;
+            border-radius: 5px;
             overflow: hidden;
-            padding: 2px;
-            gap: 2px;
+            padding: 1px;
+            gap: 1px;
+            flex-shrink: 0;
         }
 
         .mode-btn {
             background: transparent;
             border: none;
             color: var(--text-muted);
-            padding: 4px 10px;
-            font-size: 0.8rem;
-            border-radius: 4px;
+            padding: 3px 6px;
+            font-size: 0.75rem;
+            border-radius: 3px;
             cursor: pointer;
             display: flex;
             align-items: center;
-            gap: 4px;
+            gap: 3px;
             transition: all 0.15s;
             font-weight: 500;
+            white-space: nowrap;
         }
 
         .mode-btn:hover {
@@ -234,7 +246,7 @@ $mode      = $_GET['mode'] ?? 'standalone'; // 'modal' or 'standalone'
         .dcm-actions {
             display: flex;
             align-items: center;
-            gap: 5px;
+            gap: 3px;
             flex-shrink: 0;
         }
 
@@ -242,15 +254,16 @@ $mode      = $_GET['mode'] ?? 'standalone'; // 'modal' or 'standalone'
             background: #1e293b;
             border: 1px solid #475569;
             color: #e2e8f0;
-            padding: 5px 10px;
-            font-size: 0.8rem;
-            border-radius: 5px;
+            padding: 3px 7px;
+            font-size: 0.76rem;
+            border-radius: 4px;
             cursor: pointer;
             display: flex;
             align-items: center;
-            gap: 4px;
+            gap: 3px;
             transition: all 0.15s;
-            height: 32px;
+            height: 28px;
+            white-space: nowrap;
         }
 
         .action-btn:hover {
@@ -289,7 +302,7 @@ $mode      = $_GET['mode'] ?? 'standalone'; // 'modal' or 'standalone'
         .dcm-workspace {
             display: flex;
             flex: 1;
-            height: calc(100vh - 48px);
+            height: calc(100vh - 38px);
             position: relative;
             overflow: hidden;
         }
@@ -359,20 +372,7 @@ $mode      = $_GET['mode'] ?? 'standalone'; // 'modal' or 'standalone'
         }
 
         .slot-badge {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            background: rgba(15, 23, 42, 0.85);
-            border: 1px solid rgba(56, 189, 248, 0.4);
-            color: #38bdf8;
-            font-family: monospace;
-            font-weight: 700;
-            font-size: 0.8rem;
-            padding: 2px 8px;
-            border-radius: 4px;
-            z-index: 10;
-            pointer-events: none;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+            display: none !important;
         }
 
         .slot-empty-msg {
@@ -666,31 +666,31 @@ $mode      = $_GET['mode'] ?? 'standalone'; // 'modal' or 'standalone'
         -------------------------------------------------------------------------- */
         .iee-dock {
             position: absolute;
-            bottom: 12px;
+            bottom: 0;
             left: 50%;
             transform: translateX(-50%);
             display: flex;
             align-items: center;
-            gap: 5px;
-            background: rgba(15, 23, 42, 0.9);
+            gap: 4px;
+            background: rgba(15, 23, 42, 0.92);
             border: 1px solid rgba(56, 189, 248, 0.35);
+            border-bottom: none;
+            border-radius: 12px 12px 0 0;
             backdrop-filter: blur(8px);
-            padding: 4px 10px;
-            border-radius: 30px;
-            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.65), 0 0 12px rgba(56, 189, 248, 0.2);
+            padding: 2px 8px;
+            box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.6);
             z-index: 60; /* ローダー(z-index:50)やHUDより前面に常時配置しクリック不能化を防止 */
             user-select: none;
         }
 
         .iee-label {
-            font-size: 0.76rem;
+            font-size: 0.72rem;
             color: #7dd3fc;
             font-weight: 700;
-            padding-left: 4px;
-            padding-right: 4px;
+            padding: 0 3px;
             display: flex;
             align-items: center;
-            gap: 3px;
+            gap: 2px;
             white-space: nowrap;
         }
 
@@ -698,13 +698,13 @@ $mode      = $_GET['mode'] ?? 'standalone'; // 'modal' or 'standalone'
             background: #1e293b;
             border: 1px solid #334155;
             color: #cbd5e1;
-            padding: 5px 11px;
-            font-size: 0.78rem;
-            border-radius: 20px;
+            padding: 2px 7px;
+            font-size: 0.72rem;
+            border-radius: 12px;
             cursor: pointer;
             display: flex;
             align-items: center;
-            gap: 4px;
+            gap: 3px;
             font-weight: 600;
             transition: all 0.15s ease;
             white-space: nowrap;
@@ -721,7 +721,7 @@ $mode      = $_GET['mode'] ?? 'standalone'; // 'modal' or 'standalone'
             background: #0284c7;
             border-color: #38bdf8;
             color: #ffffff;
-            box-shadow: 0 0 12px rgba(56, 189, 248, 0.5);
+            box-shadow: 0 0 10px rgba(56, 189, 248, 0.5);
             font-weight: 700;
         }
 
@@ -985,10 +985,10 @@ $mode      = $_GET['mode'] ?? 'standalone'; // 'modal' or 'standalone'
         <!-- アクションツール -->
         <div class="dcm-actions">
             <button type="button" class="action-btn active" id="btnFit" title="全体フィット: 画像全体を枠内に収める [Fキー]">
-                ⏹️フィット
+                ⏹️全体
             </button>
             <button type="button" class="action-btn" id="btnOlympusFit" title="オリンパスフィット: 左側文字情報を除外し、円形観察領域を中心に画面一杯に拡大表示 [Oキー / ダブルクリック]">
-                ⏹️Olympusフィット
+                ⏹️O社
             </button>
             <button type="button" class="action-btn" id="btnOneToOne" title="原寸大 (1:1) で表示">
                 1:1
@@ -1003,14 +1003,14 @@ $mode      = $_GET['mode'] ?? 'standalone'; // 'modal' or 'standalone'
                 📋 コピー
             </button>
             <button type="button" class="action-btn" id="btnDownloadZip" title="JPEG一括ZIPダウンロード">
-                📦 ZIP
+                📦
             </button>
             <button type="button" class="action-btn" id="btnDirectLaunch" title="外部DICOM専用ビューワを直接起動">
-                🚀 外部
+                🚀
             </button>
             <?php if ($mode === 'modal'): ?>
                 <button type="button" class="action-btn" id="btnPopout" title="新しいウィンドウで大画面表示">
-                    🪟 別窓
+                    🪟
                 </button>
                 <button type="button" class="action-btn btn-close" id="btnCloseModal" title="閉じる [Escキー]">
                     ✕
@@ -1591,10 +1591,9 @@ $mode      = $_GET['mode'] ?? 'standalone'; // 'modal' or 'standalone'
             const imgW = img0.naturalWidth;
             const imgH = img0.naturalHeight;
 
-            // 余白を持たせたフィット倍率を算出
-            const padding = 12;
-            const scaleX = (slotW - padding * 2) / imgW;
-            const scaleY = (slotH - padding * 2) / imgH;
+            // 余白ゼロで画面いっぱいにフィット (縦解像度最大化)
+            const scaleX = slotW / imgW;
+            const scaleY = slotH / imgH;
             zoom = Math.min(scaleX, scaleY, 1.0);
 
             // 中央寄せ
@@ -1606,7 +1605,7 @@ $mode      = $_GET['mode'] ?? 'standalone'; // 'modal' or 'standalone'
             if (btnOlympusFit) btnOlympusFit.classList.remove('active');
 
             updateTransform();
-            showToast("⏹️ 全体フィット (標準表示)");
+            showToast("⏹️ 全体フィット");
         }
 
         // --------------------------------------------------------------------------
@@ -1633,8 +1632,8 @@ $mode      = $_GET['mode'] ?? 'standalone'; // 'modal' or 'standalone'
             const centerX = imgW * 0.675;
             const centerY = imgH * 0.50;
 
-            const scaleX = (slotW * 0.98) / circleW;
-            const scaleY = (slotH * 0.98) / circleH;
+            const scaleX = slotW / circleW;
+            const scaleY = slotH / circleH;
             zoom = Math.min(scaleX, scaleY);
 
             // 円形観察視野の中心 (centerX, centerY) がスロットの中央 (slotW/2, slotH/2) に来るようパンを決定
@@ -1646,7 +1645,7 @@ $mode      = $_GET['mode'] ?? 'standalone'; // 'modal' or 'standalone'
             if (btnOlympusFit) btnOlympusFit.classList.add('active');
 
             updateTransform();
-            showToast("🎯 O社内視鏡フィット (左側テキスト除外・画像最大化)");
+            showToast("⏹️ O社フィット");
         }
 
         function applyActiveFit() {
@@ -2132,31 +2131,6 @@ $mode      = $_GET['mode'] ?? 'standalone'; // 'modal' or 'standalone'
                         const destH = img.naturalHeight * zoom;
                         ctx.drawImage(singleCanvas, destX, destY, destW, destH);
                     }
-
-                    // スロット番号バッジ (#1, #2...)
-                    const badgeText = '#' + (fileIdx + 1);
-                    const bx = vx + 10;
-                    const by = vy + 10;
-                    const bw = 36;
-                    const bh = 22;
-
-                    ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
-                    ctx.strokeStyle = 'rgba(56, 189, 248, 0.4)';
-                    ctx.lineWidth = 1;
-                    ctx.beginPath();
-                    if (ctx.roundRect) {
-                        ctx.roundRect(bx, by, bw, bh, 4);
-                    } else {
-                        ctx.rect(bx, by, bw, bh);
-                    }
-                    ctx.fill();
-                    ctx.stroke();
-
-                    ctx.fillStyle = '#38bdf8';
-                    ctx.font = 'bold 12px monospace';
-                    ctx.textAlign = 'center';
-                    ctx.textBaseline = 'middle';
-                    ctx.fillText(badgeText, bx + bw / 2, by + bh / 2);
                 } else {
                     ctx.fillStyle = '#64748b';
                     ctx.font = '14px sans-serif';
