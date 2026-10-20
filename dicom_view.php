@@ -652,10 +652,79 @@ $mode      = $_GET['mode'] ?? 'standalone'; // 'modal' or 'standalone'
             color: #ffffff;
         }
 
-        /* トースト通知 */
+        /* --------------------------------------------------------------------------
+           画面下部・内視鏡病変強調ドック (IEE: Image-Enhanced Endoscopy)
+        -------------------------------------------------------------------------- */
+        .iee-dock {
+            position: absolute;
+            bottom: 12px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            background: rgba(15, 23, 42, 0.9);
+            border: 1px solid rgba(56, 189, 248, 0.35);
+            backdrop-filter: blur(8px);
+            padding: 4px 10px;
+            border-radius: 30px;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.65), 0 0 12px rgba(56, 189, 248, 0.2);
+            z-index: 45;
+        }
+
+        .iee-label {
+            font-size: 0.76rem;
+            color: #7dd3fc;
+            font-weight: 700;
+            padding-left: 4px;
+            padding-right: 4px;
+            display: flex;
+            align-items: center;
+            gap: 3px;
+            white-space: nowrap;
+        }
+
+        .iee-btn {
+            background: #1e293b;
+            border: 1px solid #334155;
+            color: #cbd5e1;
+            padding: 5px 11px;
+            font-size: 0.78rem;
+            border-radius: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-weight: 600;
+            transition: all 0.15s ease;
+            white-space: nowrap;
+        }
+
+        .iee-btn:hover {
+            color: #ffffff;
+            background: #334155;
+            border-color: #64748b;
+            transform: translateY(-1px);
+        }
+
+        .iee-btn.active {
+            background: #0284c7;
+            border-color: #38bdf8;
+            color: #ffffff;
+            box-shadow: 0 0 12px rgba(56, 189, 248, 0.5);
+            font-weight: 700;
+        }
+
+        @media (max-width: 960px) {
+            .mouse-guide {
+                display: none;
+            }
+        }
+
+        /* トースト通知 (ドック上部に浮遊表示) */
         #dcmToast {
             position: fixed;
-            bottom: 24px;
+            bottom: 60px;
             left: 50%;
             transform: translateX(-50%) translateY(50px);
             background: rgba(15, 23, 42, 0.95);
@@ -829,6 +898,29 @@ $mode      = $_GET['mode'] ?? 'standalone'; // 'modal' or 'standalone'
                 <div style="font-size:0.85rem; color:#94a3b8;">DICOM画像を読み込み中...</div>
             </div>
 
+            <!-- 画面下部 内視鏡病変強調ドック (IEE) -->
+            <div class="iee-dock" id="ieeDock" title="内視鏡 病巣・微細血管強調モード">
+                <span class="iee-label">🔬 病巣強調:</span>
+                <button type="button" class="iee-btn active" data-mode="normal" title="通常表示 (白色光)">
+                    🌈 通常
+                </button>
+                <button type="button" class="iee-btn" data-mode="lci" title="発赤強調 (LCI風): 早期胃癌・ポリープ・炎症の境界を赤と白の対比で極限まで浮き彫りにする">
+                    🔴 発赤(LCI)
+                </button>
+                <button type="button" class="iee-btn" data-mode="nbi" title="血管強調 (NBI風): 青緑色光効果で微細血管や腺管ピットパターンを茶褐色に際立たせる">
+                    🟢 血管(NBI)
+                </button>
+                <button type="button" class="iee-btn" data-mode="ihb" title="血流マップ (IHb): ヘモグロビン濃度を強調し充血・病巣部をサーモグラフィ風に可視化">
+                    📊 血流マップ
+                </button>
+                <button type="button" class="iee-btn" data-mode="texture" title="凹凸・構造強調: 粘膜のひだ・境界・段差の輪郭をシャープに強調">
+                    🏔️ 構造強調
+                </button>
+                <button type="button" class="iee-btn" data-mode="indigo" title="色素散布シミュレーション: インジゴカルミンを散布したかのように凹部の段差を強調">
+                    🔵 色素散布
+                </button>
+            </div>
+
             <!-- サイドバー再オープンボタン -->
             <button type="button" class="sidebar-reopen-btn" id="sidebarReopenBtn" title="サムネイル一覧を開く">◀</button>
         </div>
@@ -844,6 +936,69 @@ $mode      = $_GET['mode'] ?? 'standalone'; // 'modal' or 'standalone'
             </div>
         </aside>
     </main>
+
+    <!-- SVGフィルター定義 (内視鏡画像強調用: GPUハードウェアアクセラレーション) -->
+    <svg style="display:none;" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+            <!-- ① LCI風・発赤強調 (赤色分離度最大化) -->
+            <filter id="iee-lci" color-interpolation-filters="sRGB">
+                <feColorMatrix type="matrix" values="
+                    1.45 -0.25 -0.15 0 0.04
+                   -0.10  1.15 -0.10 0 0.00
+                   -0.15 -0.15  1.20 0 0.00
+                    0     0     0    1 0" />
+                <feComponentTransfer>
+                    <feFuncR type="linear" slope="1.15" intercept="-0.04" />
+                    <feFuncG type="linear" slope="1.05" intercept="-0.02" />
+                    <feFuncB type="linear" slope="1.05" intercept="-0.02" />
+                </feComponentTransfer>
+            </filter>
+
+            <!-- ② 疑似NBI風・微細血管/ピット強調 (青緑光再マッピング) -->
+            <filter id="iee-nbi" color-interpolation-filters="sRGB">
+                <feColorMatrix type="matrix" values="
+                    0.20  0.65  0.25  0 -0.05
+                    0.00  0.75  0.35  0  0.00
+                    0.00  0.20  0.85  0  0.05
+                    0     0     0     1  0" />
+                <feComponentTransfer>
+                    <feFuncR type="linear" slope="1.25" intercept="-0.06" />
+                    <feFuncG type="linear" slope="1.10" intercept="0.00" />
+                    <feFuncB type="linear" slope="1.10" intercept="0.00" />
+                </feComponentTransfer>
+            </filter>
+
+            <!-- ③ ヘモグロビン血流マップ (IHb: 充血・新生血管サーモグラフィ) -->
+            <filter id="iee-ihb" color-interpolation-filters="sRGB">
+                <feColorMatrix type="matrix" values="
+                    1.80 -0.80 -0.10 0 0.10
+                   -0.40  1.40 -0.10 0 -0.05
+                   -0.80 -0.20  1.80 0 -0.10
+                    0     0     0    1 0" />
+            </filter>
+
+            <!-- ④ 凹凸・構造強調 (Texture / Edge Sharpening) -->
+            <filter id="iee-texture" color-interpolation-filters="sRGB">
+                <feConvolveMatrix order="3" kernelMatrix="
+                   -0.3 -0.6 -0.3
+                   -0.6  4.6 -0.6
+                   -0.3 -0.6 -0.3" preserveAlpha="true" />
+            </filter>
+
+            <!-- ⑤ 色素散布シミュレーション (インジゴカルミン風) -->
+            <filter id="iee-indigo" color-interpolation-filters="sRGB">
+                <feColorMatrix type="matrix" values="
+                    0.85  0.00  0.00 0 -0.05
+                    0.00  0.90  0.00 0 -0.02
+                    0.10  0.20  1.30 0  0.10
+                    0     0     0    1  0" />
+                <feConvolveMatrix order="3" kernelMatrix="
+                   -0.2 -0.3 -0.2
+                   -0.3  3.0 -0.3
+                   -0.2 -0.3 -0.2" preserveAlpha="true" />
+            </filter>
+        </defs>
+    </svg>
 
     <!-- トースト通知 -->
     <div id="dcmToast">メッセージ</div>
@@ -907,6 +1062,7 @@ $mode      = $_GET['mode'] ?? 'standalone'; // 'modal' or 'standalone'
         let brightness = 100;  // Window Level (WL) 相当 (100%基準)
         let isInverted = false;
         let activeMouseTool = 'ww_wl'; // 'ww_wl', 'pan', 'zoom'
+        let activeIeeMode = 'normal';  // 'normal', 'lci', 'nbi', 'ihb', 'texture', 'indigo'
 
         // ドラッグ制御用
         let isDragging = false;
@@ -1111,10 +1267,38 @@ $mode      = $_GET['mode'] ?? 'standalone'; // 'modal' or 'standalone'
         }
 
         // 階調 (WW/WL) 反映 (全スロット完全同期)
+        // 画面下部 内視鏡病変強調モード切替
+        function setIeeMode(mode) {
+            activeIeeMode = mode;
+            document.querySelectorAll('.iee-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.mode === mode);
+            });
+            updateFilters();
+
+            const names = {
+                'normal': '🌈 通常表示 (白色光)',
+                'lci': '🔴 発赤強調 (LCI風: 早期病変・炎症拾い上げ)',
+                'nbi': '🟢 血管・ピット強調 (NBI風: 微細血管・腺管質的診断)',
+                'ihb': '📊 血流マップ (ヘモグロビン濃度強調)',
+                'texture': '🏔️ 凹凸・構造強調 (テクスチャ・境界シャープ化)',
+                'indigo': '🔵 色素散布シミュレーション (インジゴカルミン風)'
+            };
+            showToast(`${names[mode] || mode} に切り替えました`);
+        }
+
+        // 階調 (WW/WL) & 内視鏡強調 (IEE) 反映 (全スロット完全同期)
         function updateFilters() {
             let filterStr = `contrast(${contrast}%) brightness(${brightness}%)`;
             if (isInverted) {
                 filterStr += ' invert(100%)';
+            }
+            if (activeIeeMode !== 'normal') {
+                filterStr += ` url(#iee-${activeIeeMode})`;
+                if (activeIeeMode === 'lci') {
+                    filterStr += ' saturate(135%)';
+                } else if (activeIeeMode === 'nbi') {
+                    filterStr += ' saturate(125%)';
+                }
             }
             viewports.forEach(vp => {
                 const img = vp.querySelector('.dcm-slot-img');
@@ -1122,7 +1306,8 @@ $mode      = $_GET['mode'] ?? 'standalone'; // 'modal' or 'standalone'
                     img.style.filter = filterStr;
                 }
             });
-            hudWwWl.textContent = `C:${Math.round(contrast)}% B:${Math.round(brightness)}%`;
+            const ieeTag = (activeIeeMode !== 'normal') ? ` [${activeIeeMode.toUpperCase()}]` : '';
+            hudWwWl.textContent = `C:${Math.round(contrast)}% B:${Math.round(brightness)}%${ieeTag}`;
         }
 
         // 画面にフィット
@@ -1172,6 +1357,10 @@ $mode      = $_GET['mode'] ?? 'standalone'; // 'modal' or 'standalone'
             contrast = 100;
             brightness = 100;
             isInverted = false;
+            activeIeeMode = 'normal';
+            document.querySelectorAll('.iee-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.mode === 'normal');
+            });
             btnInvert.classList.remove('active-toggle');
             updateFilters();
             fitToWindow();
@@ -1314,6 +1503,12 @@ $mode      = $_GET['mode'] ?? 'standalone'; // 'modal' or 'standalone'
             btn.addEventListener('click', () => {
                 const l = parseInt(btn.dataset.layout, 10);
                 setLayout(l);
+            });
+        });
+
+        document.querySelectorAll('.iee-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                setIeeMode(btn.dataset.mode);
             });
         });
         navPrevBtn.addEventListener('click', () => { if (currentIndex > 0) loadSlice(currentIndex - 1); });
