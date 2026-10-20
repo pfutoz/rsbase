@@ -488,6 +488,7 @@ $mode      = $_GET['mode'] ?? 'standalone'; // 'modal' or 'standalone'
             flex-direction: column;
             gap: 12px;
             z-index: 50;
+            pointer-events: none; /* 下部ドックやツールバーへのクリック入力を遮断しない */
         }
 
         .dcm-spinner {
@@ -677,7 +678,8 @@ $mode      = $_GET['mode'] ?? 'standalone'; // 'modal' or 'standalone'
             padding: 4px 10px;
             border-radius: 30px;
             box-shadow: 0 4px 24px rgba(0, 0, 0, 0.65), 0 0 12px rgba(56, 189, 248, 0.2);
-            z-index: 45;
+            z-index: 60; /* ローダー(z-index:50)やHUDより前面に常時配置しクリック不能化を防止 */
+            user-select: none;
         }
 
         .iee-label {
@@ -806,13 +808,14 @@ $mode      = $_GET['mode'] ?? 'standalone'; // 'modal' or 'standalone'
             </button>
         </div>
 
+        
         <!-- アクションツール -->
         <div class="dcm-actions">
             <button type="button" class="action-btn active" id="btnFit" title="全体フィット: 画像全体を枠内に収める [Fキー]">
-                ⏹️ フィット
+                ⏹️フィット
             </button>
-            <button type="button" class="action-btn" id="btnOlympusFit" title="O社(オリンパス)フィット: 左側文字情報を除外し、円形観察領域を中心に画面一杯に拡大表示 [Oキー / ダブルクリック]">
-                🎯 O社フィット
+            <button type="button" class="action-btn" id="btnOlympusFit" title="オリンパスフィット: 左側文字情報を除外し、円形観察領域を中心に画面一杯に拡大表示 [Oキー / ダブルクリック]">
+                ⏹️Olympusフィット
             </button>
             <button type="button" class="action-btn" id="btnOneToOne" title="原寸大 (1:1) で表示">
                 1:1
@@ -949,7 +952,8 @@ $mode      = $_GET['mode'] ?? 'standalone'; // 'modal' or 'standalone'
     </main>
 
     <!-- SVGフィルター定義 (内視鏡画像強調用: GPUハードウェアアクセラレーション) -->
-    <svg style="display:none;" xmlns="http://www.w3.org/2000/svg">
+    <!-- 注意: display:none はブラウザ(Chrome/Edge)でレンダリングツリーから除外されフィルター解除やキャッシュ無効化に不具合を起こすため、不可視かつレンダリングツリーに残るスタイルを使用 -->
+    <svg style="position: absolute; width: 0; height: 0; overflow: hidden; pointer-events: none;" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
         <defs>
             <!-- ① LCI風・発赤強調 (赤色分離度最大化) -->
             <filter id="iee-lci" color-interpolation-filters="sRGB">
@@ -1062,11 +1066,13 @@ $mode      = $_GET['mode'] ?? 'standalone'; // 'modal' or 'standalone'
         const sidebar = document.getElementById('dcmSidebar');
         const btnToggleSidebar = document.getElementById('btnToggleSidebar');
         const sidebarReopenBtn = document.getElementById('sidebarReopenBtn');
+        const ieeDock = document.getElementById('ieeDock');
 
         // ビューワ内部ステート
         let dcmFiles = [];
         let currentIndex = 0;
         let currentLayout = 1; // 1, 2, or 4
+        let currentSliceRequestId = 0; // 高速コマ送り時の競合・非同期順序崩れ防止用ID
         let zoom = 1.0;
         let panX = 0;
         let panY = 0;
@@ -1202,11 +1208,13 @@ $mode      = $_GET['mode'] ?? 'standalone'; // 'modal' or 'standalone'
             if (index < 0 || index >= dcmFiles.length) return;
             currentIndex = index;
 
+            const thisRequestId = ++currentSliceRequestId;
+
             updateNavUI();
             updateFilmstripHighlight();
 
             const file0 = dcmFiles[currentIndex];
-            hudFilename.textContent = file0.filename;
+            if (hudFilename) hudFilename.textContent = file0.filename;
 
             loader.style.display = 'flex';
 
@@ -1231,8 +1239,9 @@ $mode      = $_GET['mode'] ?? 'standalone'; // 'modal' or 'standalone'
                         pendingCount++;
                         const tempImg = new Image();
                         tempImg.onload = () => {
+                            if (thisRequestId !== currentSliceRequestId) return; // 古いリクエストは破棄
                             img.src = imgUrl;
-                            hudResolution.textContent = `${tempImg.naturalWidth} x ${tempImg.naturalHeight}`;
+                            if (hudResolution) hudResolution.textContent = `${tempImg.naturalWidth} x ${tempImg.naturalHeight}`;
                             pendingCount--;
                             if (pendingCount <= 0) loader.style.display = 'none';
 
@@ -1241,8 +1250,10 @@ $mode      = $_GET['mode'] ?? 'standalone'; // 'modal' or 'standalone'
                             } else {
                                 updateTransform();
                             }
+                            updateFilters(); // 画像切替後も確実にフィルターを再適用
                         };
                         tempImg.onerror = () => {
+                            if (thisRequestId !== currentSliceRequestId) return;
                             pendingCount--;
                             if (pendingCount <= 0) loader.style.display = 'none';
                             showToast("⚠️ 画像の読み込みに失敗しました");
@@ -1250,14 +1261,14 @@ $mode      = $_GET['mode'] ?? 'standalone'; // 'modal' or 'standalone'
                         tempImg.src = imgUrl;
                     } else {
                         pendingCount++;
-                        img.onload = () => {
+                        const onSlotLoaded = () => {
+                            if (thisRequestId !== currentSliceRequestId) return;
                             pendingCount--;
                             if (pendingCount <= 0) loader.style.display = 'none';
+                            updateFilters();
                         };
-                        img.onerror = () => {
-                            pendingCount--;
-                            if (pendingCount <= 0) loader.style.display = 'none';
-                        };
+                        img.onload = onSlotLoaded;
+                        img.onerror = onSlotLoaded;
                         img.src = imgUrl;
                     }
                 } else {
@@ -1280,8 +1291,13 @@ $mode      = $_GET['mode'] ?? 'standalone'; // 'modal' or 'standalone'
         }
 
         // 階調 (WW/WL) 反映 (全スロット完全同期)
-        // 画面下部 内視鏡病変強調モード切替
+        // 画面下部 内視鏡病変強調モード切替 (同一モード再クリックで通常へトグル復帰可能)
         function setIeeMode(mode) {
+            // すでにアクティブな強調モードを再度クリックした場合は通常表示にトグル復帰
+            if (activeIeeMode === mode && mode !== 'normal') {
+                mode = 'normal';
+            }
+
             activeIeeMode = mode;
             document.querySelectorAll('.iee-btn').forEach(btn => {
                 btn.classList.toggle('active', btn.dataset.mode === mode);
@@ -1301,26 +1317,38 @@ $mode      = $_GET['mode'] ?? 'standalone'; // 'modal' or 'standalone'
 
         // 階調 (WW/WL) & 内視鏡強調 (IEE) 反映 (全スロット完全同期)
         function updateFilters() {
-            let filterStr = `contrast(${contrast}%) brightness(${brightness}%)`;
-            if (isInverted) {
-                filterStr += ' invert(100%)';
-            }
+            let filterParts = [];
+            if (contrast !== 100) filterParts.push(`contrast(${contrast}%)`);
+            if (brightness !== 100) filterParts.push(`brightness(${brightness}%)`);
+            if (isInverted) filterParts.push('invert(100%)');
+
             if (activeIeeMode !== 'normal') {
-                filterStr += ` url(#iee-${activeIeeMode})`;
+                filterParts.push(`url(#iee-${activeIeeMode})`);
                 if (activeIeeMode === 'lci') {
-                    filterStr += ' saturate(135%)';
+                    filterParts.push('saturate(135%)');
                 } else if (activeIeeMode === 'nbi') {
-                    filterStr += ' saturate(125%)';
+                    filterParts.push('saturate(125%)');
                 }
             }
+
+            const filterStr = filterParts.length > 0 ? filterParts.join(' ') : 'none';
+
             viewports.forEach(vp => {
                 const img = vp.querySelector('.dcm-slot-img');
                 if (img) {
+                    // ブラウザ(特にChromium/Edge)のSVGフィルター解除時キャッシュ固着を完全に防ぐため、
+                    // 通常表示に戻る時、既存フィルターにurl(#iee-)が含まれていれば一旦強制クリア
+                    if (activeIeeMode === 'normal' && (img.style.filter.indexOf('url(') !== -1 || filterStr === 'none')) {
+                        img.style.filter = 'none';
+                        void img.offsetHeight; // DOM再計算を強制フラッシュしてGPUシェーダーを完全破棄
+                    }
                     img.style.filter = filterStr;
                 }
             });
             const ieeTag = (activeIeeMode !== 'normal') ? ` [${activeIeeMode.toUpperCase()}]` : '';
-            hudWwWl.textContent = `C:${Math.round(contrast)}% B:${Math.round(brightness)}%${ieeTag}`;
+            if (hudWwWl) {
+                hudWwWl.textContent = `C:${Math.round(contrast)}% B:${Math.round(brightness)}%${ieeTag}`;
+            }
         }
 
         // --------------------------------------------------------------------------
@@ -1559,6 +1587,8 @@ $mode      = $_GET['mode'] ?? 'standalone'; // 'modal' or 'standalone'
                 setLayout(4);
             } else if (e.key === 'r' || e.key === 'R') {
                 resetView();
+            } else if (e.key === '0' || e.key === 'n' || e.key === 'N') {
+                setIeeMode('normal');
             } else if (e.key === 'i' || e.key === 'I') {
                 btnInvert.click();
             } else if (e.key === 'Escape') {
@@ -1576,8 +1606,18 @@ $mode      = $_GET['mode'] ?? 'standalone'; // 'modal' or 'standalone'
             });
         });
 
+        if (ieeDock) {
+            // ドック内のクリックやドラッグが画像ステージ(WW/WLドラッグ・ダブルクリック拡大・ホイールコマ送り)へ誤伝播するのを完全に遮断
+            ieeDock.addEventListener('mousedown', e => e.stopPropagation());
+            ieeDock.addEventListener('mouseup', e => e.stopPropagation());
+            ieeDock.addEventListener('click', e => e.stopPropagation());
+            ieeDock.addEventListener('dblclick', e => e.stopPropagation());
+            ieeDock.addEventListener('wheel', e => e.stopPropagation());
+        }
+
         document.querySelectorAll('.iee-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
+            btn.addEventListener('click', e => {
+                e.stopPropagation();
                 setIeeMode(btn.dataset.mode);
             });
         });
